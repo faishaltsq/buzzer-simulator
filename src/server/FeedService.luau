@@ -53,6 +53,18 @@ local NPC_IDENTITIES: { { name: string, handle: string } } = {
 	{ name = "Yoga Pratama", handle = "@yoga.builds" },
 }
 
+-- Server-owned public clue keys for mission contexts.
+--
+-- MissionDef in the public Catalog has no clueKey field (only OrganicContextDef
+-- does), so mission-context feed cards would otherwise carry no clue and become
+-- undiscoverable. These are PUBLIC clue identifiers only -- they name the
+-- authored clue, never the template affinity that decides the winner, so no
+-- private scoring data is exposed. V0 ships one mission context; M1 clues are
+-- added by BS-11 with their content.
+local MISSION_CLUE_KEYS: { [string]: string } = {
+	meal_time = "meal_time_clue",
+}
+
 -- Authored reply/comment pools. Bounded and fictional; never user text.
 local REPLY_POOLS: { [string]: { string } } = {
 	organic_snack = {
@@ -138,12 +150,14 @@ end
 -- The authored clue key for a context, from the public Catalog. Keeps important
 -- clue cards discoverable without exposing any private affinity data.
 local function clueKeyFor(contextId: string): string?
+	-- Organic contexts publish their clueKey in the public Catalog.
 	for _, ctx in ipairs(Catalog.OrganicContexts) do
 		if (ctx :: any).contextId == contextId then
 			return (ctx :: any).clueKey
 		end
 	end
-	return nil
+	-- Mission contexts carry a server-owned public clue key instead.
+	return MISSION_CLUE_KEYS[contextId]
 end
 
 -- Authored NPC cards, projected. Bounded to AUTHORED_NPC_CARDS and ordered by

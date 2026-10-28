@@ -38,6 +38,22 @@ local ORGANIC_AFFINITIES: { [string]: Affinity } = {
 	snack_honest = { trendId = "late_night_trend", audienceId = "students" },
 }
 
+-- Server-owned mission context -> (trendId, audienceId) mapping.
+--
+-- MissionDef in the public Catalog deliberately has NO trendId/audienceId
+-- fields (only OrganicContextDef does), so mission contexts cannot inherit
+-- their tags from the public catalog. This table is therefore the single
+-- authoritative source for mission-context tags, and it is looked up
+-- explicitly: an unknown context is an error, never a silent fallback to V0
+-- identifiers, which would let M1 content score against the wrong tags.
+--
+-- V0's meal_time shares the snack context's authored tags. M1 contexts are
+-- added here by BS-11 alongside their affinities, and are not reachable until
+-- they are shipped.
+local MISSION_CONTEXT_TAGS: { [string]: { trendId: string, audienceId: string } } = {
+	meal_time = { trendId = "snack_trend", audienceId = "students" },
+}
+
 local MISSION_AFFINITIES: { [string]: Affinity } = {
 	-- meal_time: trend snack_trend, audience students (same tags as the V0
 	-- organic context, so the authored winners differ by template set).
@@ -232,6 +248,143 @@ function ScoringCatalog.missionAffinities(): { [string]: { [string]: Affinity } 
 	return {
 		meal_time = MISSION_AFFINITIES,
 	}
+end
+
+-- Explicit mission-context tag lookup. Returns (trendId, audienceId, nil) for a
+-- known context, or (nil, nil, reason) for an unknown one. Callers must treat
+-- the error as fatal for that context -- there is no default.
+function ScoringCatalog.missionContextTags(contextId: any): (string?, string?, string?)
+	if typeof(contextId) ~= "string" then
+		return nil, nil, "mission contextId must be a string"
+	end
+	local tags = MISSION_CONTEXT_TAGS[contextId]
+	if tags == nil then
+		return nil, nil, `mission context {contextId} has no authored tags`
+	end
+	return tags.trendId, tags.audienceId, nil
+end
+
+-- Every mission context the public Catalog references must have authored tags
+-- AND a unique winning template. Used by the load-time validation gate.
+function ScoringCatalog.missionContextIds(): { string }
+	local ids: { string } = {}
+	for contextId in pairs(MISSION_CONTEXT_TAGS) do
+		table.insert(ids, contextId)
+	end
+	table.sort(ids)
+	return ids
+end
+
+ScoringCatalog._MISSION_CONTEXT_TAGS = MISSION_CONTEXT_TAGS
+
+-- ===== load-time validation gate =====
+-- Every SHIPPED context must have exactly one unique highest-scoring template
+-- before it can be used in production. Invalid content fails loudly here rather
+-- than at publish time, and never falls back to a random or default winner.
+--
+-- Returns (ok, problems). `shippedOrganicIds` / `shippedMissionIds` come from
+-- Catalog.V0Shipped so unshipped M1 content is not gated on V0 affinities.
+function ScoringCatalog.validateShippedContent(
+	catalog: any,
+	shippedOrganicIds: { string },
+	shippedMissionIds: { string }
+): (boolean, { string })
+	local problems: { string } = {}
+	local shippedOrganic: { [string]: boolean } = {}
+	for _, id in ipairs(shippedOrganicIds) do
+		shippedOrganic[id] = true
+	end
+	local shippedMission: { [string]: boolean } = {}
+	for _, id in ipairs(shippedMissionIds) do
+		shippedMission[id] = true
+	end
+
+	-- Every shipped organic id must resolve to a real catalog context.
+	for _, shippedId in ipairs(shippedOrganicIds) do
+		local found = false
+		for _, ctx in ipairs(catalog.OrganicContexts) do
+			if (ctx :: any).contextId == shippedId then
+				found = true
+				break
+			end
+		end
+		if not found then
+			table.insert(problems, `shipped organic context {shippedId} is not in the catalog`)
+		end
+	end
+
+	-- Organic contexts.
+	for _, ctx in ipairs(catalog.OrganicContexts) do
+		local contextId = (ctx :: any).contextId
+		if not shippedOrganic[contextId] then
+			continue -- unshipped M1 content is not gated yet
+		end
+		-- ORGANIC_AFFINITIES is a template->affinity map; the per-context view
+		-- comes from organicAffinities(), which is keyed by contextId.
+		local organicAffinities: any = ScoringCatalog.organicAffinities()[contextId]
+		if organicAffinities == nil then
+			table.insert(problems, `shipped organic context {contextId} has no authored affinities`)
+		else
+			local _, err = ScoringCatalog.resolveStrongTemplate(
+				(ctx :: any).templates,
+				organicAffinities,
+				(ctx :: any).trendId,
+				(ctx :: any).audienceId
+			)
+			if err ~= nil then
+				table.insert(problems, `shipped organic context {contextId}: {err}`)
+			end
+		end
+	end
+
+	-- Mission contexts: tags come from the server-owned mapping, and every
+	-- context the mission lists must be both tagged and uniquely winnable.
+	for _, mission in ipairs(catalog.Missions) do
+		local missionId = (mission :: any).missionId
+		if not shippedMission[missionId] then
+			continue
+		end
+		for _, contextId in ipairs((mission :: any).contexts) do
+			local trendId, audienceId, tagErr = ScoringCatalog.missionContextTags(contextId)
+			if trendId == nil then
+				table.insert(problems, `shipped mission {missionId} context {contextId}: {tagErr}`)
+			else
+				local missionAffinities: any = ScoringCatalog.missionAffinities()[contextId]
+				if missionAffinities == nil then
+					table.insert(problems, `shipped mission {missionId} context {contextId} has no authored affinities`)
+				else
+					local _, err = ScoringCatalog.resolveStrongTemplate(
+						(mission :: any).templates,
+						missionAffinities,
+						trendId :: string,
+						audienceId :: string
+					)
+					if err ~= nil then
+						table.insert(problems, `shipped mission {missionId} context {contextId}: {err}`)
+					end
+				end
+			end
+		end
+	end
+	return #problems == 0, problems
+end
+
+-- Assert the shipped content is valid, raising on the first problem. Intended
+-- to be called once at server startup (BS-06 Bootstrap) so broken authored
+-- content can never reach a live player.
+function ScoringCatalog.assertShippedContentValid(
+	catalog: any,
+	shippedOrganicIds: { string },
+	shippedMissionIds: { string }
+): boolean
+	local ok, problems = ScoringCatalog.validateShippedContent(catalog, shippedOrganicIds, shippedMissionIds)
+	if not ok then
+		error(
+			`ScoringCatalog: shipped content is invalid -- {table.concat(problems, "; ")}`,
+			0
+		)
+	end
+	return true
 end
 
 return ScoringCatalog

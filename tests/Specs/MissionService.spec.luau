@@ -310,14 +310,61 @@ test("Accept is rejected while a mission is already active", function()
 	)
 end)
 
-test("Accept is rejected while an organic post is resolving", function()
+test("Accept is allowed while an organic post is resolving", function()
 	local p = freshProfile()
 	local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 1000), "organic publish")
-	-- No mission is active, so the pending post is the blocking condition.
-	assertCode(
+	-- docs/02: "Accepting a mission while browsing or making organic posts is
+	-- allowed." Accepting does not touch the pending-post slot.
+	local accepted = assertOk(
 		MissionService.accept(published, "food_stall_launch", "run-1", 1000),
-		"PENDING_POST",
 		"accept during a pending organic post"
+	)
+	expectEqual(accepted.activeMission.contextId, "meal_time", "mission accepted")
+	expectEqual(accepted.activeMission.postCount, 0, "fresh postCount")
+	-- The one-global-pending-post invariant still holds: the organic post is
+	-- untouched and is still the single pending post.
+	expectEqual(accepted.pendingPost.mode, "organic", "organic post still pending")
+	expectEqual(accepted.pendingPost.templateId, "snack_meme", "organic post unchanged")
+	expectEqual(accepted.pendingPost.settleAt, 1018, "organic settleAt unchanged")
+end)
+
+test("Accepting a mission does not disturb the pending organic settlement", function()
+	local p = freshProfile()
+	local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 1000), "organic publish")
+	local accepted = assertOk(MissionService.accept(published, "food_stall_launch", "run-1", 1000), "accept")
+	-- The organic post settles normally, with its frozen payout.
+	local settled = assertOk(MissionService.settle(accepted, 1018), "settle organic")
+	expectEqual(settled.balance, 15, "organic Cuan credited once")
+	expectEqual(settled.lifetimeEarned, 15, "lifetime credited once")
+	expectEqual(settled.pendingPost, nil, "pending post cleared")
+	-- The newly accepted campaign is untouched by the organic settlement.
+	expectEqual(settled.activeMission.status, "accepted", "mission still accepted")
+	expectEqual(settled.activeMission.postCount, 0, "mission postCount still 0")
+	expectEqual(settled.activeMission.accumulatedImpact, 0, "organic post did not advance the mission")
+end)
+
+test("An organic settlement does not advance a newly accepted campaign", function()
+	local p = freshProfile()
+	local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 1000), "organic publish")
+	local accepted = assertOk(MissionService.accept(published, "food_stall_launch", "run-1", 1000), "accept")
+	local settled = assertOk(MissionService.settle(accepted, 1018), "settle")
+	-- The mission is still publishable and unaffected.
+	local campaign = assertOk(MissionService.publishMission(settled, "run-1", "meal_meme", 2000), "campaign publish")
+	expectEqual(campaign.activeMission.postCount, 1, "campaign postCount 1")
+	expectEqual(campaign.pendingPost.mode, "mission", "campaign post pending")
+	expectEqual(campaign.pendingPost.finalImpact, 120, "campaign impact scored fresh")
+end)
+
+test("Accept is still rejected while a mission post is resolving", function()
+	local p = freshProfile()
+	local accepted = assertOk(MissionService.accept(p, "food_stall_launch", "run-1", 1000), "accept")
+	local published = assertOk(MissionService.publishMission(accepted, "run-1", "meal_meme", 1000), "publish")
+	-- A mission-tagged post belongs to a run; accepting a new mission would
+	-- orphan it, so this stays blocked.
+	assertCode(
+		MissionService.accept(published, "food_stall_launch", "run-2", 1000),
+		"MISSION_ACTIVE",
+		"accept during a mission post"
 	)
 end)
 
@@ -763,6 +810,206 @@ test("Recovery: a restored accepted mission keeps its frozen context", function(
 	-- Publishing on the restored state uses the frozen context.
 	local published = assertOk(MissionService.publishMission(restored, "run-1", "meal_meme", 1000), "publish restored")
 	expectEqual(published.pendingPost.contextId, "meal_time", "published against the frozen context")
+end)
+
+-- ===== mission impact uses the mission's requiredImpact as B =====
+-- docs/03: `Rules.postImpact(requiredImpact, fit, deviceYield)`. Organic-only
+-- posts use B=100 for presentation. These fixtures are NOT shipped: they prove
+-- the scoring path honours each mission's own requirement.
+local function withMissionFixture(requiredImpact: number, fn: (any) -> ())
+	local realMissions = Catalog.Missions
+	local realShipped = Catalog.V0Shipped.missionIds
+	Catalog.Missions = {
+		{
+			missionId = "fixture_mission",
+			requiredImpact = requiredImpact,
+			reward = 80,
+			minTier = 0,
+			unlockClaims = 0,
+			templates = { "meal_meme", "queue_thread", "late_night_quip" },
+			contexts = { "meal_time" },
+		},
+	}
+	Catalog.V0Shipped.missionIds = { "fixture_mission" }
+	local ok, err = pcall(fn)
+	Catalog.Missions = realMissions
+	Catalog.V0Shipped.missionIds = realShipped
+	if not ok then
+		error(err, 0)
+	end
+end
+
+test("V0 mission posts score 120 strong / 75 weak (B=100)", function()
+	local p = freshProfile()
+	local accepted = assertOk(MissionService.accept(p, "food_stall_launch", "run-1", 1000), "accept")
+	local strong = assertOk(MissionService.publishMission(accepted, "run-1", "meal_meme", 1000), "strong publish")
+	expectEqual(strong.pendingPost.finalImpact, 120, "V0 strong impact 120")
+	expectEqual(strong.pendingPost.organicCuan, 15, "V0 strong organic 15")
+	-- A separate run for the weak assertion, so the strong settle (which reaches
+	-- readyToClaim) does not block it.
+	local accepted2 = assertOk(MissionService.accept(freshProfile(), "food_stall_launch", "run-2", 1000), "accept 2")
+	local weak = assertOk(MissionService.publishMission(accepted2, "run-2", "queue_thread", 2000), "weak publish")
+	expectEqual(weak.pendingPost.finalImpact, 75, "V0 weak impact 75")
+	expectEqual(weak.pendingPost.organicCuan, 9, "V0 weak organic 9")
+end)
+
+test("A B=130 mission scores 156 strong / 97 weak", function()
+	withMissionFixture(130, function()
+		local p = freshProfile()
+		local accepted = assertOk(MissionService.accept(p, "fixture_mission", "run-1", 1000), "accept")
+		local strong = assertOk(MissionService.publishMission(accepted, "run-1", "meal_meme", 1000), "strong")
+		expectEqual(strong.pendingPost.finalImpact, 156, "B=130 strong: floor(130*1.2)")
+		local settle = assertOk(MissionService.settle(strong, 1018), "settle")
+		expectEqual(settle.activeMission.status, "readyToClaim", "156 >= 130 is claimable")
+		-- A separate run for the weak assertion (the strong settle already
+		-- reached readyToClaim).
+		local accepted2 = assertOk(MissionService.accept(freshProfile(), "fixture_mission", "run-2", 1000), "accept 2")
+		local weak = assertOk(MissionService.publishMission(accepted2, "run-2", "queue_thread", 2000), "weak")
+		expectEqual(weak.pendingPost.finalImpact, 97, "B=130 weak: floor(130*0.75)")
+	end)
+end)
+
+test("A B=160 mission scores 192 strong / 120 weak", function()
+	withMissionFixture(160, function()
+		local p = freshProfile()
+		local accepted = assertOk(MissionService.accept(p, "fixture_mission", "run-1", 1000), "accept")
+		local strong = assertOk(MissionService.publishMission(accepted, "run-1", "meal_meme", 1000), "strong")
+		expectEqual(strong.pendingPost.finalImpact, 192, "B=160 strong: floor(160*1.2)")
+		local settle = assertOk(MissionService.settle(strong, 1018), "settle")
+		expectEqual(settle.activeMission.status, "readyToClaim", "192 >= 160 is claimable")
+		-- A separate run for the weak assertion (the strong settle already
+		-- reached readyToClaim).
+		local accepted2 = assertOk(MissionService.accept(freshProfile(), "fixture_mission", "run-2", 1000), "accept 2")
+		local weak = assertOk(MissionService.publishMission(accepted2, "run-2", "queue_thread", 2000), "weak")
+		expectEqual(weak.pendingPost.finalImpact, 120, "B=160 weak: floor(160*0.75)")
+	end)
+end)
+
+test("A B=220 mission scores 264 strong / 165 weak", function()
+	withMissionFixture(220, function()
+		local p = freshProfile()
+		local accepted = assertOk(MissionService.accept(p, "fixture_mission", "run-1", 1000), "accept")
+		local strong = assertOk(MissionService.publishMission(accepted, "run-1", "meal_meme", 1000), "strong")
+		expectEqual(strong.pendingPost.finalImpact, 264, "B=220 strong: floor(220*1.2)")
+		local settle = assertOk(MissionService.settle(strong, 1018), "settle")
+		expectEqual(settle.activeMission.status, "readyToClaim", "264 >= 220 is claimable")
+		-- A separate run for the weak assertion (the strong settle already
+		-- reached readyToClaim).
+		local accepted2 = assertOk(MissionService.accept(freshProfile(), "fixture_mission", "run-2", 1000), "accept 2")
+		local weak = assertOk(MissionService.publishMission(accepted2, "run-2", "queue_thread", 2000), "weak")
+		expectEqual(weak.pendingPost.finalImpact, 165, "B=220 weak: floor(220*0.75)")
+	end)
+end)
+
+test("Organic posts still use B=100 regardless of the active mission", function()
+	withMissionFixture(220, function()
+		local p = freshProfile()
+		local accepted = assertOk(MissionService.accept(p, "fixture_mission", "run-1", 1000), "accept")
+		-- An organic post is scored against B=100, not the mission's 220.
+		local organic = assertOk(MissionService.publishOrganic(accepted, "snack_meme", 1000), "organic publish")
+		expectEqual(organic.pendingPost.finalImpact, 120, "organic strong impact stays 120")
+		expectEqual(organic.pendingPost.organicCuan, 15, "organic strong payout stays 15")
+	end)
+end)
+
+-- ===== mission context tag resolution =====
+test("A known mission context resolves its authored tags", function()
+	local trendId, audienceId, err = MissionService._missionContextTags("meal_time")
+	expectEqual(err, nil, "no error for a known context")
+	expectEqual(trendId, "snack_trend", "meal_time trend")
+	expectEqual(audienceId, "students", "meal_time audience")
+end)
+
+test("An unknown mission context fails instead of falling back to V0 tags", function()
+	local trendId, _, err = MissionService._missionContextTags("neon_market")
+	expectEqual(trendId, nil, "no tags for an unknown context")
+	local detail: string = err or ""
+	expectTrue(detail:find("no authored tags") ~= nil, "error names the missing tags")
+end)
+
+test("Publishing against an unknown mission context is refused", function()
+	local p = freshProfile()
+	local accepted = assertOk(MissionService.accept(p, "food_stall_launch", "run-1", 1000), "accept")
+	-- Corrupt the frozen context to one with no authored tags.
+	accepted.activeMission.contextId = "neon_market"
+	local result = MissionService.publishMission(accepted, "run-1", "meal_meme", 1000)
+	expectEqual(result.ok, false, "unknown context refused")
+	expectEqual(result.code, "UNKNOWN_CONTEXT", "unknown context code")
+end)
+
+-- ===== shipped-content validation gate =====
+test("Shipped V0 content passes the validation gate", function()
+	local ok, problems = ScoringCatalog.validateShippedContent(
+		Catalog,
+		Catalog.V0Shipped.organicContextIds,
+		Catalog.V0Shipped.missionIds
+	)
+	expectTrue(ok, `shipped content invalid: {table.concat(problems, "; ")}`)
+end)
+
+test("The validation gate rejects a shipped context with no affinities", function()
+	local ok, problems = ScoringCatalog.validateShippedContent(
+		Catalog,
+		{ "organic_snack", "organic_unknown" },
+		Catalog.V0Shipped.missionIds
+	)
+	expectEqual(ok, false, "unshipped-affinity context rejected")
+	expectTrue(#problems > 0, "problems reported")
+end)
+
+test("The validation gate rejects a shipped mission context with no tags", function()
+	local realMissions = Catalog.Missions
+	Catalog.Missions = {
+		{
+			missionId = "bad_mission",
+			requiredImpact = 100,
+			reward = 80,
+			minTier = 0,
+			unlockClaims = 0,
+			templates = { "meal_meme", "queue_thread", "late_night_quip" },
+			contexts = { "meal_time", "untagged_context" },
+		},
+	}
+	local ok, problems = ScoringCatalog.validateShippedContent(
+		Catalog,
+		Catalog.V0Shipped.organicContextIds,
+		{ "bad_mission" }
+	)
+	Catalog.Missions = realMissions
+	expectEqual(ok, false, "untagged mission context rejected")
+	expectTrue(#problems > 0, "problems reported")
+end)
+
+test("The validation gate ignores unshipped M1 content", function()
+	-- An unshipped mission referencing an unknown context must not fail the
+	-- gate, because M1 content is not gated on V0 affinities yet.
+	local realMissions = Catalog.Missions
+	Catalog.Missions = {
+		{
+			missionId = "m1_mission",
+			requiredImpact = 160,
+			reward = 120,
+			minTier = 1,
+			unlockClaims = 1,
+			templates = { "weekend_plans", "event_thread", "neon_quip" },
+			contexts = { "neon_market" },
+		},
+	}
+	local ok, problems = ScoringCatalog.validateShippedContent(
+		Catalog,
+		Catalog.V0Shipped.organicContextIds,
+		Catalog.V0Shipped.missionIds
+	)
+	Catalog.Missions = realMissions
+	expectTrue(ok, `unshipped M1 content must not fail the gate: {table.concat(problems, "; ")}`)
+end)
+
+test("assertShippedContentValid raises on invalid content", function()
+	local ok, err = pcall(function()
+		ScoringCatalog.assertShippedContentValid(Catalog, { "organic_unknown" }, {})
+	end)
+	expectEqual(ok, false, "invalid content raises")
+	expectTrue(type(err) == "string" and err:find("invalid") ~= nil, "error names the invalidity")
 end)
 
 -- ===== Runner =====

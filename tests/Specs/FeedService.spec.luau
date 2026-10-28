@@ -90,27 +90,37 @@ end)
 test("Authored cards carry clues for their supported contexts", function()
 	-- Only organic contexts carry a clueKey in the public Catalog (MissionDef
 	-- has no clueKey field), so mission-context cards legitimately have none.
+	-- A clue is valid if it is either an organic context's public clueKey or a
+	-- mission context's server-owned public clue key. Neither form exposes any
+	-- private template affinity.
+	local validClues: { [string]: boolean } = {}
+	for _, ctx in ipairs(Catalog.OrganicContexts) do
+		validClues[(ctx :: any).clueKey] = true
+	end
+	validClues["meal_time_clue"] = true
 	for _, card in ipairs(FeedService.authoredCards()) do
 		local clueKey = (card :: any).clueKey
 		if clueKey ~= nil then
-			local found = false
-			for _, ctx in ipairs(Catalog.OrganicContexts) do
-				if (ctx :: any).clueKey == clueKey then
-					found = true
-					break
-				end
-			end
-			expectTrue(found, `clue {tostring(clueKey)} maps to a public context`)
+			expectTrue(validClues[clueKey] ~= nil, `clue {tostring(clueKey)} is a known public clue`)
 		end
 	end
-	-- At least the organic-context cards must carry a discoverable clue.
+	-- Every V0 authored card must carry a discoverable clue, including the
+	-- mission-context ones.
 	local withClue = 0
 	for _, card in ipairs(FeedService.authoredCards()) do
 		if (card :: any).clueKey ~= nil then
 			withClue += 1
 		end
 	end
-	expectTrue(withClue >= 3, `organic cards carry clues (got {withClue})`)
+	expectEqual(withClue, #FeedService.authoredCards(), "every authored card carries a clue")
+	-- Mission-context cards specifically must be discoverable.
+	local missionClue = 0
+	for _, card in ipairs(FeedService.authoredCards()) do
+		if (card :: any).contextId == "meal_time" and (card :: any).clueKey ~= nil then
+			missionClue += 1
+		end
+	end
+	expectEqual(missionClue, 3, "all three meal_time cards carry a clue")
 end)
 
 test("Engagement is derived, not random", function()

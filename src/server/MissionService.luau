@@ -112,18 +112,6 @@ local function findMission(missionId: any): any?
 	return nil
 end
 
-local function findOrganicContext(contextId: any): any?
-	if not isNonEmptyString(contextId) then
-		return nil
-	end
-	for _, ctx in ipairs(Catalog.OrganicContexts) do
-		if (ctx :: any).contextId == contextId then
-			return ctx
-		end
-	end
-	return nil
-end
-
 -- Shipped-content gate. V0 must not expose M1 content early (docs/03:
 -- "Respect Catalog.V0Shipped: unshipped M1 content cannot become available").
 local function isShippedMission(missionId: string): boolean
@@ -189,6 +177,9 @@ end
 
 -- Freeze a pending post. The outcome is computed ONCE here and never recomputed
 -- (docs/03: "compute and freeze final outcome on the server at publish").
+-- `requiredImpact` is the B the post is scored against. Organic-only posts use
+-- B=100 for presentation (docs/03); mission-tagged posts use the mission's own
+-- requiredImpact, so a harder mission genuinely needs a stronger post.
 local function buildPendingPost(
 	profile: any,
 	mode: PostMode,
@@ -198,11 +189,10 @@ local function buildPendingPost(
 	deviceYield: number,
 	revealSeconds: number,
 	now: number,
-	missionRunId: string?
+	missionRunId: string?,
+	requiredImpact: number
 ): any
-	-- Both modes score against B=100: organic-only posts use 100 for
-	-- presentation (docs/03), and the V0 food mission's requiredImpact is 100.
-	local finalImpact = Rules.postImpact(100, fit, deviceYield)
+	local finalImpact = Rules.postImpact(requiredImpact, fit, deviceYield)
 	local organicCuan = Rules.organicCuan(fit, deviceYield)
 	local postId = `post-{profile.nextPostSequence}`
 	return {
@@ -231,25 +221,15 @@ local function isMissionContextShipped(mission: any, contextId: string): boolean
 end
 MissionService._isMissionContextShipped = isMissionContextShipped
 
--- Context tags for a mission context. V0's meal_time shares the organic snack
--- context's tags; the lookup is centralised so M1 can add contexts without
--- touching the publish path.
-local function contextTrendFor(contextId: string): string
-	local ctx = findOrganicContext(contextId)
-	if ctx ~= nil then
-		return (ctx :: any).trendId
-	end
-	return "snack_trend"
+-- Mission-context tags come from ScoringCatalog's explicit server-owned
+-- mapping. MissionDef in the public Catalog carries no trendId/audienceId, so
+-- there is nothing to inherit and no default to fall back to: an unknown
+-- context is a hard error, which keeps M1 content from silently scoring
+-- against V0 tags.
+local function missionContextTags(contextId: any): (string?, string?, string?)
+	return scoringCatalog().missionContextTags(contextId)
 end
-local function contextAudienceFor(contextId: string): string
-	local ctx = findOrganicContext(contextId)
-	if ctx ~= nil then
-		return (ctx :: any).audienceId
-	end
-	return "students"
-end
-MissionService._contextTrendFor = contextTrendFor
-MissionService._contextAudienceFor = contextAudienceFor
+MissionService._missionContextTags = missionContextTags
 
 -- ===== AcceptMission =====
 -- Validate against shipped catalog content and progression, require no active
@@ -265,8 +245,13 @@ function MissionService.accept(profile: any, missionId: string, runId: string, n
 	if profile.activeMission ~= nil then
 		return fail("MISSION_ACTIVE", "a mission is already active")
 	end
-	if profile.pendingPost ~= nil then
-		return fail("PENDING_POST", "a post is already resolving")
+	-- docs/02: "Accepting a mission while browsing or making organic posts is
+	-- allowed." Accepting does not touch the single global pending-post slot, so
+	-- an in-flight ORGANIC post must not block it. A mission-tagged post in
+	-- flight does block it, because that post belongs to a run and accepting a
+	-- new mission would orphan it.
+	if profile.pendingPost ~= nil and profile.pendingPost.mode == "mission" then
+		return fail("PENDING_POST", "a mission post is already resolving")
 	end
 	local mission = findMission(missionId)
 	if mission == nil then
@@ -354,7 +339,9 @@ function MissionService.publishOrganic(profile: any, templateId: string, now: nu
 		deviceYield,
 		revealSeconds :: number,
 		now,
-		nil
+		nil,
+		-- Organic-only posts use B=100 for presentation (docs/03).
+		100
 	)
 	next.nextPostSequence = profile.nextPostSequence + 1
 	-- The organic sequence advances only on a successful publish.
@@ -403,6 +390,12 @@ function MissionService.publishMission(
 	end
 	-- The template must belong to the mission's FROZEN context.
 	local contextId = mission.contextId
+	-- Resolve the tags first: an unknown context is the more specific and more
+	-- actionable failure, and it must never fall back to V0 tags.
+	local trendId, audienceId, tagErr = missionContextTags(contextId)
+	if trendId == nil then
+		return fail("UNKNOWN_CONTEXT", tagErr)
+	end
 	local affinities = scoringCatalog().missionAffinities()[contextId]
 	if affinities == nil then
 		return fail("INVALID_CONTENT", `context {contextId} has no authored affinities`)
@@ -411,8 +404,8 @@ function MissionService.publishMission(
 		templateId,
 		missionDef.templates,
 		affinities,
-		contextTrendFor(contextId),
-		contextAudienceFor(contextId)
+		trendId,
+		audienceId
 	)
 	if fit == nil then
 		return fail("UNKNOWN_TEMPLATE", fitErr)
@@ -432,7 +425,9 @@ function MissionService.publishMission(
 		deviceYield,
 		revealSeconds :: number,
 		now,
-		mission.runId
+		mission.runId,
+		-- Mission-tagged posts score against the mission's own requirement.
+		missionDef.requiredImpact
 	)
 	next.nextPostSequence = profile.nextPostSequence + 1
 	-- postCount advances with the PUBLISH transition, not settlement
