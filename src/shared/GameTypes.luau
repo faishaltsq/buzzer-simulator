@@ -255,4 +255,6 @@ export type SnapshotEvent =
 	| OpenComputerDeniedEvent
 	| ComputerSessionExpiredEvent
 
-return nil
+-- Studio ModuleScripts must return exactly one non-nil value. This module is
+-- types-only (03 frozen contract): the table stays empty, no runtime surface.
+return {}

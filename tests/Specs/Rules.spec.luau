@@ -148,7 +148,9 @@ end)
 test("postImpact floors and stays integral for fractional yields", function()
 	expectEqual(Rules.postImpact(100, "strong", 1.6), 192, "strong fast phone: floor(100*1.2*1.6)")
 	expectEqual(Rules.postImpact(130, "strong", 2.5), 390, "strong PC on gadget: floor(130*1.2*2.5)")
-	expectEqual(Rules.postImpact(100, "weak", 1.6), 114, "weak fast: floor(100*.75*1.6)")
+	-- weak fast: floor(100*.75*1.6)=120 is capped by ceil(100*.94)=94 (docs/04:
+	-- weak impact stays strictly below B; un-capped product floors to 120)
+	expectEqual(Rules.postImpact(100, "weak", 1.6), 94, "weak fast capped")
 end)
 
 test("postImpact rejects nonfinite/negative/garbage input", function()
@@ -204,10 +206,13 @@ end)
 
 -- ===== GameTypes contract surface (03) — shape review, no transport =====
 
-test("GameTypes union shapes exist as documented type surface", function()
-	-- Type-only module: presence of exported fields reviewed via require;
-	-- runtime check is that the module loads and returns nil w/o remotes.
-	expectEqual(GameTypes, nil, "GameTypes returns no runtime value (types only)")
+test("GameTypes loads as ModuleScript with type contract intact", function()
+	-- Studio requires every ModuleScript to return exactly one non-nil value.
+	-- GameTypes is types-only (no runtime surface, 03 frozen contract), so it
+	-- returns an empty table; require succeeds and the table stays empty --
+	-- assert no runtime surface accretes onto the type module.
+	expectEqual(typeof(GameTypes), "table", "GameTypes require value type")
+	expectEqual(next(GameTypes), nil, "GameTypes runtime surface stays empty")
 end)
 
 -- ===== Runner =====
