@@ -177,7 +177,16 @@ local function validProfile(): any
 	}
 end
 
+-- Records every retry sleep so tests can assert the bounded backoff schedule
+-- without real waiting.
+local waitLog: { number } = {}
 local function newStore(clock: () -> number, opts: { failGet: boolean?, failUpdate: boolean?, staleCache: boolean? }?): (any, any)
+	-- Defensive: a caller that forwards makeClock()'s second return (the
+	-- setter) would send a function as opts and break the fake adapter.
+	if typeof(opts) == "function" then
+		opts = nil
+	end
+	table.clear(waitLog)
 	local store = FakeStore.new(opts)
 	-- The fake adapter's cache must age on the same clock the store reads, so
 	-- a test can advance time and observe real four-second cache expiry.
@@ -190,6 +199,9 @@ local function newStore(clock: () -> number, opts: { failGet: boolean?, failUpda
 		now = clock,
 		noCacheOptions = function()
 			return getOptions:makeNoCache()
+		end,
+		wait = function(seconds: number)
+			table.insert(waitLog, seconds)
 		end,
 	})
 end
@@ -394,22 +406,19 @@ test("Persistent write failure yields SAVE_UNAVAILABLE, never a fake success", f
 	local now = makeClock(5000)
 	-- Acquire the lease with a healthy store, then break writes: the failure
 	-- must surface as SAVE_UNAVAILABLE, never a fabricated success.
-	local store = FakeStore.new()
-	local ps = ProfileStore.new(1234, {
-		store = store,
-		httpService = FakeHttp,
-		jobId = "job-test",
-		now = now,
-	})
+	local store, ps = newStore(now)
 	ps:Load()
 	local opts: any = store.opts
 	opts.failUpdate = true
+	table.clear(waitLog)
 	local save = ps:Save(validProfile(), "op-1")
 	expectEqual(save.ok, false, "failing write not ok")
 	expectEqual(save.code, "SAVE_UNAVAILABLE", "failing write code")
 	expectEqual(save.revision, nil, "no revision reported on failure")
 	-- the durable state was never written
 	expectEqual(store.data["Player_1234"].lastSaveOpId, "init", "no operation persisted")
+	-- and the retries were bounded with backoff, not a tight loop
+	expectEqual(#waitLog, 2, "two bounded backoff sleeps")
 end)
 
 -- ===== profile validation (docs/03 cross-field invariants) =====
@@ -548,6 +557,9 @@ test("A fully populated v1 profile round-trips unchanged", function()
 	local _, ps = newStore(now)
 	ps:Load()
 	local p = validProfile()
+	-- M1 state: PC Rumah equipped (workers require PC, docs/03) with both
+	-- desks owned and both trainee seats filled.
+	p.deviceId = "pc_rumah"
 	p.ownedDesks = { 1, 2 }
 	p.workers = {
 		{ hireId = "hire-1", roleId = "trainee", slotIndex = 1 },
@@ -1029,10 +1041,13 @@ test("Legitimate recoverable states are accepted, not rejected", function()
 		p.ownedDesks = { 1 }
 	end)
 	-- a worker hired into an owned desk
-	accept("worker in an owned desk", function(p)
+	accept("worker in an owned desk with the PC equipped", function(p)
+		p.deviceId = "pc_rumah"
 		p.ownedDesks = { 1, 2 }
 		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 1 } }
 	end)
+	-- A worker is only legitimate with the PC equipped; on a phone the same
+	-- desk/worker combination must be rejected (see the reject list).
 end)
 
 test("Invalid cross-field states are rejected", function()
@@ -1050,11 +1065,27 @@ test("Invalid cross-field states are rejected", function()
 
 	-- device ownership: unknown catalog device id
 	reject("unknown device id", function(p) p.deviceId = "phone_gold_plated" end)
+	-- worker PC prerequisite (docs/03: "workers ... require PC";
+	-- docs/02: "worker cannot be hired without a PC, tier, paid desk, free
+	-- seat, and funds"). The desk may be owned, but without the PC the hire
+	-- could never have been admitted.
+	reject("worker without the PC equipped (cheap phone)", function(p)
+		p.deviceId = "phone_cheap"
+		p.ownedDesks = { 1 }
+		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 1 } }
+	end)
+	reject("worker without the PC equipped (fast phone)", function(p)
+		p.deviceId = "phone_fast"
+		p.ownedDesks = { 1, 2 }
+		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 1 } }
+	end)
 	-- worker desk prerequisite: a worker must sit in an owned desk
 	reject("worker without an owned desk", function(p)
+		p.deviceId = "pc_rumah"
 		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 1 } }
 	end)
 	reject("worker in an unowned desk slot", function(p)
+		p.deviceId = "pc_rumah"
 		p.ownedDesks = { 1 }
 		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 2 } }
 	end)
@@ -1103,14 +1134,18 @@ test("Invalid cross-field states are rejected", function()
 			postCount = 1,
 		}
 	end)
-	reject("pending mission post with postCount already at the cap", function(p)
+	-- The cap is on PUBLISHED posts per run and PublishPost admits while
+	-- postCount < 2, so postCount == 2 with a post in flight is the legal
+	-- SECOND (final) post -- see the dedicated in-flight tests. Only a count
+	-- beyond the cap is corrupt.
+	reject("pending mission post beyond the two-post cap", function(p)
 		p.activeMission = {
 			missionId = "food_stall_launch",
 			runId = "run-1",
 			contextId = "meal_time",
 			status = "resolvingPost",
 			accumulatedImpact = 200,
-			postCount = 2,
+			postCount = 3,
 		}
 		p.pendingPost = {
 			postId = "post-3",
@@ -1146,6 +1181,368 @@ test("Invalid cross-field states are rejected", function()
 			postCount = 1,
 		}
 	end)
+end)
+
+-- ===== postCount semantics for in-flight campaign posts =====
+-- Codex frozen contract (docs/03 action table): PublishPost admits while
+-- postCount < 2, and "no more than two campaign posts/run". So postCount
+-- counts posts ALREADY PUBLISHED, including the one currently in flight:
+--   0 = accepted, nothing published
+--   1 = first campaign post in flight
+--   2 = second (final) campaign post in flight
+-- A third post can never be admitted. Settlement moves the status, not the
+-- count, so the same count is legal across both weak posts of a run.
+local function missionInFlight(postCount: number, accumulated: number): any
+	local p = validProfile()
+	p.activeMission = {
+		missionId = "food_stall_launch",
+		runId = "run-1",
+		contextId = "meal_time",
+		status = "resolvingPost",
+		accumulatedImpact = accumulated,
+		postCount = postCount,
+	}
+	p.pendingPost = {
+		postId = `post-{postCount + 1}`,
+		mode = "mission",
+		missionRunId = "run-1",
+		contextId = "meal_time",
+		templateId = "meal_meme",
+		publishedAt = 100,
+		settleAt = 118,
+		finalImpact = 120,
+		organicCuan = 15,
+	}
+	return p
+end
+
+test("First in-flight campaign post (postCount=1) is a legal state", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local save = ps:Save(missionInFlight(1, 75), "op-first")
+	expectEqual(save.ok, true, "first in-flight post accepted")
+	local back = ps:GetConfirmedEnvelope()
+	expectEqual(back.profile.activeMission.postCount, 1, "postCount 1 round-trips")
+	expectEqual(back.profile.activeMission.status, "resolvingPost", "resolvingPost round-trips")
+	expectEqual(back.profile.pendingPost.missionRunId, "run-1", "in-flight post bound to the run")
+end)
+
+test("Second in-flight campaign post (postCount=2) is a legal state", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- The weak-first-post path: the first weak post settled to 75 (short of
+	-- 100), so a second post is published. PublishPost admitted it because
+	-- postCount was 1 (< 2); after publishing, the count is 2 with the second
+	-- post in flight. This state must persist, not be rejected.
+	local save = ps:Save(missionInFlight(2, 75), "op-second")
+	expectEqual(save.ok, true, "second in-flight post accepted")
+	local back = ps:GetConfirmedEnvelope()
+	expectEqual(back.profile.activeMission.postCount, 2, "postCount 2 round-trips")
+	expectEqual(back.profile.pendingPost.postId, "post-3", "second post id round-trips")
+end)
+
+test("A third campaign post (postCount>2) is rejected", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local save = ps:Save(missionInFlight(3, 195), "op-third")
+	expectEqual(save.ok, false, "third post rejected")
+	expectEqual(save.code, "INVALID_PROFILE", "third post code")
+end)
+
+test("postCount of 0 with a mission post in flight is a legal state", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- The count is advanced with the publish that creates the pending post, so
+	-- a freshly accepted mission that publishes immediately records 1. A
+	-- persisted 0 with a post in flight can only come from a write that
+	-- sequenced the two fields differently; it is still structurally sound.
+	local save = ps:Save(missionInFlight(0, 0), "op-zero")
+	expectEqual(save.ok, true, "postCount 0 with in-flight post accepted")
+end)
+
+test("Malformed postCount never raises; it fails validation structurally", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local function reject(label: string, value: any)
+		local p = missionInFlight(1, 75)
+		p.activeMission.postCount = value
+		local save = ps:Save(p, `op-bad-{label}`)
+		expectEqual(save.ok, false, `postCount {label} rejected`)
+		expectEqual(save.code, "INVALID_PROFILE", `postCount {label} code`)
+	end
+	reject("string", "two")
+	reject("boolean", true)
+	reject("table", {})
+	reject("fractional", 1.5)
+	reject("negative", -1)
+	reject("huge", math.huge)
+	reject("nan", 0 / 0)
+end)
+
+test("A readyToClaim mission holds no pending post and its count is final", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- docs/02 lifecycle: resolvingPost -> readyToClaim happens on settlement,
+	-- which clears the pending post. The count stays at its final value.
+	local p = validProfile()
+	p.activeMission = {
+		missionId = "food_stall_launch",
+		runId = "run-1",
+		contextId = "meal_time",
+		status = "readyToClaim",
+		accumulatedImpact = 150,
+		postCount = 2,
+	}
+	local save = ps:Save(p, "op-ready")
+	expectEqual(save.ok, true, "readyToClaim with no pending post accepted")
+	local back = ps:GetConfirmedEnvelope()
+	expectEqual(back.profile.activeMission.postCount, 2, "final count preserved")
+	expectEqual(back.profile.pendingPost, nil, "pending post cleared on readyToClaim")
+end)
+
+-- ===== operationId reuse with a different payload =====
+test("The same operationId with a different payload is INVALID_PROFILE", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local first = validProfile()
+	first.balance = 100
+	expectEqual(ps:Save(first, "op-1").ok, true, "first save ok")
+	-- Same ID, different content: this is a protocol violation, not a replay.
+	local different = validProfile()
+	different.balance = 999
+	local second = ps:Save(different, "op-1")
+	expectEqual(second.ok, false, "same ID with different payload rejected")
+	expectEqual(second.code, "INVALID_PROFILE", "same ID different payload code")
+	local detail: string = second.detail or ""
+	expectTrue(detail:find("different profile payload") ~= nil, "detail names the conflict")
+	-- The backend must still hold the ORIGINAL payload, unmodified.
+	expectEqual(store.data["Player_1234"].profile.balance, 100, "original payload untouched")
+	expectEqual(store.data["Player_1234"].lastSaveOpId, "op-1", "original operation id untouched")
+end)
+
+test("The same operationId with an identical payload still replays", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	expectEqual(ps:Save(validProfile(), "op-1").ok, true, "first save ok")
+	local revBefore = store.data["Player_1234"].revision
+	-- Same ID, same content (a fresh table with equal values): a legitimate
+	-- retry after a lost response must still be idempotent.
+	local retry = ps:Save(validProfile(), "op-1")
+	expectEqual(retry.ok, true, "identical payload retry ok")
+	expectEqual(retry.revision, revBefore, "identical payload retry does not bump revision")
+	expectEqual(store.data["Player_1234"].revision, revBefore, "no durable change on identical retry")
+end)
+
+test("A different operationId with a different payload is a normal save", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	expectEqual(ps:Save(validProfile(), "op-1").ok, true, "first save ok")
+	local changed = validProfile()
+	changed.balance = 4242
+	local second = ps:Save(changed, "op-2")
+	expectEqual(second.ok, true, "distinct ID with distinct payload ok")
+	expectEqual(store.data["Player_1234"].profile.balance, 4242, "new payload persisted")
+end)
+
+-- ===== transient write retry: bounded backoff and lease safety =====
+test("Transient write failures retry with a bounded exponential backoff", function()
+	-- Break writes only AFTER the lease is acquired: a store that fails from the
+	-- first call cannot even Load, and Save would then report LOCKED.
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local opts: any = store.opts
+	opts.failUpdate = true
+	local save = ps:Save(validProfile(), "op-1")
+	expectEqual(save.ok, false, "persistent failure surfaces SAVE_UNAVAILABLE")
+	expectEqual(save.code, "SAVE_UNAVAILABLE", "persistent failure code")
+	-- Bounded: exactly MAX_SAVE_ATTEMPTS-1 sleeps, growing 1s then 2s, then stop.
+	expectEqual(#waitLog, 2, "two backoff sleeps for three attempts")
+	expectEqual(waitLog[1], 1, "first backoff 1s")
+	expectEqual(waitLog[2], 2, "second backoff 2s")
+	-- The loop must not run away: exactly MAX_SAVE_ATTEMPTS save writes, plus
+	-- the single lease-acquiring UpdateAsync that Load performs.
+	expectEqual(store.updateCalls, 1 + 3, `store calls bounded, got {store.updateCalls}`)
+end)
+
+test("A single transient failure recovers after one backoff", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local attempts = 0
+	local realUpdate = store.UpdateAsync
+	store.UpdateAsync = function(self: any, key: string, transform: (any) -> any)
+		attempts += 1
+		if attempts == 1 then
+			error("FakeStore: transient write failure", 0)
+		end
+		return realUpdate(self, key, transform)
+	end
+	local save = ps:Save(validProfile(), "op-1")
+	store.UpdateAsync = realUpdate
+	expectEqual(save.ok, true, "recovers after one transient failure")
+	expectEqual(save.revision, 2, "recovers to revision 2")
+	expectEqual(attempts, 2, "exactly one retry")
+	expectEqual(#waitLog, 1, "one backoff sleep before the retry")
+	expectEqual(waitLog[1], 1, "first backoff is 1s")
+end)
+
+test("Retrying a transient failure never violates lease safety", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local tokenBefore = store.data["Player_1234"].lease.token
+	-- Fail twice so the retry path runs, then succeed.
+	local failures = 0
+	local realUpdate = store.UpdateAsync
+	store.UpdateAsync = function(self: any, key: string, transform: (any) -> any)
+		failures += 1
+		if failures <= 2 then
+			error("FakeStore: transient write failure", 0)
+		end
+		return realUpdate(self, key, transform)
+	end
+	local save = ps:Save(validProfile(), "op-1")
+	store.UpdateAsync = realUpdate
+	expectEqual(save.ok, true, "succeeds on the third attempt")
+	-- The lease token must be preserved across every retry: a retry may never
+	-- re-acquire or release ownership.
+	expectEqual(store.data["Player_1234"].lease.token, tokenBefore, "lease token stable across retries")
+	expectEqual(ps:GetLeaseToken(), tokenBefore, "instance still holds the same lease")
+	expectEqual(save.revision, 2, "revision advanced exactly once")
+	expectEqual(#waitLog, 2, "backoff slept before each retry")
+end)
+
+test("A retry cannot resurrect a lease lost mid-retry", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local realUpdate = store.UpdateAsync
+	local stolen = false
+	store.UpdateAsync = function(self: any, key: string, transform: (any) -> any)
+		if not stolen then
+			stolen = true
+			error("FakeStore: transient write failure", 0)
+		end
+		-- On the retry, another server has taken the lease: the transform must
+		-- abort rather than write with a stale token.
+		self.data[key].lease.token = "stolen-token"
+		return realUpdate(self, key, transform)
+	end
+	local save = ps:Save(validProfile(), "op-1")
+	store.UpdateAsync = realUpdate
+	expectEqual(save.ok, false, "write refused after lease loss")
+	expectEqual(store.data["Player_1234"].lease.token, "stolen-token", "thief's token untouched")
+	expectEqual(store.data["Player_1234"].lastSaveOpId, "init", "no profile write landed")
+end)
+
+-- ===== operationId fingerprinting across a reconnect =====
+-- docs/03: the ring persists {requestId, action, intent, ...} "in the same
+-- conditional write as the mutation" precisely so lookup works AFTER a
+-- reconnect. The same-ID/different-payload guard must therefore survive a
+-- ProfileStore recreation, not silently forget what an earlier session wrote.
+local function instanceOn(backend: any, jobId: string, now: () -> number): any
+	return ProfileStore.new(1234, {
+		store = backend,
+		httpService = FakeHttp,
+		jobId = jobId,
+		now = now,
+		noCacheOptions = function()
+			local getOptions = FakeGetOptions.new()
+			return getOptions:makeNoCache()
+		end,
+		wait = function(seconds: number)
+			table.insert(waitLog, seconds)
+		end,
+	})
+end
+
+test("Equal-value tables in separate allocations fingerprint identically", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local first = validProfile()
+	first.balance = 100
+	expectEqual(ps:Save(first, "op-det").ok, true, "first save ok")
+	local revAfter = store.data["Player_1234"].revision
+	-- A retry after a lost response carries an equal-valued but separately
+	-- allocated table. It must be recognised as the same payload, not rejected.
+	local retry = validProfile()
+	retry.balance = 100
+	local result = ps:Save(retry, "op-det")
+	expectEqual(result.ok, true, "equal-value retry is idempotent")
+	expectEqual(result.revision, revAfter, "equal-value retry does not bump revision")
+end)
+
+test("A reused operationId with a different payload is caught after a reconnect", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local first = validProfile()
+	first.balance = 100
+	first.recentMutationOutcomes = {
+		{
+			requestId = "op-1",
+			action = "BuyDevice",
+			intent = "canonical-intent-op-1",
+			ok = true,
+			code = "OK",
+			revision = 2,
+		},
+	}
+	expectEqual(ps:Save(first, "op-1").ok, true, "session1 save ok")
+	expectEqual(store.data["Player_1234"].profile.balance, 100, "session1 balance persisted")
+	local revBefore = store.data["Player_1234"].revision
+	ps:Release("rel-1")
+
+	-- Reconnect: a brand-new ProfileStore instance with an empty in-memory
+	-- map, loading the same durable ring.
+	local reconnected = instanceOn(store, "job-reconnected", function()
+		return 5241
+	end)
+	local load = reconnected:Load()
+	expectEqual(load.ok, true, "reconnect load ok")
+	expectEqual(load.envelope.profile.balance, 100, "reconnect sees the saved balance")
+
+	-- Reuse the same operationId with a DIFFERENT payload. Without ring
+	-- rehydration this would silently overwrite durable state.
+	local different = validProfile()
+	different.balance = 999
+	local attempt = reconnected:Save(different, "op-1")
+	expectEqual(attempt.ok, false, "reconnect reuse with different payload rejected")
+	expectEqual(attempt.code, "INVALID_PROFILE", "reconnect reuse code")
+	expectEqual(store.data["Player_1234"].profile.balance, 100, "durable balance untouched")
+	expectEqual(store.data["Player_1234"].revision, revBefore, "durable revision untouched")
+end)
+
+test("A fresh operationId still saves normally after a reconnect", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local first = validProfile()
+	first.balance = 100
+	first.recentMutationOutcomes = {
+		{ requestId = "op-1", action = "BuyDevice", intent = "canonical-intent-op-1", ok = true, code = "OK", revision = 2 },
+	}
+	ps:Save(first, "op-1")
+	ps:Release("rel-1")
+
+	local reconnected = instanceOn(store, "job-reconnected", function()
+		return 5241
+	end)
+	reconnected:Load()
+	local changed = validProfile()
+	changed.balance = 777
+	local result = reconnected:Save(changed, "op-2")
+	expectEqual(result.ok, true, "fresh operationId after reconnect ok")
+	expectEqual(store.data["Player_1234"].profile.balance, 777, "new payload persisted")
+end)
+
+test("The in-memory guard still applies within a single session", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local first = validProfile()
+	first.balance = 100
+	expectEqual(ps:Save(first, "op-1").ok, true, "first save ok")
+	local different = validProfile()
+	different.balance = 999
+	local attempt = ps:Save(different, "op-1")
+	expectEqual(attempt.ok, false, "same-session reuse rejected")
+	expectEqual(attempt.code, "INVALID_PROFILE", "same-session reuse code")
+	expectEqual(store.data["Player_1234"].profile.balance, 100, "same-session balance untouched")
 end)
 
 -- ===== constants =====

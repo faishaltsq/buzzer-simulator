@@ -31,6 +31,14 @@ local SCHEMA_VERSION = 1
 local LEASE_DURATION = 240 -- seconds
 local LEASE_RENEW = 90 -- seconds
 local MAX_SAVE_ATTEMPTS = 3 -- bounded retry on ambiguous/failed writes
+-- Exponential backoff between retries: 1s, 2s. docs/03 requires
+-- "budget/backoff" for DataStore writes; a tight loop against a throttled key
+-- only deepens the throttle. Bounded so the lane cannot stall indefinitely.
+local RETRY_BACKOFF_SECONDS = { 1, 2 }
+-- Injectable so specs can observe the schedule without real waiting.
+local function defaultWait(seconds: number)
+	task.wait(seconds)
+end
 
 export type LoadResult = {
 	ok: boolean,
@@ -89,6 +97,8 @@ local function readBackendFresh(store: StoreAdapter, key: string, noCacheOptions
 	return ok, result
 end
 
+-- The only productive device that authorizes a worker station (docs/02).
+local PC_DEVICE_ID = "pc_rumah"
 -- Catalog lookup for the device-ownership invariant. The public catalog is
 -- shared data, so validation can consult it without touching private affinities.
 local function isKnownDevice(deviceId: any): boolean
@@ -411,6 +421,16 @@ local function validateProfile(profile: any, problems: { string})
 		end
 	end
 
+	-- Worker PC prerequisite (docs/03 invariants: "workers occupy distinct
+	-- paid slots 1..2 and require PC"; docs/02: "worker cannot be hired without
+	-- a PC, tier, paid desk, free seat, and funds"). A worker on a phone-only
+	-- profile is corrupt: the server refuses the hire, so it can never have been
+	-- written by a legitimate command.
+	if typeof(profile.workers) == "table" and #profile.workers > 0 then
+		if profile.deviceId ~= PC_DEVICE_ID then
+			table.insert(problems, `workers require the PC ({PC_DEVICE_ID}); equipped device is {tostring(profile.deviceId)}`)
+		end
+	end
 	-- Pending-post / active-mission consistency. docs/02 lifecycle:
 	--   available -> accepted -> resolvingPost -> accepted (impact short)
 	--                                        -> readyToClaim -> claimed
@@ -418,17 +438,40 @@ local function validateProfile(profile: any, problems: { string})
 	-- resolvingPost status must have that post in flight, and a mission post
 	-- may not exceed the two-post cap. Organic posts are independent and may
 	-- coexist with any mission state.
+	--
+	-- postCount semantics (Codex frozen contract, docs/03 action table):
+	--   PublishPost admits only while postCount < 2, and docs/03 invariants
+	--   allow "no more than two campaign posts/run". So postCount counts posts
+	--   ALREADY PUBLISHED for the run, including the one currently in flight:
+	--     postCount = 0  -> accepted, no post yet
+	--     postCount = 1  -> resolvingPost: the FIRST campaign post is in flight
+	--     postCount = 2  -> resolvingPost: the SECOND (final) post is in flight
+	--   A third post can never be admitted, so postCount = 2 with a mission
+	--   pending post is the last legal in-flight state; the cap guard below
+	--   rejects anything beyond it. The count is not incremented again on
+	--   settlement -- settlement moves the status, not the count.
 	local activeMission = profile.activeMission
 	local pendingPost = profile.pendingPost
 	local hasMission = activeMission ~= nil and typeof(activeMission) == "table"
 	local hasPost = pendingPost ~= nil and typeof(pendingPost) == "table"
+	-- postCount is read here and below. A malformed value (string, boolean,
+	-- table) must surface as a structured problem from validateActiveMission,
+	-- never as a runtime comparison error, so the cross-field pass only reads it
+	-- once it has been type-checked.
+	local missionPostCount: number? = nil
+	if hasMission and isNonNegativeInteger((activeMission :: any).postCount) then
+		missionPostCount = asNumber((activeMission :: any).postCount)
+	end
 	if hasMission and hasPost then
 		if pendingPost.mode == "mission" then
 			if not isNonEmptyString(pendingPost.missionRunId) then
 				table.insert(problems, "mission pending post requires missionRunId")
 			elseif (activeMission :: any).runId ~= pendingPost.missionRunId then
 				table.insert(problems, "mission pending post runId must match the active mission")
-			elseif asNumber((activeMission :: any).postCount) >= 2 then
+			elseif missionPostCount ~= nil and missionPostCount > 2 then
+				-- The cap is on PUBLISHED posts per run, and PublishPost admits
+				-- while postCount < 2. So postCount == 2 with a mission post in
+				-- flight is the legal SECOND (final) post; only > 2 is corrupt.
 				table.insert(problems, "mission pending post exceeds the two-post cap")
 			end
 		end
@@ -556,9 +599,15 @@ function ProfileStore.new(userId: number, opts: ProfileStoreOptions?): ProfileSt
 	self._now = (opts and opts.now) or function()
 		return workspace:GetServerTimeNow()
 	end
+	self._wait = (opts and opts.wait) or defaultWait
 	self._leaseToken = nil :: string?
 	self._envelope = nil :: any? -- last confirmed in-memory envelope
 	self._lastConfirmedRevision = 0
+	-- operationId -> fingerprint of the profile it durably wrote. Lets a
+	-- same-ID/different-payload call be rejected as INVALID_INPUT instead of
+	-- silently replaying the first payload (docs/03: "An identical request ID
+	-- with different action/payload is INVALID_INPUT, not a replay").
+	self._opPayloads = {} :: { [string]: string }
 	return self
 end
 
@@ -570,9 +619,11 @@ export type ProfileStoreInstance = {
 	_noCacheOptions: () -> any,
 	_jobId: string,
 	_now: () -> number,
+	_wait: (number) -> (),
 	_leaseToken: string?,
 	_envelope: any?,
 	_lastConfirmedRevision: number,
+	_opPayloads: { [string]: string },
 }
 export type ProfileStoreOptions = {
 	store: StoreAdapter?, -- injected DataStore adapter (specs)
@@ -580,10 +631,41 @@ export type ProfileStoreOptions = {
 	noCacheOptions: (() -> any)?, -- injected DataStoreGetOptions factory (specs)
 	jobId: string?, -- server identity recorded in the lease
 	now: (() -> number)?, -- epoch-second clock (specs inject a fake)
+	wait: ((number) -> ())?, -- retry sleep (specs inject a fake)
 }
 
 local function generateToken(httpService: any): string
 	return httpService:GenerateGUID(false)
+end
+
+-- Seed the in-memory operationId -> payload map from the durable outcome ring
+-- after a load/reconnect. docs/03: the ring persists
+-- {requestId, action, intent, ...} where intent is "the canonical bounded
+-- action+payload", written in the same conditional write as the mutation, so
+-- the same-ID/different-payload guard keeps working across a reconnect rather
+-- than silently forgetting what an earlier session wrote.
+local function seedOpPayloadsFromRing(instance: any)
+	local envelope = instance._envelope
+	if envelope == nil or typeof(envelope) ~= "table" then
+		return
+	end
+	local profile = envelope.profile
+	if profile == nil or typeof(profile) ~= "table" then
+		return
+	end
+	local ring = profile.recentMutationOutcomes
+	if ring == nil or typeof(ring) ~= "table" then
+		return
+	end
+	for _, outcome in ipairs(ring) do
+		if typeof(outcome) == "table" then
+			local requestId = (outcome :: any).requestId
+			local intent = (outcome :: any).intent
+			if isNonEmptyString(requestId) and isNonEmptyString(intent) then
+				instance._opPayloads[requestId] = intent
+			end
+		end
+	end
 end
 
 -- ===== Load =====
@@ -659,6 +741,7 @@ function ProfileStore:Load(): LoadResult
 	self._leaseToken = token
 	self._envelope = deepCopy(result)
 	self._lastConfirmedRevision = result.revision
+	seedOpPayloadsFromRing(self)
 	return { ok = true, code = "OK", envelope = deepCopy(result) }
 end
 
@@ -694,7 +777,46 @@ function ProfileStore:_acquireFreshLease(): LoadResult
 	self._leaseToken = token
 	self._envelope = deepCopy(result)
 	self._lastConfirmedRevision = result.revision
+	seedOpPayloadsFromRing(self)
 	return { ok = true, code = "OK", envelope = deepCopy(result) }
+end
+
+-- Deterministic fingerprint of a profile payload. Used to detect an
+-- operationId being reused with DIFFERENT content, which must be
+-- INVALID_INPUT rather than a silent replay. JSONEncode normalizes key order;
+-- the type tag distinguishes 1 from "1" and true.
+-- Structural digest used only if JSONEncode is unavailable. It must be
+-- value-based (never table identity) so an identical payload re-sent in a new
+-- table still produces the same digest and a legitimate retry stays idempotent.
+local function structuralDigest(value: any, depth: number): string
+	if depth > 8 then
+		return "..."
+	end
+	local t = typeof(value)
+	if t == "table" then
+		local keys = {}
+		for k in pairs(value) do
+			table.insert(keys, tostring(k))
+		end
+		table.sort(keys)
+		local parts = {}
+		for _, k in ipairs(keys) do
+			table.insert(parts, k .. "=" .. structuralDigest((value :: any)[k], depth + 1))
+		end
+		return "{" .. table.concat(parts, ",") .. "}"
+	end
+	return t .. ":" .. tostring(value)
+end
+
+
+local function fingerprintProfile(httpService: any, profile: any): string
+	local ok, encoded = pcall(function()
+		return httpService:JSONEncode(profile)
+	end)
+	if ok then
+		return encoded :: string
+	end
+	return "digest:" .. structuralDigest(profile, 0)
 end
 
 -- ===== Save =====
@@ -716,6 +838,24 @@ function ProfileStore:Save(profile: any, operationId: string): SaveResult
 	if #profileProblems > 0 then
 		return { ok = false, code = "INVALID_PROFILE", detail = table.concat(profileProblems, "; ") }
 	end
+	-- Same operationId with a different payload is a protocol violation, not a
+	-- replay. Reject it before touching the store so a caller can never read a
+	-- success-shaped reply as confirmation of the new payload.
+	--
+	-- The known fingerprint is either one this instance recorded, or the
+	-- `intent` rehydrated from the durable outcome ring (see
+	-- seedOpPayloadsFromRing), so the guard survives a reconnect. Callers must
+	-- write the ring's intent with the same canonical encoding this produces.
+	local fingerprint = fingerprintProfile(self._httpService, profile)
+	local knownFingerprint = self._opPayloads[operationId]
+	if knownFingerprint ~= nil and knownFingerprint ~= fingerprint then
+		return {
+			ok = false,
+			code = "INVALID_PROFILE",
+			detail = `operationId {operationId} was already used for a different profile payload`,
+		}
+	end
+	self._opPayloads[operationId] = fingerprint
 	local token = self._leaseToken
 	local expectedRevision = self._lastConfirmedRevision
 	local now = self._now()
@@ -752,7 +892,15 @@ function ProfileStore:Save(profile: any, operationId: string): SaveResult
 		end)
 		if not writeOk then
 			lastDetail = tostring(result)
-			-- Ambiguous failure (throttle/timeout): retry same operationId.
+			-- Ambiguous failure (throttle/timeout): retry with the SAME
+			-- operationId so a landed write is recognised as idempotent, after
+			-- a bounded backoff so a throttled key is not hammered.
+			if attempt < MAX_SAVE_ATTEMPTS then
+				local backoff = RETRY_BACKOFF_SECONDS[attempt]
+				if backoff ~= nil then
+					self._wait(backoff)
+				end
+			end
 			continue
 		end
 		if result == nil then
@@ -831,6 +979,12 @@ function ProfileStore:Release(operationId: string): ReleaseResult
 		end)
 		if not writeOk then
 			lastDetail = tostring(result)
+			if attempt < MAX_SAVE_ATTEMPTS then
+				local backoff = RETRY_BACKOFF_SECONDS[attempt]
+				if backoff ~= nil then
+					self._wait(backoff)
+				end
+			end
 			continue
 		end
 		if result == nil then
