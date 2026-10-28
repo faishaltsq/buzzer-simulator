@@ -473,6 +473,14 @@ local function validateProfile(profile: any, problems: { string})
 				-- while postCount < 2. So postCount == 2 with a mission post in
 				-- flight is the legal SECOND (final) post; only > 2 is corrupt.
 				table.insert(problems, "mission pending post exceeds the two-post cap")
+			elseif missionPostCount ~= nil and missionPostCount < 1 then
+				-- PublishPost writes the pending post and the incremented count
+				-- in ONE durable save (docs/03 action table; docs/02: "persists
+				-- the pending post before replying"). A mission post in flight
+				-- therefore always implies postCount >= 1; a persisted 0 means
+				-- the atomic transition was split, which the contract does not
+				-- permit.
+				table.insert(problems, "mission pending post requires postCount >= 1")
 			end
 		end
 	end
@@ -608,6 +616,7 @@ function ProfileStore.new(userId: number, opts: ProfileStoreOptions?): ProfileSt
 	-- silently replaying the first payload (docs/03: "An identical request ID
 	-- with different action/payload is INVALID_INPUT, not a replay").
 	self._opPayloads = {} :: { [string]: string }
+	self._durableIntents = {} :: { [string]: string? }
 	return self
 end
 
@@ -624,6 +633,7 @@ export type ProfileStoreInstance = {
 	_envelope: any?,
 	_lastConfirmedRevision: number,
 	_opPayloads: { [string]: string },
+	_durableIntents: { [string]: string? },
 }
 export type ProfileStoreOptions = {
 	store: StoreAdapter?, -- injected DataStore adapter (specs)
@@ -638,12 +648,35 @@ local function generateToken(httpService: any): string
 	return httpService:GenerateGUID(false)
 end
 
--- Seed the in-memory operationId -> payload map from the durable outcome ring
--- after a load/reconnect. docs/03: the ring persists
--- {requestId, action, intent, ...} where intent is "the canonical bounded
--- action+payload", written in the same conditional write as the mutation, so
--- the same-ID/different-payload guard keeps working across a reconnect rather
--- than silently forgetting what an earlier session wrote.
+-- ===== identifier responsibilities (docs/03) =====
+-- Two distinct questions must never be conflated:
+--
+--   1. CLIENT-REQUEST identity: "is this the same command being retried?"
+--      Answered by `intent` -- "the canonical bounded action+payload"
+--      (docs/03). Persisted in the bounded 32-entry recentMutationOutcomes ring
+--      in the same write as the mutation, so the answer survives a reconnect.
+--      Owned by the caller (SessionService in BS-04), which knows the action
+--      and payload; ProfileStore only validates and stores it.
+--
+--   2. TRANSACTION identity: "is this the exact durable state this
+--      operationId wrote?" Answered by a whole-profile fingerprint. This is
+--      only meaningful while a write is in flight or being reconciled within
+--      the same session, so it stays per-instance in memory. It is NOT
+--      persisted, because the durable answer to question 1 is already carried
+--      by `intent`, and persisting a second copy would add redundant state to
+--      the frozen v1 schema.
+--
+-- `lastSaveOpId` is the durable single-slot marker for the most recent
+-- server-owned write; it is what makes an ambiguous response idempotent, and
+-- it is deliberately NOT a client request ID (docs/03: "Server-owned
+-- settlement/bank operation IDs stay in the existing last-save/settlement
+-- reconciliation path, not in the client-request ring").
+--
+-- Consequence: after a reconnect, ProfileStore can no longer answer question 2
+-- for an ID it did not itself write in this session. Rather than guess (which
+-- would either falsely accept a different payload or falsely reject a
+-- legitimate retry), it defers to the durable `intent` comparison the caller
+-- performs, and to `lastSaveOpId` for idempotency.
 local function seedOpPayloadsFromRing(instance: any)
 	local envelope = instance._envelope
 	if envelope == nil or typeof(envelope) ~= "table" then
@@ -657,12 +690,17 @@ local function seedOpPayloadsFromRing(instance: any)
 	if ring == nil or typeof(ring) ~= "table" then
 		return
 	end
+	-- Record the durable client-request identities so a retransmitted command
+	-- can be recognised as a replay. `intent` is stored verbatim: it is the
+	-- caller's canonical action+payload encoding, and ProfileStore compares
+	-- like with like (intent vs intent), never intent vs a profile fingerprint.
 	for _, outcome in ipairs(ring) do
 		if typeof(outcome) == "table" then
 			local requestId = (outcome :: any).requestId
 			local intent = (outcome :: any).intent
-			if isNonEmptyString(requestId) and isNonEmptyString(intent) then
-				instance._opPayloads[requestId] = intent
+			if isNonEmptyString(requestId) then
+				instance._durableIntents = instance._durableIntents or {}
+				instance._durableIntents[requestId] = if isNonEmptyString(intent) then intent else nil
 			end
 		end
 	end
@@ -826,7 +864,11 @@ end
 -- the write short-circuits unchanged (idempotent ambiguous-retry path).
 -- profile: the full validated v1 profile to persist.
 -- operationId: stable ID for this logical save (retries reuse it).
-function ProfileStore:Save(profile: any, operationId: string): SaveResult
+-- `intent` is the caller's canonical action+payload for this request
+-- (docs/03). It is optional: when supplied, a reconnect-safe check rejects a
+-- requestId that the durable ring already recorded under a DIFFERENT intent.
+-- When omitted, only the per-session transaction check applies.
+function ProfileStore:Save(profile: any, operationId: string, intent: string?): SaveResult
 	if self._leaseToken == nil then
 		return { ok = false, code = "LOCKED", detail = "no lease held; Load first" }
 	end
@@ -838,14 +880,16 @@ function ProfileStore:Save(profile: any, operationId: string): SaveResult
 	if #profileProblems > 0 then
 		return { ok = false, code = "INVALID_PROFILE", detail = table.concat(profileProblems, "; ") }
 	end
-	-- Same operationId with a different payload is a protocol violation, not a
-	-- replay. Reject it before touching the store so a caller can never read a
-	-- success-shaped reply as confirmation of the new payload.
+	-- TRANSACTION identity: if this session already wrote this operationId, the
+	-- payload must be byte-identical or it is a protocol violation. Rejecting
+	-- before touching the store means a caller can never read a success-shaped
+	-- reply as confirmation of a mutation that did not land.
 	--
-	-- The known fingerprint is either one this instance recorded, or the
-	-- `intent` rehydrated from the durable outcome ring (see
-	-- seedOpPayloadsFromRing), so the guard survives a reconnect. Callers must
-	-- write the ring's intent with the same canonical encoding this produces.
+	-- This check is deliberately per-session. After a reconnect this instance
+	-- has no record of what an earlier session wrote, and the durable `intent`
+	-- in the outcome ring is a DIFFERENT encoding (action+payload, not the
+	-- whole profile) -- comparing the two would be a category error that
+	-- rejects legitimate retries. See the identifier-responsibility note above.
 	local fingerprint = fingerprintProfile(self._httpService, profile)
 	local knownFingerprint = self._opPayloads[operationId]
 	if knownFingerprint ~= nil and knownFingerprint ~= fingerprint then
@@ -856,6 +900,22 @@ function ProfileStore:Save(profile: any, operationId: string): SaveResult
 		}
 	end
 	self._opPayloads[operationId] = fingerprint
+	-- CLIENT-REQUEST identity: if the durable ring already recorded this
+	-- requestId under a different intent, this is a reused ID for different
+	-- content. docs/03: "An identical request ID with different action/payload
+	-- is INVALID_INPUT, not a replay." This is the reconnect-safe half of the
+	-- guard, because the ring survives a reconnect while the in-memory
+	-- transaction map does not.
+	if intent ~= nil then
+		local durableIntent = self._durableIntents and self._durableIntents[operationId]
+		if durableIntent ~= nil and durableIntent ~= intent then
+			return {
+				ok = false,
+				code = "INVALID_PROFILE",
+				detail = `requestId {operationId} was already applied with a different intent`,
+			}
+		end
+	end
 	local token = self._leaseToken
 	local expectedRevision = self._lastConfirmedRevision
 	local now = self._now()
@@ -914,7 +974,25 @@ function ProfileStore:Save(profile: any, operationId: string): SaveResult
 				continue
 			end
 			if typeof(current) == "table" and current.lastSaveOpId == operationId then
-				-- Already durably applied by an earlier ambiguous attempt.
+				-- Already durably applied. Distinguish two cases that both look
+				-- like "no write needed":
+				--   (a) the caller is retrying the SAME payload (a legitimate
+				--       replay after a lost response, possibly after a
+				--       reconnect) -> idempotent OK;
+				--   (b) the caller reused this ID for DIFFERENT content -> the
+				--       durable state does not match what was asked for, so
+				--       reporting OK would falsely confirm a mutation that never
+				--       landed. Reject instead.
+				-- The comparison is against the durable profile, which is the
+				-- authoritative record of what this operationId actually wrote.
+				local durableProfile = current.profile
+				if durableProfile ~= nil and fingerprintProfile(self._httpService, durableProfile) ~= fingerprint then
+					return {
+						ok = false,
+						code = "INVALID_PROFILE",
+						detail = `operationId {operationId} was already applied to a different profile payload`,
+					}
+				end
 				self._envelope = deepCopy(current)
 				self._lastConfirmedRevision = current.revision
 				self._leaseToken = current.lease and current.lease.token or self._leaseToken

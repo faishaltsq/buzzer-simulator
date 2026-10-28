@@ -1249,15 +1249,23 @@ test("A third campaign post (postCount>2) is rejected", function()
 	expectEqual(save.code, "INVALID_PROFILE", "third post code")
 end)
 
-test("postCount of 0 with a mission post in flight is a legal state", function()
+-- DECISION (postCount = 0 with a mission post in flight): REJECTED.
+-- Justification: docs/03's PublishPost row admits the command while
+-- `postCount < 2` and performs ONE durable save that both freezes the outcome
+-- and creates the pending post; docs/02 adds that the server "persists the
+-- pending post before replying". The count and the pending post are therefore
+-- written in the same atomic write, so a mission post in flight always implies
+-- postCount >= 1. A persisted 0 alongside an in-flight mission post can only
+-- arise from a write that split the two fields, which the contract does not
+-- permit -- it is corrupt state, not a recoverable one. Rejecting it is
+-- consistent with the frozen lifecycle and does not affect the legitimate
+-- two-weak-post journey, which runs 0 -> 1 -> 2.
+test("postCount of 0 with a mission post in flight contradicts the atomic publish", function()
 	local _, ps = newStore(makeClock(5000), nil)
 	ps:Load()
-	-- The count is advanced with the publish that creates the pending post, so
-	-- a freshly accepted mission that publishes immediately records 1. A
-	-- persisted 0 with a post in flight can only come from a write that
-	-- sequenced the two fields differently; it is still structurally sound.
 	local save = ps:Save(missionInFlight(0, 0), "op-zero")
-	expectEqual(save.ok, true, "postCount 0 with in-flight post accepted")
+	expectEqual(save.ok, false, "postCount 0 with in-flight post rejected")
+	expectEqual(save.code, "INVALID_PROFILE", "postCount 0 code")
 end)
 
 test("Malformed postCount never raises; it fails validation structurally", function()
@@ -1469,28 +1477,40 @@ test("Equal-value tables in separate allocations fingerprint identically", funct
 	expectEqual(result.revision, revAfter, "equal-value retry does not bump revision")
 end)
 
-test("A reused operationId with a different payload is caught after a reconnect", function()
+-- ===== identifier contract: requestId vs transaction identity =====
+-- docs/03 separates two questions that must never be conflated:
+--   * CLIENT-REQUEST identity -- `intent`, "the canonical bounded
+--     action+payload", persisted in the 32-entry ring so it survives a
+--     reconnect. "An identical request ID with different action/payload is
+--     INVALID_INPUT, not a replay."
+--   * TRANSACTION identity -- the whole-profile fingerprint, per-session,
+--     answering "is this the exact durable state this operationId wrote?".
+-- Comparing one against the other is a category error.
+local INTENT_BUY_FAST = "BuyDevice|{\"deviceId\":\"phone_fast\"}"
+local INTENT_BUY_PC = "BuyDevice|{\"deviceId\":\"pc_rumah\"}"
+
+test("A reused requestId with a different intent is rejected after a reconnect", function()
 	local store, ps = newStore(makeClock(5000), nil)
 	ps:Load()
 	local first = validProfile()
 	first.balance = 100
 	first.recentMutationOutcomes = {
 		{
-			requestId = "op-1",
+			requestId = "mut-0001",
 			action = "BuyDevice",
-			intent = "canonical-intent-op-1",
+			intent = INTENT_BUY_FAST,
 			ok = true,
 			code = "OK",
 			revision = 2,
 		},
 	}
-	expectEqual(ps:Save(first, "op-1").ok, true, "session1 save ok")
+	expectEqual(ps:Save(first, "mut-0001", INTENT_BUY_FAST).ok, true, "session1 save ok")
 	expectEqual(store.data["Player_1234"].profile.balance, 100, "session1 balance persisted")
 	local revBefore = store.data["Player_1234"].revision
 	ps:Release("rel-1")
 
-	-- Reconnect: a brand-new ProfileStore instance with an empty in-memory
-	-- map, loading the same durable ring.
+	-- Reconnect: a brand-new instance whose in-memory transaction map is empty,
+	-- rehydrating client-request identity from the durable ring.
 	local reconnected = instanceOn(store, "job-reconnected", function()
 		return 5241
 	end)
@@ -1498,15 +1518,95 @@ test("A reused operationId with a different payload is caught after a reconnect"
 	expectEqual(load.ok, true, "reconnect load ok")
 	expectEqual(load.envelope.profile.balance, 100, "reconnect sees the saved balance")
 
-	-- Reuse the same operationId with a DIFFERENT payload. Without ring
-	-- rehydration this would silently overwrite durable state.
+	-- Same requestId, DIFFERENT intent: a reused ID for different content.
+	-- docs/03 requires INVALID_INPUT, and the durable state must not move.
 	local different = validProfile()
 	different.balance = 999
-	local attempt = reconnected:Save(different, "op-1")
-	expectEqual(attempt.ok, false, "reconnect reuse with different payload rejected")
+	local attempt = reconnected:Save(different, "mut-0001", INTENT_BUY_PC)
+	expectEqual(attempt.ok, false, "reconnect reuse with different intent rejected")
 	expectEqual(attempt.code, "INVALID_PROFILE", "reconnect reuse code")
 	expectEqual(store.data["Player_1234"].profile.balance, 100, "durable balance untouched")
 	expectEqual(store.data["Player_1234"].revision, revBefore, "durable revision untouched")
+end)
+
+test("An identical retry with the same intent is idempotent after a reconnect", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local first = validProfile()
+	first.balance = 100
+	first.recentMutationOutcomes = {
+		{
+			requestId = "mut-0001",
+			action = "BuyDevice",
+			intent = INTENT_BUY_FAST,
+			ok = true,
+			code = "OK",
+			revision = 2,
+		},
+	}
+	ps:Save(first, "mut-0001", INTENT_BUY_FAST)
+	ps:Release("rel-1")
+
+	local reconnected = instanceOn(store, "job-reconnected", function()
+		return 5241
+	end)
+	reconnected:Load()
+	-- The client retransmits the identical command after a lost reply. This is
+	-- a legitimate replay and must be accepted, not rejected as a mismatch.
+	local retry = validProfile()
+	retry.balance = 100
+	retry.recentMutationOutcomes = first.recentMutationOutcomes
+	local result = reconnected:Save(retry, "mut-0001", INTENT_BUY_FAST)
+	expectEqual(result.ok, true, "identical retry after reconnect accepted")
+	expectEqual(result.code, "OK", "identical retry code")
+	expectEqual(store.data["Player_1234"].profile.balance, 100, "durable balance unchanged")
+end)
+
+test("Equivalent tables with different key insertion order fingerprint identically", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local a = validProfile()
+	a.balance = 100
+	expectEqual(ps:Save(a, "op-order").ok, true, "first save ok")
+	local revAfter = store.data["Player_1234"].revision
+	-- Same values, different construction order. JSONEncode normalises key
+	-- order, so this must be recognised as the same payload.
+	local b = validProfile()
+	b.nextPostSequence = 1
+	b.ownPosts = {}
+	b.pendingPost = nil
+	b.activeMission = nil
+	b.nextOrganicSequence = 0
+	b.missionVariantCounters = {}
+	b.recentMutationOutcomes = {}
+	b.claimedRunIdsWindow = {}
+	b.fractionalIncome = 0
+	b.workers = {}
+	b.ownedDesks = {}
+	b.propertyId = "bedroom"
+	b.deviceId = "phone_cheap"
+	b.completedMissions = 1
+	b.lifetimeEarned = 110
+	b.balance = 100
+	local result = ps:Save(b, "op-order")
+	expectEqual(result.ok, true, "reordered-key retry is idempotent")
+	expectEqual(result.revision, revAfter, "reordered-key retry does not bump revision")
+end)
+
+test("A save without an intent keeps per-session transaction identity only", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local first = validProfile()
+	first.balance = 100
+	expectEqual(ps:Save(first, "op-1").ok, true, "first save ok")
+	-- Same session, same ID, different payload: still caught by the in-memory
+	-- transaction check even though no intent was supplied.
+	local different = validProfile()
+	different.balance = 999
+	local attempt = ps:Save(different, "op-1")
+	expectEqual(attempt.ok, false, "same-session different payload rejected")
+	expectEqual(attempt.code, "INVALID_PROFILE", "same-session code")
+	expectEqual(store.data["Player_1234"].profile.balance, 100, "durable balance untouched")
 end)
 
 test("A fresh operationId still saves normally after a reconnect", function()
@@ -1543,6 +1643,229 @@ test("The in-memory guard still applies within a single session", function()
 	expectEqual(attempt.ok, false, "same-session reuse rejected")
 	expectEqual(attempt.code, "INVALID_PROFILE", "same-session reuse code")
 	expectEqual(store.data["Player_1234"].profile.balance, 100, "same-session balance untouched")
+end)
+
+-- ===== mission lifecycle journey (docs/02) =====
+-- The full two-weak-post journey must remain persistable at every step, and
+-- each transition must match the frozen lifecycle:
+--   accepted -> resolvingPost -> accepted (impact short)
+--                            -> readyToClaim -> claimed
+local function missionRun(status: string, postCount: number, accumulated: number, pending: any?): any
+	local p = validProfile()
+	p.activeMission = {
+		missionId = "food_stall_launch",
+		runId = "run-1",
+		contextId = "meal_time",
+		status = status,
+		accumulatedImpact = accumulated,
+		postCount = postCount,
+	}
+	p.pendingPost = pending
+	return p
+end
+
+local function missionPost(postId: string, impact: number, cuan: number): any
+	return {
+		postId = postId,
+		mode = "mission",
+		missionRunId = "run-1",
+		contextId = "meal_time",
+		templateId = "meal_meme",
+		publishedAt = 100,
+		settleAt = 118,
+		finalImpact = impact,
+		organicCuan = cuan,
+	}
+end
+
+test("Mission journey: accept, weak publish, short settle, weak publish, claim-ready", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+
+	-- 1. AcceptMission: postCount 0, nothing pending.
+	expectEqual(ps:Save(missionRun("accepted", 0, 0, nil), "op-accept").ok, true, "accept persists")
+
+	-- 2. PublishPost #1 (weak, 75 < 100): the atomic write sets BOTH the
+	--    pending post and postCount 1.
+	expectEqual(
+		ps:Save(missionRun("resolvingPost", 1, 75, missionPost("post-1", 75, 9)), "op-pub1").ok,
+		true,
+		"first weak post pending persists"
+	)
+
+	-- 3. Settlement of #1: impact short, so status returns to accepted and the
+	--    pending post clears. The count stays 1 -- settlement moves the status,
+	--    not the count.
+	expectEqual(ps:Save(missionRun("accepted", 1, 75, nil), "op-settle1").ok, true, "first weak post settled persists")
+
+	-- 4. PublishPost #2 (weak): admitted because postCount 1 < 2. The atomic
+	--    write sets the pending post and postCount 2.
+	expectEqual(
+		ps:Save(missionRun("resolvingPost", 2, 75, missionPost("post-2", 75, 9)), "op-pub2").ok,
+		true,
+		"second weak post pending persists"
+	)
+
+	-- 5. Settlement of #2: 75 + 75 = 150 >= 100, so readyToClaim with no
+	--    pending post left.
+	local ready = ps:Save(missionRun("readyToClaim", 2, 150, nil), "op-settle2")
+	expectEqual(ready.ok, true, "second weak post settled persists")
+	local back = ps:GetConfirmedEnvelope()
+	expectEqual(back.profile.activeMission.status, "readyToClaim", "status readyToClaim after two weak posts")
+	expectEqual(back.profile.activeMission.accumulatedImpact, 150, "accumulated impact 150")
+	expectEqual(back.profile.activeMission.postCount, 2, "final postCount 2")
+	expectEqual(back.profile.pendingPost, nil, "no pending post once ready to claim")
+end)
+
+test("Mission journey: a strong first post reaches readyToClaim in one publish", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- docs/02: "a strong first always meets requirement". 120 >= 100.
+	local result = ps:Save(missionRun("resolvingPost", 1, 120, missionPost("post-1", 120, 15)), "op-strong")
+	expectEqual(result.ok, true, "strong first post pending persists")
+	local settled = ps:Save(missionRun("readyToClaim", 1, 120, nil), "op-settle")
+	expectEqual(settled.ok, true, "strong post settled to readyToClaim persists")
+end)
+
+test("Mission journey: a pending organic post may coexist with an accepted mission", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- docs/02: "Publishing an organic post while a mission is accepted/ready to
+	-- claim is allowed, but never while any post is resolving."
+	local p = missionRun("accepted", 0, 0, nil)
+	p.pendingPost = {
+		postId = "post-organic",
+		mode = "organic",
+		contextId = "organic_snack",
+		templateId = "snack_meme",
+		publishedAt = 100,
+		settleAt = 118,
+		finalImpact = 100,
+		organicCuan = 15,
+	}
+	local result = ps:Save(p, "op-organic")
+	expectEqual(result.ok, true, "organic pending post alongside accepted mission persists")
+	local back = ps:GetConfirmedEnvelope()
+	expectEqual(back.profile.pendingPost.mode, "organic", "organic post mode preserved")
+	expectEqual(back.profile.activeMission.status, "accepted", "mission still accepted")
+end)
+
+test("Mission journey: an organic pending post may NOT coexist with resolvingPost", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- resolvingPost means THIS mission's post is in flight, so the single
+	-- global pending slot cannot be an organic post at the same time.
+	local p = missionRun("resolvingPost", 1, 75, nil)
+	p.pendingPost = {
+		postId = "post-organic",
+		mode = "organic",
+		contextId = "organic_snack",
+		templateId = "snack_meme",
+		publishedAt = 100,
+		settleAt = 118,
+		finalImpact = 100,
+		organicCuan = 15,
+	}
+	local result = ps:Save(p, "op-mixed")
+	expectEqual(result.ok, false, "organic post during resolvingPost rejected")
+	expectEqual(result.code, "INVALID_PROFILE", "organic during resolvingPost code")
+end)
+
+-- ===== eviction and server-owned identifiers =====
+-- docs/09: "Evicted entries are UNKNOWN, not evidence that retry is safe" and
+-- "UNKNOWN in any session means no automatic retransmit/new-ID mutation".
+-- ProfileStore's part of that contract: a requestId that has fallen out of the
+-- 32-entry ring must NOT be treated as either applied or unapplied -- the
+-- in-memory transaction map is the only thing that can answer for it, and that
+-- is per-session.
+test("An evicted requestId is not treated as applied after a reconnect", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- Fill the ring to its 32-entry bound, then push the target ID out.
+	local ring: { any } = {}
+	for i = 1, 32 do
+		table.insert(ring, {
+			requestId = `mut-old-{i}`,
+			action = "PublishOrganic",
+			intent = "PublishOrganic|{\"templateId\":\"snack_meme\"}",
+			ok = true,
+			code = "OK",
+			revision = 2,
+		})
+	end
+	local first = validProfile()
+	first.balance = 100
+	first.recentMutationOutcomes = ring
+	ps:Save(first, "op-fill")
+	ps:Release("rel-1")
+
+	local reconnected = instanceOn(store, "job-reconnected", function()
+		return 5241
+	end)
+	reconnected:Load()
+	-- A requestId that is NOT in the ring carries no durable identity, so the
+	-- reconnect guard must not fire for it -- it is UNKNOWN, not applied. The
+	-- save proceeds on its own merits (validated profile, valid lease).
+	local fresh = validProfile()
+	fresh.balance = 200
+	local result = reconnected:Save(fresh, "mut-never-seen", "PublishOrganic|{\"templateId\":\"snack_meme\"}")
+	expectEqual(result.ok, true, "unknown requestId is not blocked as a replay")
+	expectEqual(store.data["Player_1234"].profile.balance, 200, "unknown requestId save applies normally")
+end)
+
+test("A full 32-entry ring is accepted and a 33rd entry is rejected", function()
+	local _, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	local ring: { any } = {}
+	for i = 1, 32 do
+		table.insert(ring, {
+			requestId = `mut-{i}`,
+			action = "PublishOrganic",
+			intent = `intent-{i}`,
+			ok = true,
+			code = "OK",
+			revision = 2,
+		})
+	end
+	local full = validProfile()
+	full.recentMutationOutcomes = ring
+	expectEqual(ps:Save(full, "op-full").ok, true, "32-entry ring accepted")
+	local over = validProfile()
+	over.recentMutationOutcomes = table.clone(ring)
+	table.insert(over.recentMutationOutcomes, {
+		requestId = "mut-33",
+		action = "PublishOrganic",
+		intent = "intent-33",
+		ok = true,
+		code = "OK",
+		revision = 2,
+	})
+	local result = ps:Save(over, "op-over")
+	expectEqual(result.ok, false, "33-entry ring rejected")
+	expectEqual(result.code, "INVALID_PROFILE", "33-entry ring code")
+end)
+
+test("Server-owned settlement IDs are distinct from client request IDs", function()
+	local store, ps = newStore(makeClock(5000), nil)
+	ps:Load()
+	-- docs/03: "Server-owned settlement/bank operation IDs stay in the existing
+	-- last-save/settlement reconciliation path, not in the client-request ring."
+	-- A server-owned ID used as a Save operationId must not collide with a
+	-- client requestId recorded in the ring.
+	local first = validProfile()
+	first.balance = 100
+	first.recentMutationOutcomes = {
+		{ requestId = "settle-post-1", action = "PublishOrganic", intent = "server-owned", ok = true, code = "OK", revision = 2 },
+	}
+	expectEqual(ps:Save(first, "settle-post-1").ok, true, "server-owned settlement save ok")
+	local revAfter = store.data["Player_1234"].revision
+	-- Retrying the same server-owned ID with the same payload is idempotent.
+	local retry = validProfile()
+	retry.balance = 100
+	retry.recentMutationOutcomes = first.recentMutationOutcomes
+	local result = ps:Save(retry, "settle-post-1")
+	expectEqual(result.ok, true, "server-owned ID retry idempotent")
+	expectEqual(result.revision, revAfter, "server-owned ID retry does not bump revision")
 end)
 
 -- ===== constants =====
