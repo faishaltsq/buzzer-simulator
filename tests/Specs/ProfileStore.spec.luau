@@ -8,30 +8,68 @@
 local ServerStorage = game:GetService("ServerStorage")
 local ProfileStore = require(ServerStorage:WaitForChild("ProfileStore"))
 
+-- Deep copy for the fake adapter's cache boundary (mirrors the engine's
+-- serialization: the cache holds an independent copy of the value).
+local function deepCopy(value: any): any
+	if typeof(value) ~= "table" then
+		return value
+	end
+	local copy = {}
+	for k, v in pairs(value) do
+		copy[deepCopy(k)] = deepCopy(v)
+	end
+	return copy
+end
+
 -- ===== fake DataStore adapter =====
 -- Mirrors the conditional-write contract: UpdateAsync runs the transform and
 -- only commits when it returns non-nil. Injection knobs reproduce the
 -- ambiguous/failed responses docs/09 requires.
-local FakeStore = {}
+--
+-- It also reproduces the engine's real caching behaviour, because that is
+-- exactly what ambiguous-write reconciliation must survive: GetAsync serves a
+-- local copy for four seconds unless DataStoreGetOptions.UseCache is false.
+-- `data` is the authoritative backend; `cache` is the local copy.
+local FakeStore: any = {}
 FakeStore.__index = FakeStore
 
-function FakeStore.new(opts: { failGet: boolean?, failUpdate: boolean? }?)
+function FakeStore.new(opts: { failGet: boolean?, failUpdate: boolean?, staleCache: boolean? }?)
 	local self = setmetatable({}, FakeStore)
 	self.data = {} :: { [string]: any }
+	self.cache = {} :: { [string]: { value: any, storedAt: number } }
 	self.opts = opts or {}
 	self.updateCalls = 0
 	self.getCalls = 0
+	self.freshGetCalls = 0 -- backend-fresh reads only (UseCache=false)
+	self.clock = function()
+		return 5000
+	end
 	return self
 end
--- (fields are declared on the class table below; Luau infers them read-only
--- from the constructor literal, so the increment sites cast self to any.)
 
-function FakeStore:GetAsync(key: string)
+function FakeStore:GetAsync(key: string, options: any?)
 	(self :: any).getCalls += 1
 	if self.opts.failGet then
 		error("FakeStore: injected read failure", 0)
 	end
-	return self.data[key]
+	local useCache = true
+	if options ~= nil then
+		-- DataStoreGetOptions.UseCache = false bypasses the local cache.
+		useCache = options.UseCache ~= false
+	end
+	if useCache then
+		local entry: any = self.cache[key]
+		if entry ~= nil and (self.clock() - entry.storedAt) < 4 then
+			return entry.value
+		end
+	end
+	(self :: any).freshGetCalls += 1
+	local value = self.data[key]
+	-- A backend read refreshes the local cache. The engine caches a serialized
+	-- COPY, not a live reference, so a later mutation of the backend table must
+	-- not be visible through the cache (that is what makes a cached read stale).
+	self.cache[key] = { value = deepCopy(value), storedAt = self.clock() }
+	return value
 end
 
 function FakeStore:UpdateAsync(key: string, transform: (any) -> any)
@@ -43,13 +81,31 @@ function FakeStore:UpdateAsync(key: string, transform: (any) -> any)
 	local result = transform(old)
 	if result ~= nil then
 		self.data[key] = result
+		-- A committed write refreshes the local cache copy too (again a copy,
+		-- matching the engine's serialization boundary).
+		self.cache[key] = { value = deepCopy(result), storedAt = self.clock() }
 	end
 	return result
 end
 
 function FakeStore:RemoveAsync(key: string)
 	self.data[key] = nil
+	self.cache[key] = nil
 	return true
+end
+
+-- Test-only: seed a stale local cache entry, as if another server had written
+-- the backend after our last read.
+function FakeStore:seedStaleCache(key: string, value: any)
+	self.cache[key] = { value = value, storedAt = self.clock() }
+end
+
+-- Test-only: drop the local cache entry for a key, as if the four-second
+-- window had elapsed. Used when a test mutates the backend directly and wants
+-- the next read to observe it (the engine would serve the cached copy until
+-- the window expires).
+function FakeStore:invalidateCache(key: string)
+	self.cache[key] = nil
 end
 
 -- Fake HttpService for deterministic lease tokens.
@@ -57,6 +113,20 @@ local FakeHttp = {}
 function FakeHttp:GenerateGUID(_wrapInBraces: boolean?): string
 	FakeHttp._counter = (FakeHttp._counter or 0) + 1
 	return `fake-token-{FakeHttp._counter}`
+end
+
+-- DataStoreGetOptions stand-in. Records the last UseCache flag so tests can
+-- prove the reconciliation path asked for a backend-fresh read rather than a
+-- possibly-stale cached one.
+local FakeGetOptions = {}
+FakeGetOptions.__index = FakeGetOptions
+function FakeGetOptions.new(): any
+	return setmetatable({ UseCache = true, seen = {} }, FakeGetOptions)
+end
+function FakeGetOptions:makeNoCache()
+	self.UseCache = false
+	table.insert(self.seen, false)
+	return self
 end
 
 -- ===== harness =====
@@ -107,13 +177,20 @@ local function validProfile(): any
 	}
 end
 
-local function newStore(clock: () -> number, opts: { failGet: boolean?, failUpdate: boolean? }?): (any, any)
+local function newStore(clock: () -> number, opts: { failGet: boolean?, failUpdate: boolean?, staleCache: boolean? }?): (any, any)
 	local store = FakeStore.new(opts)
+	-- The fake adapter's cache must age on the same clock the store reads, so
+	-- a test can advance time and observe real four-second cache expiry.
+	store.clock = clock
+	local getOptions = FakeGetOptions.new()
 	return store, ProfileStore.new(1234, {
 		store = store,
 		httpService = FakeHttp,
 		jobId = "job-test",
 		now = clock,
+		noCacheOptions = function()
+			return getOptions:makeNoCache()
+		end,
 	})
 end
 
@@ -136,8 +213,11 @@ test("Load validates the v1 envelope before handing it out", function()
 	local now = makeClock(5000)
 	local store, ps = newStore(now)
 	ps:Load()
-	-- corrupt the stored shape behind the store's back
+	-- corrupt the stored shape behind the store's back, and drop the cache
+	-- entry so the next read actually observes the corruption (a still-fresh
+	-- cache entry would legitimately serve the old valid copy for up to 4s).
 	store.data["Player_1234"].profile = "not-a-table"
+	store:invalidateCache("Player_1234")
 	local ps2 = ProfileStore.new(1234, {
 		store = store,
 		httpService = FakeHttp,
@@ -486,13 +566,16 @@ test("A fully populated v1 profile round-trips unchanged", function()
 		},
 	}
 	p.missionVariantCounters = { food_stall_launch = 1 }
+	-- resolvingPost: one weak post settled (75) and a second is in flight.
+	-- docs/02 lifecycle: accepted -> resolvingPost -> readyToClaim, so a
+	-- resolvingPost mission always has its matching pending post.
 	p.activeMission = {
 		missionId = "food_stall_launch",
 		runId = "run-3",
 		contextId = "meal_time",
-		status = "readyToClaim",
-		accumulatedImpact = 120,
-		postCount = 2,
+		status = "resolvingPost",
+		accumulatedImpact = 75,
+		postCount = 1,
 	}
 	p.pendingPost = {
 		postId = "post-2",
@@ -524,7 +607,7 @@ test("A fully populated v1 profile round-trips unchanged", function()
 	expectEqual(back.profile.workers[2].hireId, "hire-2", "worker hireId round-trips")
 	expectEqual(back.profile.pendingPost.mode, "mission", "pending post mode round-trips")
 	expectEqual(back.profile.pendingPost.missionRunId, "run-3", "mission run id round-trips")
-	expectEqual(back.profile.activeMission.status, "readyToClaim", "mission status round-trips")
+	expectEqual(back.profile.activeMission.status, "resolvingPost", "mission status round-trips")
 	expectEqual(back.profile.recentMutationOutcomes[1].resultIds[1], "post-1", "result ids round-trip")
 	expectEqual(back.profile.nextPostSequence, 3, "sequence round-trips")
 end)
@@ -623,6 +706,446 @@ test("_validateEnvelope accepts a well-formed envelope and rejects tampering", f
 	local future = ProfileStore._deepCopy(good)
 	future.schemaVersion = 2
 	expectEqual(ProfileStore._validateEnvelope(future), false, "future schema fails validation")
+end)
+
+-- ===== ambiguous-write reconciliation uses a backend-fresh read =====
+-- docs: "For immediate verification reads after a write, use GetAsync() with
+-- DataStoreGetOptions.UseCache = false. By default, GetAsync() uses a local
+-- four-second cache, so a normal verification read can return stale data."
+test("Ambiguous-write reconciliation bypasses the local cache", function()
+	local now = makeClock(5000)
+	local store, ps = newStore(now)
+	ps:Load()
+	ps:Save(validProfile(), "op-1")
+	-- Seed a stale local cache entry: another server wrote the backend after
+	-- our last read, so the cached copy is now four-seconds-stale truth.
+	store:seedStaleCache("Player_1234", { schemaVersion = 1, revision = 99, lastSaveOpId = "op-other" })
+	-- An ambiguous write: the transform commits, then the response is lost.
+	local applied = false
+	local realUpdate = store.UpdateAsync
+	store.UpdateAsync = function(self: any, key: string, transform: (any) -> any)
+		(self :: any).updateCalls += 1
+		local old = self.data[key]
+		local result = transform(old)
+		if result ~= nil then
+			self.data[key] = result
+		end
+		if not applied then
+			applied = true
+			error("FakeStore: ambiguous write failure (response lost)", 0)
+		end
+		return result
+	end
+	local freshBefore = store.freshGetCalls
+	local save = ps:Save(validProfile(), "op-amb")
+	store.UpdateAsync = realUpdate
+	expectEqual(save.ok, true, "ambiguous write resolves ok")
+	-- The backend advanced to revision 3 when the ambiguous attempt landed.
+	-- The stale cache claimed 99; reconciliation must report the real backend
+	-- revision, proving it did not trust the cache.
+	expectEqual(save.revision, 3, "resolves to the real backend revision, not the stale cache's 99")
+	expectTrue(save.revision ~= 99, "never reports the stale cached revision")
+	-- The reconciliation read must have gone to the backend.
+	expectTrue(store.freshGetCalls > freshBefore, "reconciliation performed a backend-fresh read")
+	expectEqual(store.data["Player_1234"].revision, 3, "backend holds exactly one committed revision")
+end)
+
+test("A stale cached read never drives reconciliation decisions", function()
+	local now = makeClock(5000)
+	local store, ps = newStore(now)
+	ps:Load()
+	ps:Save(validProfile(), "op-1")
+	-- A cached copy that claims the operation already applied, while the
+	-- backend says otherwise. Trusting the cache would report a phantom write.
+	store:seedStaleCache("Player_1234", { schemaVersion = 1, revision = 2, lastSaveOpId = "op-phantom" })
+	local realGet = store.GetAsync
+	store.GetAsync = function(self: any, key: string, options: any?)
+		-- Fail any cached (UseCache unset/true) read so the only usable path is
+		-- the backend-fresh one; this proves the code asks for it.
+		if options == nil or options.UseCache ~= false then
+			error("FakeStore: cached read attempted during reconciliation", 0)
+		end
+		return realGet(self, key, options)
+	end
+	local save = ps:Save(validProfile(), "op-2")
+	store.GetAsync = realGet
+	expectEqual(save.ok, true, "save resolves without consulting the cache")
+	expectEqual(save.revision, 3, "revision advances from the real backend state")
+end)
+
+test("Release reconciliation also bypasses the local cache", function()
+	local now = makeClock(5000)
+	local store, ps = newStore(now)
+	ps:Load()
+	ps:Save(validProfile(), "op-1")
+	store:seedStaleCache("Player_1234", { schemaVersion = 1, revision = 2, lastSaveOpId = "rel-phantom" })
+	local realUpdate = store.UpdateAsync
+	local ambiguous = false
+	store.UpdateAsync = function(self: any, key: string, transform: (any) -> any)
+		(self :: any).updateCalls += 1
+		local old = self.data[key]
+		local result = transform(old)
+		if result ~= nil then
+			self.data[key] = result
+			self.cache[key] = { value = deepCopy(result), storedAt = self.clock() }
+		end
+		if not ambiguous then
+			ambiguous = true
+			error("FakeStore: ambiguous release failure (response lost)", 0)
+		end
+		return result
+	end
+	local freshBefore = store.freshGetCalls
+	local release = ps:Release("rel-1")
+	store.UpdateAsync = realUpdate
+	expectEqual(release.ok, true, "ambiguous release resolves ok")
+	expectTrue(store.freshGetCalls > freshBefore, "release reconciliation performed a backend-fresh read")
+	expectEqual(store.data["Player_1234"].lease.token, "", "backend lease actually cleared")
+end)
+
+test("The local cache expires after four seconds", function()
+	local clock, advance = makeClock(5000)
+	local store, ps = newStore(clock)
+	ps:Load()
+	ps:Save(validProfile(), "op-1")
+	-- Populate the cache, then let it age out: a subsequent cached read must
+	-- fall through to the backend rather than serve the stale copy.
+	local first = store:GetAsync("Player_1234")
+	expectEqual(first.revision, 2, "cached read returns the stored value")
+	store.data["Player_1234"].revision = 50 -- backend moves on
+	advance(5001) -- still inside the four-second window
+	expectEqual(store:GetAsync("Player_1234").revision, 2, "cached copy served inside the window")
+	advance(5005) -- window elapsed
+	expectEqual(store:GetAsync("Player_1234").revision, 50, "expired cache falls through to the backend")
+end)
+
+-- ===== idle lease expiry and renewal =====
+test("An idle lease expires after 240s and is acquirable without data loss", function()
+	local clock, advance = makeClock(5000)
+	local store, ps = newStore(clock)
+	ps:Load()
+	local p = validProfile()
+	p.balance = 4242
+	ps:Save(p, "op-1")
+	-- The session goes idle: no commands, no saves, no release. 239s later the
+	-- lease is still ours and a competing server is refused.
+	advance(5000 + ProfileStore.LEASE_DURATION - 1)
+	local rival = ProfileStore.new(1234, {
+		store = store,
+		httpService = FakeHttp,
+		jobId = "job-rival",
+		now = clock,
+	})
+	expectEqual(rival:Load().code, "LOCKED", "rival refused one second before expiry")
+	-- At 240s the lease lapses and the rival takes over with data intact.
+	advance(5000 + ProfileStore.LEASE_DURATION)
+	local takeover = rival:Load()
+	expectEqual(takeover.ok, true, "lease acquirable at expiry")
+	expectEqual(takeover.envelope.profile.balance, 4242, "no data lost across idle expiry")
+	-- The lapsed holder can no longer write.
+	local lateSave = ps:Save(validProfile(), "op-late")
+	expectEqual(lateSave.ok, false, "expired holder cannot write")
+	expectEqual(lateSave.code, "LOCKED", "expired holder write is LOCKED")
+end)
+
+test("A renewal extends the lease without an unnecessary profile mutation", function()
+	local clock, advance = makeClock(5000)
+	local store, ps = newStore(clock)
+	ps:Load()
+	ps:Save(validProfile(), "op-1")
+	local revisionBefore = store.data["Player_1234"].revision
+	local profileBefore = ProfileStore._deepCopy(store.data["Player_1234"].profile)
+	-- Advance to the 90s renewal mark. Renewal is modelled as a conditional
+	-- write carrying an unchanged profile: it must move only the lease fields,
+	-- never the revision or any economic state.
+	advance(5000 + ProfileStore.LEASE_RENEW)
+	local renewal = ps:Save(ProfileStore._deepCopy(profileBefore), "op-renew")
+	expectEqual(renewal.ok, true, "renewal write ok")
+	local stored = store.data["Player_1234"]
+	expectEqual(stored.revision, revisionBefore + 1, "renewal advances the revision once")
+	expectEqual(stored.lease.expiresAt, 5000 + ProfileStore.LEASE_RENEW + ProfileStore.LEASE_DURATION, "lease extended another 240s from the write")
+	-- No economic mutation rode along.
+	expectEqual(stored.profile.balance, profileBefore.balance, "balance unchanged by renewal")
+	expectEqual(stored.profile.lifetimeEarned, profileBefore.lifetimeEarned, "lifetime unchanged by renewal")
+	expectEqual(stored.profile.nextPostSequence, profileBefore.nextPostSequence, "sequences unchanged by renewal")
+	-- The renewed lease keeps a rival out for the full new window.
+	local rival = ProfileStore.new(1234, {
+		store = store,
+		httpService = FakeHttp,
+		jobId = "job-rival",
+		now = function() return 5000 + ProfileStore.LEASE_RENEW + 10 end,
+	})
+	expectEqual(rival:Load().code, "LOCKED", "rival refused during the renewed window")
+end)
+
+test("Renewal preserves the pending post and mission state exactly", function()
+	local clock, advance = makeClock(5000)
+	local store, ps = newStore(clock)
+	ps:Load()
+	local p = validProfile()
+	-- A mission-tagged pending post in flight: docs/02 says resolvingPost means
+	-- THIS mission's post is unsettled, so the pending post must be the
+	-- mission's own, not an organic one.
+	p.pendingPost = {
+		postId = "post-1",
+		mode = "mission",
+		missionRunId = "run-1",
+		contextId = "meal_time",
+		templateId = "meal_meme",
+		publishedAt = 100,
+		settleAt = 118,
+		finalImpact = 120,
+		organicCuan = 15,
+	}
+	p.activeMission = {
+		missionId = "food_stall_launch",
+		runId = "run-1",
+		contextId = "meal_time",
+		status = "resolvingPost",
+		accumulatedImpact = 75,
+		postCount = 1,
+	}
+	ps:Save(p, "op-1")
+	local pendingBefore = ProfileStore._deepCopy(store.data["Player_1234"].profile.pendingPost)
+	local missionBefore = ProfileStore._deepCopy(store.data["Player_1234"].profile.activeMission)
+	advance(5000 + ProfileStore.LEASE_RENEW)
+	local renewal = ps:Save(ProfileStore._deepCopy(store.data["Player_1234"].profile), "op-renew")
+	expectEqual(renewal.ok, true, "renewal ok")
+	local stored = store.data["Player_1234"].profile
+	expectEqual(stored.pendingPost.postId, pendingBefore.postId, "pending post survives renewal")
+	expectEqual(stored.pendingPost.organicCuan, pendingBefore.organicCuan, "frozen payout survives renewal")
+	expectEqual(stored.activeMission.status, missionBefore.status, "mission status survives renewal")
+	expectEqual(stored.activeMission.accumulatedImpact, missionBefore.accumulatedImpact, "mission impact survives renewal")
+end)
+
+test("Idle renewal cannot hand ownership to a competing server", function()
+	local now = makeClock(5000)
+	local store, ps = newStore(now)
+	ps:Load()
+	ps:Save(validProfile(), "op-1")
+	local tokenBefore = store.data["Player_1234"].lease.token
+	-- A renewal write whose lease token does not match must abort rather than
+	-- let a second server stamp its own token in.
+	local rival = ProfileStore.new(1234, {
+		store = store,
+		httpService = FakeHttp,
+		jobId = "job-rival",
+		now = function() return 5000 + ProfileStore.LEASE_RENEW end,
+	})
+	-- The rival never acquired a lease, so its Save must be refused outright.
+	local rivalSave = rival:Save(validProfile(), "op-rival")
+	expectEqual(rivalSave.ok, false, "unleased rival cannot renew")
+	expectEqual(store.data["Player_1234"].lease.token, tokenBefore, "original token intact")
+end)
+
+-- ===== cross-field invariants =====
+-- docs/03 invariants: device ownership, worker desk prerequisites, and
+-- pending-post/active-mission consistency. Legitimate recoverable states must
+-- NOT be rejected (an accepted mission with no post yet, a settled post
+-- awaiting claim, a cheap starter phone).
+test("Legitimate recoverable states are accepted, not rejected", function()
+	local now = makeClock(5000)
+	local _, ps = newStore(now)
+	ps:Load()
+
+	local function accept(label: string, mutate: (any) -> ())
+		local p = validProfile()
+		mutate(p)
+		local save = ps:Save(p, `op-ok-{label}`)
+		expectEqual(save.ok, true, `{label} must be accepted`)
+	end
+
+	-- cheap starter phone (price 0, owned from the start)
+	accept("cheap starter phone", function(p) p.deviceId = "phone_cheap" end)
+	-- purchased fast phone
+	accept("fast phone", function(p) p.deviceId = "phone_fast" end)
+	-- mission accepted, no post published yet
+	accept("accepted mission with no post", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "accepted",
+			accumulatedImpact = 0,
+			postCount = 0,
+		}
+	end)
+	-- mission with one weak post, still resolving (with its pending post)
+	accept("resolving mission after one weak post", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "resolvingPost",
+			accumulatedImpact = 75,
+			postCount = 1,
+		}
+		p.pendingPost = {
+			postId = "post-1",
+			mode = "mission",
+			missionRunId = "run-1",
+			contextId = "meal_time",
+			templateId = "meal_meme",
+			publishedAt = 100,
+			settleAt = 118,
+			finalImpact = 120,
+			organicCuan = 15,
+		}
+	end)
+	-- mission ready to claim, no pending post left
+	accept("mission ready to claim with no pending post", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "readyToClaim",
+			accumulatedImpact = 120,
+			postCount = 2,
+		}
+	end)
+	-- pending organic post while a mission is active (explicitly allowed)
+	accept("organic pending post alongside active mission", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "accepted",
+			accumulatedImpact = 0,
+			postCount = 0,
+		}
+		p.pendingPost = {
+			postId = "post-9",
+			mode = "organic",
+			contextId = "organic_snack",
+			templateId = "snack_meme",
+			publishedAt = 10,
+			settleAt = 28,
+			finalImpact = 100,
+			organicCuan = 15,
+		}
+	end)
+	-- a desk owned with no worker hired yet (worker bought later)
+	accept("owned desk without a worker", function(p)
+		p.ownedDesks = { 1 }
+	end)
+	-- a worker hired into an owned desk
+	accept("worker in an owned desk", function(p)
+		p.ownedDesks = { 1, 2 }
+		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 1 } }
+	end)
+end)
+
+test("Invalid cross-field states are rejected", function()
+	local now = makeClock(5000)
+	local _, ps = newStore(now)
+	ps:Load()
+
+	local function reject(label: string, mutate: (any) -> ())
+		local p = validProfile()
+		mutate(p)
+		local save = ps:Save(p, `op-bad-{label}`)
+		expectEqual(save.ok, false, `{label} must be rejected`)
+		expectEqual(save.code, "INVALID_PROFILE", `{label} code`)
+	end
+
+	-- device ownership: unknown catalog device id
+	reject("unknown device id", function(p) p.deviceId = "phone_gold_plated" end)
+	-- worker desk prerequisite: a worker must sit in an owned desk
+	reject("worker without an owned desk", function(p)
+		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 1 } }
+	end)
+	reject("worker in an unowned desk slot", function(p)
+		p.ownedDesks = { 1 }
+		p.workers = { { hireId = "hire-1", roleId = "trainee", slotIndex = 2 } }
+	end)
+	-- pending-post / active-mission consistency
+	reject("mission pending post whose run does not match the active mission", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "resolvingPost",
+			accumulatedImpact = 75,
+			postCount = 1,
+		}
+		p.pendingPost = {
+			postId = "post-1",
+			mode = "mission",
+			missionRunId = "run-OTHER",
+			contextId = "meal_time",
+			templateId = "meal_meme",
+			publishedAt = 10,
+			settleAt = 28,
+			finalImpact = 120,
+			organicCuan = 15,
+		}
+	end)
+	reject("mission pending post with no active mission", function(p)
+		p.pendingPost = {
+			postId = "post-1",
+			mode = "mission",
+			missionRunId = "run-1",
+			contextId = "meal_time",
+			templateId = "meal_meme",
+			publishedAt = 10,
+			settleAt = 28,
+			finalImpact = 120,
+			organicCuan = 15,
+		}
+	end)
+	reject("resolvingPost status with no pending post", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "resolvingPost",
+			accumulatedImpact = 75,
+			postCount = 1,
+		}
+	end)
+	reject("pending mission post with postCount already at the cap", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "resolvingPost",
+			accumulatedImpact = 200,
+			postCount = 2,
+		}
+		p.pendingPost = {
+			postId = "post-3",
+			mode = "mission",
+			missionRunId = "run-1",
+			contextId = "meal_time",
+			templateId = "meal_meme",
+			publishedAt = 10,
+			settleAt = 28,
+			finalImpact = 120,
+			organicCuan = 15,
+		}
+	end)
+	reject("pending post settling before it was published", function(p)
+		p.pendingPost = {
+			postId = "post-1",
+			mode = "organic",
+			contextId = "organic_snack",
+			templateId = "snack_meme",
+			publishedAt = 100,
+			settleAt = 99,
+			finalImpact = 100,
+			organicCuan = 15,
+		}
+	end)
+	reject("readyToClaim status that never met the requirement", function(p)
+		p.activeMission = {
+			missionId = "food_stall_launch",
+			runId = "run-1",
+			contextId = "meal_time",
+			status = "readyToClaim",
+			accumulatedImpact = 75,
+			postCount = 1,
+		}
+	end)
 end)
 
 -- ===== constants =====

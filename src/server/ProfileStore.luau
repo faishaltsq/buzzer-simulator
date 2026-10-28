@@ -22,6 +22,10 @@
 local ProfileStore = {}
 ProfileStore.__index = ProfileStore
 
+-- Public catalog only (device IDs for the ownership invariant). Private
+-- affinity tags stay in ScoringCatalog (BS-03) and are never touched here.
+local Catalog = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Catalog"))
+
 local STORE_NAME = "PlayerData"
 local SCHEMA_VERSION = 1
 local LEASE_DURATION = 240 -- seconds
@@ -47,7 +51,9 @@ export type ReleaseResult = {
 }
 
 export type StoreAdapter = {
-	GetAsync: (self: any, key: string) -> any,
+	-- options is a DataStoreGetOptions; pass UseCache=false for
+	-- backend-fresh reconciliation reads (see readBackendFresh).
+	GetAsync: (self: any, key: string, options: any?) -> any,
 	UpdateAsync: (self: any, key: string, transform: (any) -> any) -> any,
 	RemoveAsync: (self: any, key: string) -> any,
 }
@@ -60,6 +66,41 @@ local function defaultStore(): StoreAdapter
 end
 local function defaultHttpService(): any
 	return game:GetService("HttpService")
+end
+-- Backend-fresh read options. Official guidance: "For immediate verification
+-- reads after a write, use GetAsync() with DataStoreGetOptions.UseCache =
+-- false. By default, GetAsync() uses a local four-second cache, so a normal
+-- verification read can return stale data."
+-- https://create.roblox.com/docs/cloud-services/data-stores/versioning-listing-and-caching
+local function noCacheOptions(): any
+	local options = Instance.new("DataStoreGetOptions")
+	options.UseCache = false
+	return options
+end
+-- Read the authoritative backend value, bypassing the engine's local cache.
+-- Used ONLY for ambiguous-write reconciliation: deciding whether a write whose
+-- response was lost actually landed must never trust a 4-second-old cached
+-- copy. Ordinary reads (Load) stay cached to protect the request budget.
+-- `noCacheOptions` is injectable so specs can run outside Studio.
+local function readBackendFresh(store: StoreAdapter, key: string, noCacheOptions: () -> any): (boolean, any)
+	local ok, result = pcall(function()
+		return store:GetAsync(key, noCacheOptions())
+	end)
+	return ok, result
+end
+
+-- Catalog lookup for the device-ownership invariant. The public catalog is
+-- shared data, so validation can consult it without touching private affinities.
+local function isKnownDevice(deviceId: any): boolean
+	if typeof(deviceId) ~= "string" then
+		return false
+	end
+	for _, device in ipairs(Catalog.Devices) do
+		if (device :: any).id == deviceId then
+			return true
+		end
+	end
+	return false
 end
 
 -- ===== v1 validation (docs/03 profile contract) =====
@@ -246,6 +287,10 @@ local function validateProfile(profile: any, problems: { string})
 	end
 	if not isNonEmptyString(profile.deviceId) then
 		table.insert(problems, "profile.deviceId must be a nonempty string")
+	elseif not isKnownDevice(profile.deviceId) then
+		-- Ownership invariant: the equipped device must exist in the catalog.
+		-- A saved ID that no longer resolves is corrupt, not a free upgrade.
+		table.insert(problems, `profile.deviceId {profile.deviceId} is not a catalog device`)
 	end
 	if profile.propertyId ~= "bedroom" then
 		table.insert(problems, `profile.propertyId must be "bedroom"`)
@@ -339,6 +384,93 @@ local function validateProfile(profile: any, problems: { string})
 	if not isNonNegativeInteger(profile.nextPostSequence) then
 		table.insert(problems, "profile.nextPostSequence must be a nonnegative integer")
 	end
+
+	-- ===== cross-field invariants (docs/03) =====
+	-- These relate separate fields. They are checked only when both sides are
+	-- individually well-formed, so a single malformed field reports one clear
+	-- problem instead of a cascade of derived ones.
+
+	-- Worker desk prerequisite: every hired worker must occupy an owned desk.
+	-- Ownership is what makes the worker payable; a worker in an unowned slot
+	-- is corrupt state, not a legitimate "bought the worker first" ordering
+	-- (the server enforces desk-then-hire).
+	if typeof(profile.ownedDesks) == "table" and typeof(profile.workers) == "table" then
+		local owned: { [number]: boolean } = {}
+		for _, slot in ipairs(profile.ownedDesks) do
+			if isNonNegativeInteger(slot) then
+				owned[asNumber(slot)] = true
+			end
+		end
+		for _, w in ipairs(profile.workers) do
+			if typeof(w) == "table" and isNonNegativeInteger((w :: any).slotIndex) then
+				local slot = asNumber((w :: any).slotIndex)
+				if not owned[slot] then
+					table.insert(problems, `worker in slot {slot} requires an owned desk`)
+				end
+			end
+		end
+	end
+
+	-- Pending-post / active-mission consistency. docs/02 lifecycle:
+	--   available -> accepted -> resolvingPost -> accepted (impact short)
+	--                                        -> readyToClaim -> claimed
+	-- A mission-tagged pending post must belong to the active run, a
+	-- resolvingPost status must have that post in flight, and a mission post
+	-- may not exceed the two-post cap. Organic posts are independent and may
+	-- coexist with any mission state.
+	local activeMission = profile.activeMission
+	local pendingPost = profile.pendingPost
+	local hasMission = activeMission ~= nil and typeof(activeMission) == "table"
+	local hasPost = pendingPost ~= nil and typeof(pendingPost) == "table"
+	if hasMission and hasPost then
+		if pendingPost.mode == "mission" then
+			if not isNonEmptyString(pendingPost.missionRunId) then
+				table.insert(problems, "mission pending post requires missionRunId")
+			elseif (activeMission :: any).runId ~= pendingPost.missionRunId then
+				table.insert(problems, "mission pending post runId must match the active mission")
+			elseif asNumber((activeMission :: any).postCount) >= 2 then
+				table.insert(problems, "mission pending post exceeds the two-post cap")
+			end
+		end
+	end
+	-- resolvingPost means this mission's post is in flight and not yet settled.
+	-- docs/02 lifecycle: the status is only entered while a post is pending, so
+	-- a resolvingPost mission with no matching pending post is corrupt state
+	-- (a crash mid-settlement must not leave the mission claimable-looking).
+	if hasMission and (activeMission :: any).status == "resolvingPost" then
+		if not hasPost or pendingPost.mode ~= "mission" or (activeMission :: any).runId ~= pendingPost.missionRunId then
+			table.insert(problems, "resolvingPost status requires a matching mission pending post")
+		end
+	end
+	-- A mission pending post with no active mission is orphaned state.
+	if (activeMission == nil) and pendingPost ~= nil and typeof(pendingPost) == "table" and pendingPost.mode == "mission" then
+		table.insert(problems, "mission pending post requires an active mission")
+	end
+	-- A post cannot settle before it was published.
+	if pendingPost ~= nil and typeof(pendingPost) == "table" then
+		if isFiniteNumber(pendingPost.publishedAt) and isFiniteNumber(pendingPost.settleAt) then
+			if asNumber(pendingPost.settleAt) < asNumber(pendingPost.publishedAt) then
+				table.insert(problems, "pending post settleAt must not precede publishedAt")
+			end
+		end
+	end
+	-- readyToClaim means the requirement is met: accumulated impact must have
+	-- reached the mission's requirement. Checking against the catalog keeps the
+	-- claim gate server-authoritative after a rejoin.
+	if activeMission ~= nil and typeof(activeMission) == "table" and activeMission.status == "readyToClaim" then
+		if isNonEmptyString((activeMission :: any).missionId) and isNonNegativeInteger((activeMission :: any).accumulatedImpact) then
+			local missionId = (activeMission :: any).missionId
+			local accumulated = asNumber((activeMission :: any).accumulatedImpact)
+			for _, mission in ipairs(Catalog.Missions) do
+				if (mission :: any).missionId == missionId then
+					if accumulated < asNumber((mission :: any).requiredImpact) then
+						table.insert(problems, `readyToClaim requires accumulatedImpact >= {(mission :: any).requiredImpact}`)
+					end
+					break
+				end
+			end
+		end
+	end
 end
 
 -- Full envelope validation. Returns (ok, problems). Rejects wrong schema
@@ -419,6 +551,7 @@ function ProfileStore.new(userId: number, opts: ProfileStoreOptions?): ProfileSt
 	self._key = `Player_{userId}`
 	self._store = (opts and opts.store) or defaultStore()
 	self._httpService = (opts and opts.httpService) or defaultHttpService()
+	self._noCacheOptions = (opts and opts.noCacheOptions) or noCacheOptions
 	self._jobId = (opts and opts.jobId) or "server-unknown"
 	self._now = (opts and opts.now) or function()
 		return workspace:GetServerTimeNow()
@@ -434,6 +567,7 @@ export type ProfileStoreInstance = {
 	_key: string,
 	_store: StoreAdapter,
 	_httpService: any,
+	_noCacheOptions: () -> any,
 	_jobId: string,
 	_now: () -> number,
 	_leaseToken: string?,
@@ -443,6 +577,7 @@ export type ProfileStoreInstance = {
 export type ProfileStoreOptions = {
 	store: StoreAdapter?, -- injected DataStore adapter (specs)
 	httpService: any?, -- injected HttpService for lease tokens (specs)
+	noCacheOptions: (() -> any)?, -- injected DataStoreGetOptions factory (specs)
 	jobId: string?, -- server identity recorded in the lease
 	now: (() -> number)?, -- epoch-second clock (specs inject a fake)
 }
@@ -622,10 +757,10 @@ function ProfileStore:Save(profile: any, operationId: string): SaveResult
 		end
 		if result == nil then
 			-- Aborted. Distinguish lease loss from idempotent already-applied
-			-- by reading the current value without cache.
-			local readOk, current: any = pcall(function()
-				return self._store:GetAsync(self._key)
-			end)
+			-- by reading the authoritative backend value with the engine's
+			-- local cache bypassed (docs: UseCache=false for verification
+			-- reads after a write).
+			local readOk, current: any = readBackendFresh(self._store, self._key, self._noCacheOptions)
 			if not readOk then
 				lastDetail = tostring(current)
 				continue
@@ -699,9 +834,9 @@ function ProfileStore:Release(operationId: string): ReleaseResult
 			continue
 		end
 		if result == nil then
-			local readOk, current: any = pcall(function()
-				return self._store:GetAsync(self._key)
-			end)
+			-- Backend-fresh reconciliation read: the cached copy can be up to
+			-- four seconds stale and would misreport an ambiguous release.
+			local readOk, current: any = readBackendFresh(self._store, self._key, self._noCacheOptions)
 			if not readOk then
 				lastDetail = tostring(current)
 				continue
