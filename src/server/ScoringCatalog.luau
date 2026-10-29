@@ -178,18 +178,20 @@ end
 -- `entries` may be either shape:
 --   * an OrganicContextDef -- has contextId, trendId, audienceId, templates;
 --   * a MissionDef -- has missionId and a `contexts` array, whose tags come
---     from the matching organic context (V0's meal_time shares the snack
---     context's tags).
+--     from the server-owned mission-context mapping (MISSION_CONTEXT_TAGS).
 -- Both shapes are validated so a tie or missing winner is rejected at load.
+--
+-- `tagLookup` is REQUIRED for mission entries and must resolve each context to
+-- its authored (trendId, audienceId). There is deliberately no default: an
+-- unknown context is invalid content, never a silent fallback to the V0
+-- identifiers, which would let future content score against the wrong tags and
+-- certify a winner that the live scoring path would never produce.
 function ScoringCatalog.validateContent(
 	entries: { any },
 	affinitySets: { [string]: { [string]: Affinity } },
-	tagLookup: ((string) -> (string, string))? 
+	tagLookup: ((string) -> (string?, string?, string?))?
 ): (boolean, { string })
 	local problems: { string } = {}
-	local lookup: (string) -> (string, string) = tagLookup or function(_contextId: string)
-		return "snack_trend", "students"
-	end
 	for _, entry in ipairs(entries) do
 		local e: any = entry
 		if e.contextId ~= nil then
@@ -211,21 +213,31 @@ function ScoringCatalog.validateContent(
 				end
 			end
 		elseif e.missionId ~= nil then
-			-- Mission shape: validate every context it lists.
-			for _, contextId in ipairs((e.contexts or {}) :: { string }) do
-				local affinities = affinitySets[contextId :: string]
-				if affinities == nil then
-					table.insert(problems, `mission {e.missionId} context {contextId} has no authored affinity set`)
-				else
-					local trendId, audienceId = lookup(contextId)
-					local _, err = ScoringCatalog.resolveStrongTemplate(
-						e.templates,
-						affinities,
-						trendId,
-						audienceId
-					)
-					if err ~= nil then
-						table.insert(problems, `mission {e.missionId} context {contextId}: {err}`)
+			-- Mission shape: validate every context it lists. Tags MUST come
+			-- from an explicit lookup; an unresolvable context is invalid
+			-- content, never a defaulted V0 pair.
+			if tagLookup == nil then
+				table.insert(problems, `mission {e.missionId} requires an explicit context tag lookup`)
+			else
+				for _, contextId in ipairs((e.contexts or {}) :: { string }) do
+					local affinities = affinitySets[contextId :: string]
+					if affinities == nil then
+						table.insert(problems, `mission {e.missionId} context {contextId} has no authored affinity set`)
+					else
+						local trendId, audienceId, tagErr = tagLookup(contextId :: string)
+						if trendId == nil or audienceId == nil then
+							table.insert(problems, `mission {e.missionId} context {contextId}: {tagErr or "has no authored tags"}`)
+						else
+							local _, err = ScoringCatalog.resolveStrongTemplate(
+								e.templates,
+								affinities,
+								trendId,
+								audienceId
+							)
+							if err ~= nil then
+								table.insert(problems, `mission {e.missionId} context {contextId}: {err}`)
+							end
+						end
 					end
 				end
 			end
@@ -310,6 +322,22 @@ function ScoringCatalog.validateShippedContent(
 		end
 		if not found then
 			table.insert(problems, `shipped organic context {shippedId} is not in the catalog`)
+		end
+	end
+
+	-- Every shipped mission id must resolve to a real catalog mission. Without
+	-- this, a typo'd or stale shipped ID is invisible: the loop below only walks
+	-- the missions that exist, so a missing mission is never examined at all.
+	for _, shippedId in ipairs(shippedMissionIds) do
+		local found = false
+		for _, mission in ipairs(catalog.Missions) do
+			if (mission :: any).missionId == shippedId then
+				found = true
+				break
+			end
+		end
+		if not found then
+			table.insert(problems, `shipped mission {shippedId} is not in the catalog`)
 		end
 	end
 

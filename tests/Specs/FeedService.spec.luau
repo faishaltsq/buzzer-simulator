@@ -122,6 +122,75 @@ test("Authored cards carry clues for their supported contexts", function()
 	end
 	expectEqual(missionClue, 3, "all three meal_time cards carry a clue")
 end)
+test("Both V0 contexts resolve to readable authored clue text", function()
+	-- docs/02: "Each context names a fictional trend, audience, and readable
+	-- clue." A clue KEY alone is not usable by a player, so every shipped
+	-- context must resolve to readable text through the projection.
+	local expected: { [string]: string } = {
+		organic_snack = "organic_snack_clue",
+		meal_time = "meal_time_clue",
+	}
+	for contextId, expectedKey in pairs(expected) do
+		local found = false
+		for _, card in ipairs(FeedService.authoredCards()) do
+			local c: any = card
+			if c.contextId == contextId then
+				found = true
+				expectEqual(c.clueKey, expectedKey, `{contextId} clue key`)
+				expectTrue(
+					typeof(c.clueText) == "string" and #(c.clueText :: string) > 0,
+					`{contextId} resolves to readable clue text`
+				)
+			end
+		end
+		expectTrue(found, `{contextId} has authored feed cards`)
+	end
+	-- Own cards resolve the same way, so the composer can show the clue too.
+	local p = freshProfile()
+	table.insert(p.ownPosts, {
+		postId = "post-1",
+		mode = "organic",
+		contextId = "organic_snack",
+		templateId = "snack_meme",
+		finalImpact = 120,
+		organicCuan = 15,
+		publishedAt = 1000,
+	})
+	local own = FeedService.ownCards(p)
+	expectEqual(#own, 1, "one own card")
+	expectEqual((own[1] :: any).clueKey, "organic_snack_clue", "own card clue key")
+	expectTrue(
+		#((own[1] :: any).clueText :: string) > 0,
+		"own card resolves to readable clue text"
+	)
+end)
+test("Clue text never reveals the winning template", function()
+	-- The clue is public readable context. It must not name or imply which
+	-- template the private scoring catalog will score as strong.
+	local clues = {
+		organic_snack = "organic_snack_clue",
+		meal_time = "meal_time_clue",
+	}
+	local winners = {
+		organic_snack = "snack_meme",
+		meal_time = "meal_meme",
+	}
+	for contextId, clueKey in pairs(clues) do
+		local text: string? = nil
+		for _, card in ipairs(FeedService.authoredCards()) do
+			local c: any = card
+			if c.contextId == contextId and c.clueKey == clueKey then
+				text = c.clueText
+				break
+			end
+		end
+		expectTrue(text ~= nil, `{contextId} has clue text`)
+		expectTrue(
+			(text :: string):find(winners[contextId], 1, true) == nil,
+			`{contextId} clue text does not name its winning template`
+		)
+	end
+end)
 
 test("Engagement is derived, not random", function()
 	local cards = FeedService.authoredCards()
@@ -301,6 +370,10 @@ test("The feed never leaks private scoring affinities", function()
 	-- The per-template affinity mapping must not appear anywhere in the feed.
 	expectTrue(encoded:find('"snack_meme":{"trendId"') == nil, "no per-template affinity in the feed")
 	expectTrue(encoded:find("audienceId") == nil, "no audience tags in the feed")
+	-- The readable clue text is public context, but it must never carry the
+	-- private affinity field names that would reveal the answer key.
+	expectTrue(encoded:find("trendId") == nil, "no trendId affinity fields in the feed")
+	expectTrue(encoded:find('"snack_meme":') == nil, "no template-keyed affinity table in the feed")
 end)
 
 -- ===== Runner =====

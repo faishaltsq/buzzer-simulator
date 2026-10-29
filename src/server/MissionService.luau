@@ -44,6 +44,11 @@ local MissionService = {}
 local MAX_OWN_POSTS = 10
 local MAX_CLAIMED_RUNS = 32
 local MAX_CAMPAIGN_POSTS = 2
+-- Frozen economy guard (docs/04): "stop growth before 1e12". A credit that
+-- would bring either currency total to or past this bound is refused outright
+-- rather than clamped, so no payout formula is altered and no partial
+-- mutation can land. ProfileStore repeats the check as defense in depth.
+local MAX_ECONOMIC_TOTAL = 1e12
 
 -- PostMode and FitKind are declared locally to match the frozen GameTypes
 -- unions ("organic" | "mission", "strong" | "weak") without a runtime
@@ -98,6 +103,16 @@ MissionService._deepCopy = deepCopy
 
 local function isNonEmptyString(v: any): boolean
 	return typeof(v) == "string" and #v > 0
+end
+
+-- Server time is injected by the caller (BS-04 supplies it). Only a finite,
+-- nonnegative number is a valid server timestamp: NaN and both infinities are
+-- rejected (Rules validates its numeric inputs the same way, src/shared/Rules),
+-- and a negative timestamp cannot describe a published or settled post. A
+-- non-finite `now` would otherwise produce a pending post with an infinite
+-- settleAt that ProfileStore rejects far from its cause.
+local function isValidServerTime(v: any): boolean
+	return typeof(v) == "number" and v == v and v ~= math.huge and v ~= -math.huge and v >= 0
 end
 
 local function findMission(missionId: any): any?
@@ -239,8 +254,8 @@ function MissionService.accept(profile: any, missionId: string, runId: string, n
 	if not isNonEmptyString(missionId) or not isNonEmptyString(runId) then
 		return fail("INVALID_INPUT", "missionId and runId are required")
 	end
-	if typeof(now) ~= "number" or now ~= now then
-		return fail("INVALID_INPUT", "now must be a finite number")
+	if not isValidServerTime(now) then
+		return fail("INVALID_INPUT", "now must be a finite nonnegative number")
 	end
 	if profile.activeMission ~= nil then
 		return fail("MISSION_ACTIVE", "a mission is already active")
@@ -263,6 +278,23 @@ function MissionService.accept(profile: any, missionId: string, runId: string, n
 	-- Progression gates from the catalog definition.
 	if profile.completedMissions < mission.unlockClaims then
 		return fail("NOT_READY", `mission {missionId} requires {mission.unlockClaims} prior claims`)
+	end
+	-- Tier gate from the catalog definition. The v1 profile persists no tier
+	-- field, so eligibility is derived from the monotone inputs (docs/02 career
+	-- table: tier requires BOTH lifetime earnings and completed claims) and
+	-- clamped to the currently shipped tier cap. Spending never demotes, so the
+	-- derivation is stable across a rejoin. V0's food_stall_launch has
+	-- minTier = 0 and stays available at tier 0.
+	local eligibleTier = Rules.eligibleTier(
+		profile.lifetimeEarned,
+		profile.completedMissions,
+		Catalog.V0Shipped.maxShippedTier
+	)
+	if eligibleTier < (mission :: any).minTier then
+		return fail(
+			"NOT_READY",
+			`mission {missionId} requires tier {(mission :: any).minTier}; eligible tier is {eligibleTier}`
+		)
 	end
 	local contexts = missionContexts(mission)
 	if #contexts == 0 then
@@ -300,8 +332,8 @@ function MissionService.publishOrganic(profile: any, templateId: string, now: nu
 	if not isNonEmptyString(templateId) then
 		return fail("INVALID_INPUT", "templateId is required")
 	end
-	if typeof(now) ~= "number" or now ~= now then
-		return fail("INVALID_INPUT", "now must be a finite number")
+	if not isValidServerTime(now) then
+		return fail("INVALID_INPUT", "now must be a finite nonnegative number")
 	end
 	if profile.pendingPost ~= nil then
 		return fail("PENDING_POST", "a post is already resolving")
@@ -362,8 +394,8 @@ function MissionService.publishMission(
 	if not isNonEmptyString(runId) or not isNonEmptyString(templateId) then
 		return fail("INVALID_INPUT", "runId and templateId are required")
 	end
-	if typeof(now) ~= "number" or now ~= now then
-		return fail("INVALID_INPUT", "now must be a finite number")
+	if not isValidServerTime(now) then
+		return fail("INVALID_INPUT", "now must be a finite nonnegative number")
 	end
 	if profile.pendingPost ~= nil then
 		return fail("PENDING_POST", "a post is already resolving")
@@ -445,8 +477,8 @@ end
 -- mission posts adds impact and moves the mission status. A second settlement
 -- after the pending post is consumed pays nothing.
 function MissionService.settle(profile: any, now: number): OperationResult
-	if typeof(now) ~= "number" or now ~= now then
-		return fail("INVALID_INPUT", "now must be a finite number")
+	if not isValidServerTime(now) then
+		return fail("INVALID_INPUT", "now must be a finite nonnegative number")
 	end
 	local pending = profile.pendingPost
 	if pending == nil then
@@ -458,8 +490,18 @@ function MissionService.settle(profile: any, now: number): OperationResult
 
 	local next = deepCopy(profile)
 	-- Credit the FROZEN organic payout exactly once.
-	next.balance = profile.balance + pending.organicCuan
-	next.lifetimeEarned = profile.lifetimeEarned + pending.organicCuan
+	local nextBalance = profile.balance + pending.organicCuan
+	local nextLifetime = profile.lifetimeEarned + pending.organicCuan
+	-- Frozen economy guard (docs/04): refuse rather than clamp, so the payout
+	-- formula is untouched and no partial mutation can land.
+	if nextBalance >= MAX_ECONOMIC_TOTAL or nextLifetime >= MAX_ECONOMIC_TOTAL then
+		return fail(
+			"LIMIT_REACHED",
+			`settlement would reach the {MAX_ECONOMIC_TOTAL} economy limit`
+		)
+	end
+	next.balance = nextBalance
+	next.lifetimeEarned = nextLifetime
 	-- Bounded own-post summary (newest first, capped at 10).
 	local summary = {
 		postId = pending.postId,
@@ -471,10 +513,16 @@ function MissionService.settle(profile: any, now: number): OperationResult
 		publishedAt = pending.publishedAt,
 		missionRunId = pending.missionRunId,
 	}
+	-- Retained summaries are DEEP COPIED from the input. `deepCopy(profile)`
+	-- above already produced a private copy of ownPosts, but rebuilding the
+	-- array from the input's tables would alias the caller's summaries into the
+	-- proposal, so any later in-place edit would write through into the input
+	-- profile. The module boundary (never mutates its input profile) requires
+	-- the proposal to own every nested table.
 	local ownPosts: { any } = { summary }
 	for _, existing in ipairs(profile.ownPosts) do
 		if #ownPosts < MAX_OWN_POSTS then
-			table.insert(ownPosts, existing)
+			table.insert(ownPosts, deepCopy(existing))
 		end
 	end
 	next.ownPosts = ownPosts
@@ -533,8 +581,18 @@ function MissionService.claim(profile: any, runId: string): OperationResult
 	end
 
 	local next = deepCopy(profile)
-	next.balance = profile.balance + missionDef.reward
-	next.lifetimeEarned = profile.lifetimeEarned + missionDef.reward
+	local nextBalance = profile.balance + missionDef.reward
+	local nextLifetime = profile.lifetimeEarned + missionDef.reward
+	-- Frozen economy guard (docs/04): refuse rather than clamp, so the fixed
+	-- catalog reward is untouched and no partial mutation can land.
+	if nextBalance >= MAX_ECONOMIC_TOTAL or nextLifetime >= MAX_ECONOMIC_TOTAL then
+		return fail(
+			"LIMIT_REACHED",
+			`claim would reach the {MAX_ECONOMIC_TOTAL} economy limit`
+		)
+	end
+	next.balance = nextBalance
+	next.lifetimeEarned = nextLifetime
 	next.completedMissions = profile.completedMissions + 1
 	-- Bounded claimed-run window (<=32, newest last).
 	local window: { string } = {}

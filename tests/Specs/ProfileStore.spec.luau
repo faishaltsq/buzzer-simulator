@@ -718,6 +718,22 @@ test("_validateEnvelope accepts a well-formed envelope and rejects tampering", f
 	local future = ProfileStore._deepCopy(good)
 	future.schemaVersion = 2
 	expectEqual(ProfileStore._validateEnvelope(future), false, "future schema fails validation")
+	-- Frozen economy guard (docs/04): totals at or past 1e12 are refused at the
+	-- persistence boundary as defense in depth.
+	local tooRich = ProfileStore._deepCopy(good)
+	tooRich.profile.balance = 1e12
+	expectEqual(ProfileStore._validateEnvelope(tooRich), false, "balance at the economy limit fails validation")
+	local tooRichLifetime = ProfileStore._deepCopy(good)
+	tooRichLifetime.profile.lifetimeEarned = 1e12
+	expectEqual(
+		ProfileStore._validateEnvelope(tooRichLifetime),
+		false,
+		"lifetimeEarned at the economy limit fails validation"
+	)
+	local justUnder = ProfileStore._deepCopy(good)
+	justUnder.profile.balance = 1e12 - 1
+	justUnder.profile.lifetimeEarned = 1e12 - 1
+	expectEqual(ProfileStore._validateEnvelope(justUnder), true, "totals just below the limit pass")
 end)
 
 -- ===== ambiguous-write reconciliation uses a backend-fresh read =====

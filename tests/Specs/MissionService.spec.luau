@@ -68,6 +68,30 @@ local function assertCode(result: any, code: string, label: string)
 	end
 	expectEqual(result.code, code, label)
 end
+-- ===== shared-catalog fixture isolation =====
+-- `Catalog.Missions` and `Catalog.V0Shipped.missionIds` are module-level tables
+-- shared by every test in this spec and by the other specs in the same place.
+-- A test that replaces one must restore the EXACT original reference even when
+-- an assertion or the callback itself errors, otherwise one real defect
+-- contaminates every later test and the reported failure names the wrong cause.
+-- Restoration happens before the error is re-raised, and the originals are
+-- captured as references (never reconstructed from a hardcoded V0 value).
+local function withCatalogFixture(
+	missions: { any },
+	shippedMissionIds: { string },
+	fn: () -> ()
+)
+	local realMissions = Catalog.Missions
+	local realShipped = Catalog.V0Shipped.missionIds
+	Catalog.Missions = missions
+	Catalog.V0Shipped.missionIds = shippedMissionIds
+	local ok, err = pcall(fn)
+	Catalog.Missions = realMissions
+	Catalog.V0Shipped.missionIds = realShipped
+	if not ok then
+		error(err, 0)
+	end
+end
 
 -- ===== ScoringCatalog =====
 test("V0 organic context has snack_meme as its unique strong template", function()
@@ -196,7 +220,10 @@ test("V0 shipped content validates with unique winners", function()
 	expectTrue(okOrganic, `organic content invalid: {table.concat(problemsOrganic, "; ")}`)
 	local okMission, problemsMission = ScoringCatalog.validateContent(
 		Catalog.Missions,
-		ScoringCatalog.missionAffinities()
+		ScoringCatalog.missionAffinities(),
+		-- Mission contexts must be resolved through the authoritative
+		-- server-owned mapping, never a defaulted tag pair.
+		ScoringCatalog.missionContextTags
 	)
 	expectTrue(okMission, `mission content invalid: {table.concat(problemsMission, "; ")}`)
 end)
@@ -296,6 +323,154 @@ test("Accept requires a nonempty runId", function()
 		"empty runId"
 	)
 end)
+-- ===== tier gate (mission.minTier) =====
+-- docs/02 career table: a mission's minTier is a progression gate. The v1
+-- profile persists no tier field, so accept() derives eligibility from
+-- lifetimeEarned + completedMissions clamped to the shipped tier cap.
+test("A tier-0 player is rejected from a tier-1 mission", function()
+	withCatalogFixture(
+		{
+			{
+				missionId = "tier1_mission",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 1,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
+		},
+		{ "tier1_mission" },
+		function()
+			local p = freshProfile()
+			-- A profile that satisfies every OTHER gate: claims, mission
+			-- content, context, no active mission. Only the tier is short.
+			p.lifetimeEarned = 500
+			p.completedMissions = 5
+			assertCode(
+				MissionService.accept(p, "tier1_mission", "run-1", 1000),
+				"NOT_READY",
+				"tier 0 cannot accept a tier-1 mission"
+			)
+		end
+	)
+end)
+test("A tier-1 mission requires BOTH lifetime and claim thresholds", function()
+	-- The shipped tier cap must also permit tier 1 for this test, otherwise the
+	-- clamp holds eligibility at 0 regardless of the profile's totals.
+	local realCap = Catalog.V0Shipped.maxShippedTier
+	Catalog.V0Shipped.maxShippedTier = 1
+	withCatalogFixture(
+		{
+			{
+				missionId = "tier1_mission",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 1,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
+		},
+		{ "tier1_mission" },
+		function()
+			-- Lifetime met, claims short (tier 1 needs 3 claims).
+			local shortClaims = freshProfile()
+			shortClaims.lifetimeEarned = 300
+			shortClaims.completedMissions = 2
+			assertCode(
+				MissionService.accept(shortClaims, "tier1_mission", "run-1", 1000),
+				"NOT_READY",
+				"claims threshold not met"
+			)
+			-- Claims met, lifetime short.
+			local shortLifetime = freshProfile()
+			shortLifetime.lifetimeEarned = 299
+			shortLifetime.completedMissions = 3
+			assertCode(
+				MissionService.accept(shortLifetime, "tier1_mission", "run-1", 1000),
+				"NOT_READY",
+				"lifetime threshold not met"
+			)
+			-- Both thresholds met: accepted.
+			local eligible = freshProfile()
+			eligible.lifetimeEarned = 300
+			eligible.completedMissions = 3
+			local next = assertOk(
+				MissionService.accept(eligible, "tier1_mission", "run-1", 1000),
+				"both thresholds met"
+			)
+			expectEqual(next.activeMission.missionId, "tier1_mission", "tier-1 mission accepted")
+		end
+	)
+	Catalog.V0Shipped.maxShippedTier = realCap
+end)
+test("The shipped tier cap blocks a tier above the shipped cap", function()
+	-- V0 ships maxShippedTier = 0, so even a profile that would clear tier 1's
+	-- authored thresholds stays at tier 0 while the cap is 0.
+	withCatalogFixture(
+		{
+			{
+				missionId = "tier1_mission",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 1,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
+		},
+		{ "tier1_mission" },
+		function()
+			local p = freshProfile()
+			p.lifetimeEarned = 9999
+			p.completedMissions = 99
+			assertCode(
+				MissionService.accept(p, "tier1_mission", "run-1", 1000),
+				"NOT_READY",
+				"shipped tier cap holds"
+			)
+		end
+	)
+end)
+test("The V0 food mission remains available at tier 0", function()
+	-- The shipped intro mission has minTier = 0, so a fresh profile accepts it.
+	local p = freshProfile()
+	local next = assertOk(MissionService.accept(p, "food_stall_launch", "run-1", 1000), "tier-0 accept")
+	expectEqual(next.activeMission.missionId, "food_stall_launch", "V0 mission accepted at tier 0")
+end)
+test("The tier gate does not advance the variant counter", function()
+	-- A rejected accept must not mutate the proposed state at all.
+	withCatalogFixture(
+		{
+			{
+				missionId = "tier1_mission",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 1,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
+		},
+		{ "tier1_mission" },
+		function()
+			local p = freshProfile()
+			local before = game:GetService("HttpService"):JSONEncode(p)
+			assertCode(
+				MissionService.accept(p, "tier1_mission", "run-1", 1000),
+				"NOT_READY",
+				"tier gate rejects"
+			)
+			expectEqual(
+				game:GetService("HttpService"):JSONEncode(p),
+				before,
+				"input unchanged by the tier gate"
+			)
+			expectEqual(p.missionVariantCounters["tier1_mission"], nil, "counter not advanced")
+		end
+	)
+end)
 
 test("Accept is rejected while a mission is already active", function()
 	local p = freshProfile()
@@ -386,37 +561,37 @@ test("Counter rotation works with a multi-context fixture", function()
 	-- frozen context across successive runs, without shipping M1 content.
 	local p = freshProfile()
 	p.missionVariantCounters = { multi_ctx_mission = 0 }
-	local realMissions = Catalog.Missions
-	Catalog.Missions = {
-		{
-			missionId = "multi_ctx_mission",
-			requiredImpact = 100,
-			reward = 80,
-			minTier = 0,
-			unlockClaims = 0,
-			templates = { "meal_meme", "queue_thread", "late_night_quip" },
-			contexts = { "meal_time", "ctx_b", "ctx_c" },
-		},
-	}
-	Catalog.V0Shipped.missionIds = { "multi_ctx_mission" }
 	local seen: { string } = {}
-	for i = 1, 3 do
-		local next = assertOk(
-			MissionService.accept(p, "multi_ctx_mission", `run-{i}`, 1000),
-			`accept run {i}`
-		)
-		table.insert(seen, next.activeMission.contextId)
-		-- Claim it so the next accept is allowed.
-		next.activeMission.status = "readyToClaim"
-		local claimed = assertOk(MissionService.claim(next, `run-{i}`), `claim run {i}`)
-		p = claimed
-	end
+	withCatalogFixture(
+		{
+			{
+				missionId = "multi_ctx_mission",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 0,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time", "ctx_b", "ctx_c" },
+			},
+		},
+		{ "multi_ctx_mission" },
+		function()
+			for i = 1, 3 do
+				local next = assertOk(
+					MissionService.accept(p, "multi_ctx_mission", `run-{i}`, 1000),
+					`accept run {i}`
+				)
+				table.insert(seen, next.activeMission.contextId)
+				-- Claim it so the next accept is allowed.
+				next.activeMission.status = "readyToClaim"
+				local claimed = assertOk(MissionService.claim(next, `run-{i}`), `claim run {i}`)
+				p = claimed
+			end
+		end
+	)
 	expectEqual(seen[1], "meal_time", "first run uses the first context")
 	expectEqual(seen[2], "ctx_b", "second run rotates")
 	expectEqual(seen[3], "ctx_c", "third run rotates again")
-	-- Restore the real catalog.
-	Catalog.Missions = realMissions
-	Catalog.V0Shipped.missionIds = { "food_stall_launch" }
 end)
 
 -- ===== PublishOrganic =====
@@ -686,6 +861,143 @@ test("Mission impact is credited exactly once", function()
 	-- Re-settling is impossible (no pending post), so impact cannot double.
 	assertCode(MissionService.settle(settled, 2000), "NO_PENDING_POST", "re-settle refused")
 end)
+test("Settlement does not alias own-post summaries with the input profile", function()
+	-- The proposed profile must OWN every nested table. A JSON snapshot cannot
+	-- detect aliasing, so this mutates a retained summary in the proposal and
+	-- checks the profile that was actually passed to settle(), then the other
+	-- way round.
+	local p = freshProfile()
+	for i = 1, 3 do
+		table.insert(p.ownPosts, {
+			postId = `post-{i}`,
+			mode = "organic",
+			contextId = "organic_snack",
+			templateId = "snack_meme",
+			finalImpact = 120,
+			organicCuan = 15,
+			publishedAt = 1000 * i,
+		})
+	end
+	local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 5000), "publish")
+	local settled = assertOk(MissionService.settle(published, 5018), "settle")
+	expectEqual(#settled.ownPosts, 4, "new summary prepended, three retained")
+	-- Mutating the proposal's retained summaries must not reach the profile
+	-- that was passed to settle().
+	for i = 2, 4 do
+		settled.ownPosts[i].finalImpact = 999999
+	end
+	for i = 1, 3 do
+		expectEqual(
+			published.ownPosts[i].finalImpact,
+			120,
+			`settle input summary {i} untouched by proposal mutation`
+		)
+	end
+	-- Mutating the settle input's summaries must not reach the proposal.
+	for i = 1, 3 do
+		published.ownPosts[i].finalImpact = 888888
+	end
+	for i = 2, 4 do
+		expectEqual(
+			settled.ownPosts[i].finalImpact,
+			999999,
+			`proposal summary {i} untouched by settle input mutation`
+		)
+	end
+end)
+test("Settlement refuses a credit that reaches the economy limit", function()
+	-- docs/04: "stop growth before 1e12". The payout formula is unchanged; the
+	-- transition is refused instead of clamped, with no partial mutation.
+	-- 1e12 - 5 + 15 = 1e12 + 10, which reaches the limit.
+	local p = freshProfile()
+	p.balance = 1e12 - 5
+	p.lifetimeEarned = 1e12 - 5
+	local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 1000), "publish")
+	local result = MissionService.settle(published, 1018)
+	assertCode(result, "LIMIT_REACHED", "settlement past the limit")
+	expectEqual(result.profile, nil, "no proposed profile on refusal")
+	-- The input is untouched.
+	expectEqual(published.balance, 1e12 - 5, "input balance unchanged")
+	expectEqual(published.pendingPost ~= nil, true, "pending post still pending")
+end)
+test("A credit just below the economy limit still succeeds", function()
+	-- The boundary is exclusive: a total strictly below 1e12 is legal.
+	-- 1e12 - 1000 + 15 = 1e12 - 985.
+	local p = freshProfile()
+	p.balance = 1e12 - 1000
+	p.lifetimeEarned = 1e12 - 1000
+	local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 1000), "publish")
+	local settled = assertOk(MissionService.settle(published, 1018), "settle below limit")
+	expectEqual(settled.balance, 1e12 - 985, "credit applied below the limit")
+	expectEqual(settled.lifetimeEarned, 1e12 - 985, "lifetime applied below the limit")
+end)
+test("Claim refuses a bonus that reaches the economy limit", function()
+	local p = freshProfile()
+	local accepted = assertOk(MissionService.accept(p, "food_stall_launch", "run-1", 1000), "accept")
+	local published = assertOk(MissionService.publishMission(accepted, "run-1", "meal_meme", 1000), "publish")
+	local settled = assertOk(MissionService.settle(published, 1018), "settle")
+	-- 1e12 - 5 + 80 = 1e12 + 75, which reaches the limit.
+	settled.balance = 1e12 - 5
+	settled.lifetimeEarned = 1e12 - 5
+	local result = MissionService.claim(settled, "run-1")
+	assertCode(result, "LIMIT_REACHED", "claim past the limit")
+	expectEqual(result.profile, nil, "no proposed profile on refusal")
+	expectEqual(settled.completedMissions, 0, "claim count unchanged")
+	expectEqual(#settled.claimedRunIdsWindow, 0, "claimed window unchanged")
+	expectEqual(settled.activeMission ~= nil, true, "mission still active")
+end)
+-- ===== server timestamp validation =====
+test("Publish rejects NaN, infinities and negative timestamps", function()
+	local p = freshProfile()
+	local nan = 0 / 0
+	assertCode(MissionService.publishOrganic(p, "snack_meme", nan), "INVALID_INPUT", "NaN now")
+	assertCode(MissionService.publishOrganic(p, "snack_meme", math.huge), "INVALID_INPUT", "+inf now")
+	assertCode(MissionService.publishOrganic(p, "snack_meme", -math.huge), "INVALID_INPUT", "-inf now")
+	assertCode(MissionService.publishOrganic(p, "snack_meme", -1), "INVALID_INPUT", "negative now")
+	assertCode(
+		MissionService.publishMission(p, "run-1", "meal_meme", nan),
+		"INVALID_INPUT",
+		"NaN now on campaign publish"
+	)
+	assertCode(
+		MissionService.publishMission(p, "run-1", "meal_meme", math.huge),
+		"INVALID_INPUT",
+		"+inf now on campaign publish"
+	)
+	assertCode(MissionService.publishMission(p, "run-1", "meal_meme", -5), "INVALID_INPUT", "negative now on campaign publish")
+end)
+test("Settle rejects NaN, infinities and negative timestamps", function()
+	local p = freshProfile()
+	local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 1000), "publish")
+	local nan = 0 / 0
+	assertCode(MissionService.settle(published, nan), "INVALID_INPUT", "NaN now")
+	assertCode(MissionService.settle(published, math.huge), "INVALID_INPUT", "+inf now")
+	assertCode(MissionService.settle(published, -math.huge), "INVALID_INPUT", "-inf now")
+	assertCode(MissionService.settle(published, -1), "INVALID_INPUT", "negative now")
+end)
+test("Accept rejects NaN, infinities and negative timestamps", function()
+	local nan = 0 / 0
+	assertCode(
+		MissionService.accept(freshProfile(), "food_stall_launch", "run-1", nan),
+		"INVALID_INPUT",
+		"NaN now"
+	)
+	assertCode(
+		MissionService.accept(freshProfile(), "food_stall_launch", "run-1", math.huge),
+		"INVALID_INPUT",
+		"+inf now"
+	)
+	assertCode(
+		MissionService.accept(freshProfile(), "food_stall_launch", "run-1", -math.huge),
+		"INVALID_INPUT",
+		"-inf now"
+	)
+	assertCode(
+		MissionService.accept(freshProfile(), "food_stall_launch", "run-1", -1),
+		"INVALID_INPUT",
+		"negative now"
+	)
+end)
 
 -- ===== ClaimMission =====
 test("A successful claim awards the fixed 80 Cuan exactly once", function()
@@ -817,26 +1129,21 @@ end)
 -- posts use B=100 for presentation. These fixtures are NOT shipped: they prove
 -- the scoring path honours each mission's own requirement.
 local function withMissionFixture(requiredImpact: number, fn: (any) -> ())
-	local realMissions = Catalog.Missions
-	local realShipped = Catalog.V0Shipped.missionIds
-	Catalog.Missions = {
+	withCatalogFixture(
 		{
-			missionId = "fixture_mission",
-			requiredImpact = requiredImpact,
-			reward = 80,
-			minTier = 0,
-			unlockClaims = 0,
-			templates = { "meal_meme", "queue_thread", "late_night_quip" },
-			contexts = { "meal_time" },
+			{
+				missionId = "fixture_mission",
+				requiredImpact = requiredImpact,
+				reward = 80,
+				minTier = 0,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
 		},
-	}
-	Catalog.V0Shipped.missionIds = { "fixture_mission" }
-	local ok, err = pcall(fn)
-	Catalog.Missions = realMissions
-	Catalog.V0Shipped.missionIds = realShipped
-	if not ok then
-		error(err, 0)
-	end
+		{ "fixture_mission" },
+		fn
+	)
 end
 
 test("V0 mission posts score 120 strong / 75 weak (B=100)", function()
@@ -958,50 +1265,189 @@ test("The validation gate rejects a shipped context with no affinities", functio
 end)
 
 test("The validation gate rejects a shipped mission context with no tags", function()
-	local realMissions = Catalog.Missions
-	Catalog.Missions = {
+	withCatalogFixture(
 		{
-			missionId = "bad_mission",
-			requiredImpact = 100,
-			reward = 80,
-			minTier = 0,
-			unlockClaims = 0,
-			templates = { "meal_meme", "queue_thread", "late_night_quip" },
-			contexts = { "meal_time", "untagged_context" },
+			{
+				missionId = "bad_mission",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 0,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time", "untagged_context" },
+			},
 		},
-	}
-	local ok, problems = ScoringCatalog.validateShippedContent(
-		Catalog,
-		Catalog.V0Shipped.organicContextIds,
-		{ "bad_mission" }
+		{ "bad_mission" },
+		function()
+			local ok, problems = ScoringCatalog.validateShippedContent(
+				Catalog,
+				Catalog.V0Shipped.organicContextIds,
+				Catalog.V0Shipped.missionIds
+			)
+			expectEqual(ok, false, "untagged mission context rejected")
+			expectTrue(#problems > 0, "problems reported")
+		end
 	)
-	Catalog.Missions = realMissions
-	expectEqual(ok, false, "untagged mission context rejected")
-	expectTrue(#problems > 0, "problems reported")
 end)
 
 test("The validation gate ignores unshipped M1 content", function()
 	-- An unshipped mission referencing an unknown context must not fail the
-	-- gate, because M1 content is not gated on V0 affinities yet.
-	local realMissions = Catalog.Missions
-	Catalog.Missions = {
+	-- gate, because M1 content is not gated on V0 affinities yet. The valid
+	-- shipped V0 mission stays present, so this also proves the new
+	-- shipped-mission-existence check does not fire on real content.
+	withCatalogFixture(
 		{
-			missionId = "m1_mission",
-			requiredImpact = 160,
-			reward = 120,
-			minTier = 1,
-			unlockClaims = 1,
-			templates = { "weekend_plans", "event_thread", "neon_quip" },
-			contexts = { "neon_market" },
+			-- The real V0 mission: shipped and valid.
+			{
+				missionId = "food_stall_launch",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 0,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
+			-- Unshipped M1 content with an unknown context: must be ignored.
+			{
+				missionId = "m1_mission",
+				requiredImpact = 160,
+				reward = 120,
+				minTier = 1,
+				unlockClaims = 1,
+				templates = { "weekend_plans", "event_thread", "neon_quip" },
+				contexts = { "neon_market" },
+			},
 		},
-	}
-	local ok, problems = ScoringCatalog.validateShippedContent(
-		Catalog,
-		Catalog.V0Shipped.organicContextIds,
-		Catalog.V0Shipped.missionIds
+		{ "food_stall_launch" },
+		function()
+			local ok, problems = ScoringCatalog.validateShippedContent(
+				Catalog,
+				Catalog.V0Shipped.organicContextIds,
+				Catalog.V0Shipped.missionIds
+			)
+			expectTrue(ok, `unshipped M1 content must not fail the gate: {table.concat(problems, "; ")}`)
+		end
 	)
-	Catalog.Missions = realMissions
-	expectTrue(ok, `unshipped M1 content must not fail the gate: {table.concat(problems, "; ")}`)
+end)
+test("The validation gate rejects a shipped mission missing from the catalog", function()
+	-- A shipped mission ID with no matching definition must fail: the mission
+	-- loop only walks the missions that exist, so a missing ID is otherwise
+	-- never examined at all.
+	withCatalogFixture(
+		{
+			{
+				missionId = "food_stall_launch",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 0,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
+		},
+		{ "food_stall_launch", "typo_mission" },
+		function()
+			local ok, problems = ScoringCatalog.validateShippedContent(
+				Catalog,
+				Catalog.V0Shipped.organicContextIds,
+				Catalog.V0Shipped.missionIds
+			)
+			expectEqual(ok, false, "missing shipped mission rejected")
+			expectTrue(#problems > 0, "problems reported")
+			expectTrue(
+				table.concat(problems, "; "):find("typo_mission") ~= nil,
+				"problem names the missing mission"
+			)
+		end
+	)
+end)
+test("assertShippedContentValid raises on a missing shipped mission", function()
+	local ok, err = pcall(function()
+		ScoringCatalog.assertShippedContentValid(
+			Catalog,
+			Catalog.V0Shipped.organicContextIds,
+			{ "missing_mission" }
+		)
+	end)
+	expectEqual(ok, false, "missing shipped mission raises")
+	expectTrue(
+		type(err) == "string" and err:find("missing_mission") ~= nil,
+		"error names the missing mission"
+	)
+end)
+test("validateContent rejects an unknown mission context instead of defaulting tags", function()
+	-- The generic validator must NOT silently score an unknown mission context
+	-- against the V0 identifiers. An unresolvable context is invalid content.
+	local ok, problems = ScoringCatalog.validateContent(
+		{
+			{
+				missionId = "m1_mission",
+				requiredImpact = 160,
+				reward = 120,
+				minTier = 1,
+				unlockClaims = 1,
+				templates = { "weekend_plans", "event_thread", "neon_quip" },
+				contexts = { "neon_market" },
+			},
+		},
+		ScoringCatalog.TestFixtures.mission,
+		ScoringCatalog.missionContextTags
+	)
+	expectEqual(ok, false, "unknown mission context rejected")
+	expectTrue(#problems > 0, "problems reported")
+	expectTrue(
+		table.concat(problems, "; "):find("neon_market") ~= nil,
+		"problem names the unknown context"
+	)
+end)
+test("validateContent rejects mission entries when no tag lookup is supplied", function()
+	-- Without an explicit lookup there is no authoritative source for mission
+	-- context tags, so the validator must refuse rather than guess.
+	local ok, problems = ScoringCatalog.validateContent(
+		Catalog.Missions,
+		ScoringCatalog.missionAffinities()
+	)
+	expectEqual(ok, false, "missing tag lookup rejected")
+	expectTrue(#problems > 0, "problems reported")
+end)
+test("A failing catalog fixture restores the exact original references", function()
+	-- Shared catalog state must survive a fixture whose body errors, otherwise
+	-- one real defect contaminates every later test in the place.
+	local realMissions = Catalog.Missions
+	local realShipped = Catalog.V0Shipped.missionIds
+	local fixtureFailed = false
+	pcall(function()
+		withCatalogFixture(
+			{
+				{
+					missionId = "boom_mission",
+					requiredImpact = 100,
+					reward = 80,
+					minTier = 0,
+					unlockClaims = 0,
+					templates = { "meal_meme", "queue_thread", "late_night_quip" },
+					contexts = { "meal_time" },
+				},
+			},
+			{ "boom_mission" },
+			function()
+				-- Force a failure inside the fixture body.
+				error("intentional fixture failure", 0)
+			end
+		)
+	end)
+	fixtureFailed = true
+	expectEqual(fixtureFailed, true, "fixture body ran")
+	-- Reference identity, not just equal contents.
+	expectEqual(Catalog.Missions == realMissions, true, "Catalog.Missions reference restored")
+	expectEqual(
+		Catalog.V0Shipped.missionIds == realShipped,
+		true,
+		"V0Shipped.missionIds reference restored"
+	)
+	expectEqual(Catalog.Missions[1].missionId, "food_stall_launch", "real mission content restored")
+	expectEqual(#Catalog.V0Shipped.missionIds, 1, "real shipped list restored")
+	expectEqual(Catalog.V0Shipped.missionIds[1], "food_stall_launch", "real shipped id restored")
 end)
 
 test("assertShippedContentValid raises on invalid content", function()

@@ -30,6 +30,7 @@ export type FeedCard = {
 	templateId: string,
 	body: string, -- authored copy only; never user text
 	clueKey: string?, -- authored clue relevant to a supported posting context
+	clueText: string?, -- readable authored clue; never a template affinity
 	publishedAt: number,
 	-- Engagement is DERIVED from frozen impact and timestamps, never random and
 	-- never client-supplied.
@@ -63,6 +64,22 @@ local NPC_IDENTITIES: { { name: string, handle: string } } = {
 -- added by BS-11 with their content.
 local MISSION_CLUE_KEYS: { [string]: string } = {
 	meal_time = "meal_time_clue",
+}
+-- Authored readable clue text for every shipped context.
+--
+-- docs/02: "Each context names a fictional trend, audience, and readable
+-- clue." The clue is what lets a player compare the three authored templates
+-- against the context and learn fit, so a clue KEY alone is not enough -- the
+-- projected card must carry the readable text. Both V0 contexts resolve here.
+--
+-- PRIVACY: this text names the trend and audience in plain language and never
+-- states which template wins. The per-template affinity mapping (the answer
+-- key) stays in ScoringCatalog and is never projected. The public Catalog
+-- already exposes each organic context's own trendId/audienceId (docs/03), so
+-- restating them in readable form discloses nothing new.
+local CLUE_TEXTS: { [string]: string } = {
+	organic_snack_clue = "Jajanan sore lagi rame di kalangan anak kos. Siapa yang paling bisa bikin mereka berhenti scrolling?",
+	meal_time_clue = "Jam makan siang tiba dan warung mie di ujung jalan selalu penuh. Siapa yang paling bisa bikin antriannya kelihatan ramai?",
 }
 
 -- Authored reply/comment pools. Bounded and fictional; never user text.
@@ -160,6 +177,16 @@ local function clueKeyFor(contextId: string): string?
 	return MISSION_CLUE_KEYS[contextId]
 end
 
+-- Readable authored clue text for a context's clue key. Returns nil when the
+-- key has no authored text, so an unresolved clue is visibly absent rather than
+-- silently blank. Never exposes a template affinity.
+local function clueTextFor(clueKey: string?): string?
+	if clueKey == nil then
+		return nil
+	end
+	return CLUE_TEXTS[clueKey]
+end
+
 -- Authored NPC cards, projected. Bounded to AUTHORED_NPC_CARDS and ordered by
 -- publishedAt so presentation is stable.
 function FeedService.authoredCards(): { FeedCard }
@@ -171,6 +198,7 @@ function FeedService.authoredCards(): { FeedCard }
 		end
 		local identity = NPC_IDENTITIES[a.npcIndex]
 		local likes, replies = deriveEngagement(100, a.publishedAt)
+		local clueKey = clueKeyFor(a.contextId)
 		local card: FeedCard = {
 			cardId = a.cardId,
 			kind = "authored",
@@ -179,7 +207,8 @@ function FeedService.authoredCards(): { FeedCard }
 			contextId = a.contextId,
 			templateId = a.templateId,
 			body = a.body,
-			clueKey = clueKeyFor(a.contextId),
+			clueKey = clueKey,
+			clueText = clueTextFor(clueKey),
 			publishedAt = a.publishedAt,
 			likes = likes,
 			replies = replies,
@@ -208,6 +237,7 @@ function FeedService.ownCards(profile: any): { FeedCard }
 		end
 		local s: any = summary
 		local likes, replies = deriveEngagement(s.finalImpact, s.publishedAt)
+		local clueKey = clueKeyFor(s.contextId)
 		local card: FeedCard = {
 			cardId = `own-{s.postId}`,
 			kind = "own",
@@ -216,7 +246,8 @@ function FeedService.ownCards(profile: any): { FeedCard }
 			contextId = s.contextId,
 			templateId = s.templateId,
 			body = "", -- own cards render from frozen results, never stored text
-			clueKey = clueKeyFor(s.contextId),
+			clueKey = clueKey,
+			clueText = clueTextFor(clueKey),
 			publishedAt = s.publishedAt,
 			likes = likes,
 			replies = replies,

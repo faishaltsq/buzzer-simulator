@@ -281,6 +281,13 @@ local function validateMutationOutcome(o: any, problems: { string})
 	end
 end
 
+-- Frozen economy guard (docs/04: "stop growth before 1e12"). The domain layer
+-- (MissionService) already refuses a credit that would reach this bound; this
+-- is defense in depth at the persistence boundary so a corrupt or hand-edited
+-- payload can never be durably accepted either. Minimal BS-02 change: two
+-- comparisons, no schema change, no formula change.
+local MAX_ECONOMIC_TOTAL = 1e12
+
 local function validateProfile(profile: any, problems: { string})
 	if typeof(profile) ~= "table" then
 		table.insert(problems, "profile must be a table")
@@ -288,9 +295,13 @@ local function validateProfile(profile: any, problems: { string})
 	end
 	if not isNonNegativeInteger(profile.balance) then
 		table.insert(problems, "profile.balance must be a nonnegative integer")
+	elseif asNumber(profile.balance) >= MAX_ECONOMIC_TOTAL then
+		table.insert(problems, `profile.balance must be below the {MAX_ECONOMIC_TOTAL} economy limit`)
 	end
 	if not isNonNegativeInteger(profile.lifetimeEarned) then
 		table.insert(problems, "profile.lifetimeEarned must be a nonnegative integer")
+	elseif asNumber(profile.lifetimeEarned) >= MAX_ECONOMIC_TOTAL then
+		table.insert(problems, `profile.lifetimeEarned must be below the {MAX_ECONOMIC_TOTAL} economy limit`)
 	end
 	if not isNonNegativeInteger(profile.completedMissions) then
 		table.insert(problems, "profile.completedMissions must be a nonnegative integer")
