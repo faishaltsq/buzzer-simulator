@@ -92,6 +92,20 @@ local function withCatalogFixture(
 		error(err, 0)
 	end
 end
+-- The shipped tier cap is a shared module-level number, not a table reference.
+-- A test that raises it must restore the EXACT original value even when an
+-- assertion or the callback itself errors, otherwise every later test that
+-- derives eligibility (accept's tier gate) inherits the wrong cap and the
+-- reported failure names the wrong cause.
+local function withShippedTierCap(cap: number, fn: () -> ())
+	local realCap = Catalog.V0Shipped.maxShippedTier
+	Catalog.V0Shipped.maxShippedTier = cap
+	local ok, err = pcall(fn)
+	Catalog.V0Shipped.maxShippedTier = realCap
+	if not ok then
+		error(err, 0)
+	end
+end
 
 -- ===== ScoringCatalog =====
 test("V0 organic context has snack_meme as its unique strong template", function()
@@ -357,53 +371,53 @@ test("A tier-0 player is rejected from a tier-1 mission", function()
 end)
 test("A tier-1 mission requires BOTH lifetime and claim thresholds", function()
 	-- The shipped tier cap must also permit tier 1 for this test, otherwise the
-	-- clamp holds eligibility at 0 regardless of the profile's totals.
-	local realCap = Catalog.V0Shipped.maxShippedTier
-	Catalog.V0Shipped.maxShippedTier = 1
-	withCatalogFixture(
-		{
+	-- clamp holds eligibility at 0 regardless of the profile's totals. The cap
+	-- is restored even if an assertion below throws.
+	withShippedTierCap(1, function()
+		withCatalogFixture(
 			{
-				missionId = "tier1_mission",
-				requiredImpact = 100,
-				reward = 80,
-				minTier = 1,
-				unlockClaims = 0,
-				templates = { "meal_meme", "queue_thread", "late_night_quip" },
-				contexts = { "meal_time" },
+				{
+					missionId = "tier1_mission",
+					requiredImpact = 100,
+					reward = 80,
+					minTier = 1,
+					unlockClaims = 0,
+					templates = { "meal_meme", "queue_thread", "late_night_quip" },
+					contexts = { "meal_time" },
+				},
 			},
-		},
-		{ "tier1_mission" },
-		function()
-			-- Lifetime met, claims short (tier 1 needs 3 claims).
-			local shortClaims = freshProfile()
-			shortClaims.lifetimeEarned = 300
-			shortClaims.completedMissions = 2
-			assertCode(
-				MissionService.accept(shortClaims, "tier1_mission", "run-1", 1000),
-				"NOT_READY",
-				"claims threshold not met"
-			)
-			-- Claims met, lifetime short.
-			local shortLifetime = freshProfile()
-			shortLifetime.lifetimeEarned = 299
-			shortLifetime.completedMissions = 3
-			assertCode(
-				MissionService.accept(shortLifetime, "tier1_mission", "run-1", 1000),
-				"NOT_READY",
-				"lifetime threshold not met"
-			)
-			-- Both thresholds met: accepted.
-			local eligible = freshProfile()
-			eligible.lifetimeEarned = 300
-			eligible.completedMissions = 3
-			local next = assertOk(
-				MissionService.accept(eligible, "tier1_mission", "run-1", 1000),
-				"both thresholds met"
-			)
-			expectEqual(next.activeMission.missionId, "tier1_mission", "tier-1 mission accepted")
-		end
-	)
-	Catalog.V0Shipped.maxShippedTier = realCap
+			{ "tier1_mission" },
+			function()
+				-- Lifetime met, claims short (tier 1 needs 3 claims).
+				local shortClaims = freshProfile()
+				shortClaims.lifetimeEarned = 300
+				shortClaims.completedMissions = 2
+				assertCode(
+					MissionService.accept(shortClaims, "tier1_mission", "run-1", 1000),
+					"NOT_READY",
+					"claims threshold not met"
+				)
+				-- Claims met, lifetime short.
+				local shortLifetime = freshProfile()
+				shortLifetime.lifetimeEarned = 299
+				shortLifetime.completedMissions = 3
+				assertCode(
+					MissionService.accept(shortLifetime, "tier1_mission", "run-1", 1000),
+					"NOT_READY",
+					"lifetime threshold not met"
+				)
+				-- Both thresholds met: accepted.
+				local eligible = freshProfile()
+				eligible.lifetimeEarned = 300
+				eligible.completedMissions = 3
+				local next = assertOk(
+					MissionService.accept(eligible, "tier1_mission", "run-1", 1000),
+					"both thresholds met"
+				)
+				expectEqual(next.activeMission.missionId, "tier1_mission", "tier-1 mission accepted")
+			end
+		)
+	end)
 end)
 test("The shipped tier cap blocks a tier above the shipped cap", function()
 	-- V0 ships maxShippedTier = 0, so even a profile that would clear tier 1's
@@ -1448,6 +1462,52 @@ test("A failing catalog fixture restores the exact original references", functio
 	expectEqual(Catalog.Missions[1].missionId, "food_stall_launch", "real mission content restored")
 	expectEqual(#Catalog.V0Shipped.missionIds, 1, "real shipped list restored")
 	expectEqual(Catalog.V0Shipped.missionIds[1], "food_stall_launch", "real shipped id restored")
+end)
+test("A failing tier-cap fixture restores the exact original cap", function()
+	-- The shipped tier cap is shared module state that accept() reads on every
+	-- call. A test that raises it must restore the EXACT original value even
+	-- when the body errors, otherwise the next tier test inherits a wrong cap.
+	local realCap = Catalog.V0Shipped.maxShippedTier
+	local fixtureFailed = false
+	pcall(function()
+		withShippedTierCap(1, function()
+			-- Force a failure inside the fixture body.
+			error("intentional tier-cap fixture failure", 0)
+		end)
+	end)
+	fixtureFailed = true
+	expectEqual(fixtureFailed, true, "fixture body ran")
+	expectEqual(
+		Catalog.V0Shipped.maxShippedTier,
+		realCap,
+		"maxShippedTier restored to the exact original value"
+	)
+	-- The restored cap must still gate eligibility: with the real V0 cap of 0,
+	-- a tier-1 fixture mission is refused.
+	withCatalogFixture(
+		{
+			{
+				missionId = "tier1_mission",
+				requiredImpact = 100,
+				reward = 80,
+				minTier = 1,
+				unlockClaims = 0,
+				templates = { "meal_meme", "queue_thread", "late_night_quip" },
+				contexts = { "meal_time" },
+			},
+		},
+		{ "tier1_mission" },
+		function()
+			local p = freshProfile()
+			p.lifetimeEarned = 9999
+			p.completedMissions = 99
+			assertCode(
+				MissionService.accept(p, "tier1_mission", "run-1", 1000),
+				"NOT_READY",
+				"restored cap still gates tier 1"
+			)
+		end
+	)
 end)
 
 test("assertShippedContentValid raises on invalid content", function()
