@@ -432,6 +432,48 @@ function EconomyService.tick(profile: any, connectedSeconds: number): OperationR
 	return ok(next)
 end
 
+-- Accrue a connected interval at an EXPLICIT rate, independent of the
+-- profile's current worker list. SessionService uses this to credit a pending
+-- interval with the worker count that was active while it elapsed, so a hire
+-- can never retroactively re-rate earlier time. `rate` is Cuan/s.
+function EconomyService.tickAtRate(profile: any, connectedSeconds: number, rate: number): OperationResult
+	if not isFiniteNumber(connectedSeconds) or connectedSeconds < 0 then
+		return fail("INVALID_INPUT", "connectedSeconds must be a finite nonnegative number")
+	end
+	if not isFiniteNumber(rate) or rate < 0 then
+		return fail("INVALID_INPUT", "rate must be a finite nonnegative number")
+	end
+	if not isUsableProfile(profile) then
+		return fail("INVALID_INPUT", "profile is not a usable v1 profile")
+	end
+	if rate == 0 or connectedSeconds == 0 then
+		return ok(deepCopy(profile))
+	end
+	local fractional = profile.fractionalIncome + rate * connectedSeconds
+	local credit = math.floor(fractional)
+	local residual = fractional - credit
+	if credit > 0 then
+		local nextBalance = profile.balance + credit
+		local nextLifetime = profile.lifetimeEarned + credit
+		if nextBalance >= MAX_ECONOMIC_TOTAL or nextLifetime >= MAX_ECONOMIC_TOTAL then
+			return fail(
+				"LIMIT_REACHED",
+				`worker accrual would reach the {MAX_ECONOMIC_TOTAL} economy limit`
+			)
+		end
+		local next = deepCopy(profile)
+		next.balance = nextBalance
+		next.lifetimeEarned = nextLifetime
+		next.fractionalIncome = residual
+		local result = ok(next)
+		result.earned = credit
+		return result
+	end
+	local next = deepCopy(profile)
+	next.fractionalIncome = residual
+	return ok(next)
+end
+
 -- ===== introspection (used by SessionService and specs) =====
 -- Worker income rate in Cuan/s for the currently owned workers.
 function EconomyService.incomePerSecond(profile: any): number

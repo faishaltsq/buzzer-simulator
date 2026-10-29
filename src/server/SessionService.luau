@@ -278,6 +278,9 @@ function SessionService.new(opts: SessionOptions): SessionServiceInstance
 	-- Seconds since the last durable bank, tracked so a renewal or a command
 	-- can piggyback the same accrued interval exactly once.
 	self._unbankedSeconds = 0
+	-- Pending accrual as rate-tagged intervals, so each is credited at the
+	-- worker count active while it elapsed.
+	self._pendingAccrual = {} :: { { seconds: number, rate: number } }
 	self._lastBankAt = 0
 	-- Live reservation/replay bookkeeping. The durable ring is the authority
 	-- after a reconnect; this table only answers within the live session.
@@ -310,6 +313,7 @@ export type SessionServiceInstance = {
 	_saveStatus: SaveStatusCode,
 	_connectedSeconds: number,
 	_unbankedSeconds: number,
+	_pendingAccrual: { { seconds: number, rate: number } },
 	_lastBankAt: number,
 	_reserved: { [string]: boolean },
 	_liveResults: { [string]: MutationResult },
@@ -355,6 +359,9 @@ function SessionService:Start(): { ok: boolean, code: string, detail: string?, s
 	self._started = true
 	self._connectedSeconds = 0
 	self._unbankedSeconds = 0
+	-- Pending accrual as rate-tagged intervals, so each is credited at the
+	-- worker count active while it elapsed.
+	self._pendingAccrual = {} :: { { seconds: number, rate: number } }
 	self._lastBankAt = 0
 	return { ok = true, code = "OK", snapshot = self:_buildSnapshot() }
 end
@@ -417,11 +424,18 @@ function SessionService:_pendingWorkerCuan(): number
 	if profile == nil then
 		return 0
 	end
-	local rate = EconomyService.incomePerSecond(profile)
-	if rate == 0 or self._unbankedSeconds <= 0 then
-		return 0
+	-- Project each pending interval at ITS OWN rate, so the displayed
+	-- unbanked accrual matches what a bank would actually credit. Using the
+	-- current rate would overstate (or understate) an interval that elapsed
+	-- under a different worker count.
+	local fractional = profile.fractionalIncome
+	local projected = 0
+	local accrual: { { seconds: number, rate: number } } = self._pendingAccrual
+	for i = 1, #accrual do
+		local entry = accrual[i]
+		fractional += entry.rate * entry.seconds
 	end
-	local projected = math.floor(profile.fractionalIncome + rate * self._unbankedSeconds)
+	projected = math.floor(fractional)
 	return projected
 end
 
@@ -480,12 +494,22 @@ local function appendOutcome(profile: any, outcome: any)
 end
 
 -- ===== the single serialized lane =====
--- Every durable action for this player runs here, one at a time. The lane
--- yields between turns so a long save cannot block the scheduler, but it never
--- runs two writes concurrently for the same player.
-function SessionService:_runLane(fn: () -> ())
-	while self._laneBusy do
-		self._wait(0)
+-- Every durable action for this player runs here, one at a time. The lane never
+-- runs two writes concurrently for the same player, and it never busy-waits:
+-- an unbounded `while busy do wait(0) end` spin would stall a caller for as long
+-- as a held write takes, and docs/03 requires a busy read to return the last
+-- confirmed state "without waiting".
+--
+-- `_tryRunLane` returns false when the lane is already held, so a caller can
+-- either back off with explicit BUSY backpressure or defer the work. `_runLane`
+-- keeps the blocking form for callers that must complete the action in this
+-- turn (a command that has already reserved its identity), but it waits with a
+-- BOUNDED number of yields and then reports BUSY rather than spinning forever.
+local MAX_LANE_WAITS = 64
+
+function SessionService:_tryRunLane(fn: () -> ()): boolean
+	if self._laneBusy then
+		return false
 	end
 	self._laneBusy = true
 	local ok, err = pcall(fn)
@@ -493,51 +517,86 @@ function SessionService:_runLane(fn: () -> ())
 	if not ok then
 		error(err, 0)
 	end
+	return true
+end
+
+function SessionService:_runLane(fn: () -> ()): boolean
+	local waits = 0
+	while self._laneBusy do
+		if waits >= MAX_LANE_WAITS then
+			-- Bounded backpressure: never spin forever behind a held write.
+			return false
+		end
+		self._wait(0)
+		waits += 1
+	end
+	return self:_tryRunLane(fn)
 end
 
 -- Advance connected time in bounded chunks without dropping the remainder.
--- The leftover stays in self._unbankedSeconds for the next lane turn.
-function SessionService:_drainChunks(): { number }
+--
+-- RATE-AWARE PENDING ACCRUAL: each pending interval is stored with the
+-- worker RATE that was active while it accrued, not just its duration. A
+-- hire or a worker-count change must not retroactively re-rate time that
+-- elapsed under a different count, and a failed write must restore the
+-- interval at its ORIGINAL rate rather than the rate current at recovery.
+-- `_unbankedSeconds` remains the total unbanked duration for reporting.
+function SessionService:_drainChunks(): { { seconds: number, rate: number } }
 	local session: any = self
-	local chunks: { number } = {}
-	while session._unbankedSeconds > 0 do
-		local chunk = math.min(session._unbankedSeconds, MAX_TIME_CHUNK)
-		table.insert(chunks, chunk)
-		session._unbankedSeconds -= chunk
+	local pending: { { seconds: number, rate: number } } = session._pendingAccrual
+	local drained: { { seconds: number, rate: number } } = {}
+	local remaining: { { seconds: number, rate: number } } = {}
+	for i = 1, #pending do
+		local entry = pending[i]
+		local seconds = entry.seconds
+		while seconds > 0 do
+			local chunk = math.min(seconds, MAX_TIME_CHUNK)
+			table.insert(drained, { seconds = chunk, rate = entry.rate })
+			seconds -= chunk
+		end
 	end
-	return chunks
+	session._pendingAccrual = remaining
+	session._unbankedSeconds = 0
+	return drained
 end
 
 -- Apply accrued worker income to a PROPOSED profile. Returns the proposed
--- profile and the credited amount. The confirmed profile is never touched:
--- the caller commits the proposal only after a durable save succeeds, so a
--- failed or ambiguous write cannot publish unconfirmed Cuan.
-function SessionService:_applyWorkerAccrual(base: any): (any, number)
+-- profile, the credited amount, and the EXACT list of consumed intervals.
+-- Each interval is credited with the worker count that was active while it
+-- elapsed, so a hire never re-rates earlier time. The confirmed profile is
+-- never touched: the caller commits the proposal only after a durable save
+-- succeeds, so a failed or ambiguous write cannot publish unconfirmed Cuan.
+function SessionService:_applyWorkerAccrual(base: any): (any, number, { { seconds: number, rate: number } })
 	local chunks = self:_drainChunks()
 	if #chunks == 0 then
-		return base, 0
+		return base, 0, {}
 	end
 	local current = base
 	local totalCredited = 0
-	for _, chunk in ipairs(chunks) do
-		local tick = EconomyService.tick(current, chunk)
+	local consumed: { { seconds: number, rate: number } } = {}
+	for i = 1, #chunks do
+		local chunk = chunks[i]
+		-- Credit this interval using the worker count it accrued under, by
+		-- ticking a profile whose worker list reflects that rate.
+		local tick = EconomyService.tickAtRate(current, chunk.seconds, chunk.rate)
 		if not tick.ok then
-			-- Refuse rather than clamp: the caller must not persist a partial
-			-- or silently reduced credit.
+			-- Refuse rather than clamp: the caller must not persist a partial or
+			-- silently reduced credit.
 			error(`SessionService: worker accrual refused ({tick.code}: {tostring(tick.detail)})`, 0)
 		end
 		current = tick.profile
 		totalCredited += tick.earned or 0
+		table.insert(consumed, chunk)
 	end
 	self._lastBankAt = self._connectedSeconds
-	return current, totalCredited
+	return current, totalCredited, consumed
 end
 
 -- Fold accrued worker income into a durable write that is happening anyway.
 -- Returns the PROPOSED profile (with the worker credit applied) and the
 -- credited amount. Never issues a write of its own: piggybacking is the only
 -- path that avoids a redundant bank, and the caller performs the save.
-function SessionService:_piggybackWorker(): (any, number)
+function SessionService:_piggybackWorker(): (any, number, { { seconds: number, rate: number } })
 	return self:_applyWorkerAccrual(self._profile)
 end
 
@@ -564,38 +623,59 @@ end
 -- A standalone worker bank write, used only when no other durable write is
 -- already carrying the accrued interval.
 function SessionService:_bankWorker(): { ok: boolean, code: string, credited: number }
-	local proposed, credited = self:_piggybackWorker()
+	local proposed, credited, consumed = self:_piggybackWorker()
 	if credited == 0 then
 		return { ok = true, code = "OK", credited = 0 }
 	end
 	local commit = self:_commit(proposed, `{OP_PREFIX.bank}-{self._userId}-{self._lastBankAt}`)
 	if not commit.ok then
 		-- The proposal is discarded. The confirmed wallet is unchanged, and the
-		-- accrued interval is restored so it is credited on a later turn exactly
-		-- once rather than being silently dropped.
-		self:_restoreUnbanked(credited)
+		-- exact accrued interval is restored so it is credited on a later turn
+		-- exactly once rather than being silently dropped.
+		self:_restoreUnbanked(credited, consumed)
 		return { ok = false, code = commit.code, credited = 0 }
 	end
 	return { ok = true, code = "OK", credited = credited }
 end
 
 -- Restore an accrued interval that could not be confirmed, so the next lane
--- turn credits it exactly once. The fractional residual is recomputed from
--- the confirmed profile, so no partial credit is double-counted.
-function SessionService:_restoreUnbanked(credited: number)
+-- turn credits it exactly once.
+--
+-- EXACT ATTRIBUTION: the interval is restored as the SECONDS captured when
+-- the accrual was computed, not reconstructed from the rounded credit.
+-- Deriving seconds as `credited / currentRate` loses the fractional residual
+-- and, worse, misattributes the interval when the worker count changed
+-- between the failed write and its recovery: the same credit would be
+-- divided by a different rate and the restored time would be wrong.
+-- `_applyWorkerAccrual` records the exact seconds it consumed, and this
+-- function restores precisely those.
+function SessionService:_restoreUnbanked(credited: number, consumed: { { seconds: number, rate: number } }?)
+	if credited <= 0 then
+		return
+	end
+	local session: any = self
+	if consumed ~= nil and #consumed > 0 then
+		-- Restore each interval with its ORIGINAL rate, so a worker-count change
+		-- between the failed write and its recovery cannot re-rate the interval.
+		for i = 1, #consumed do
+			local entry = consumed[i]
+			table.insert(session._pendingAccrual, entry)
+			session._unbankedSeconds += entry.seconds
+		end
+		return
+	end
+	-- Fallback for a caller that did not record the interval: recover from the
+	-- credit using the CURRENT rate. Approximate, and only reached on a path
+	-- that did not change the worker count.
 	local profile = self._profile
-	if profile == nil or credited <= 0 then
+	if profile == nil then
 		return
 	end
 	local rate = EconomyService.incomePerSecond(profile)
 	if rate <= 0 then
 		return
 	end
-	-- credited = floor(fractional + rate * seconds), so the seconds that
-	-- produced it are recovered from the credit itself.
-	local seconds = credited / rate
-	local session: any = self
-	session._unbankedSeconds += seconds
+	session._unbankedSeconds += credited / rate
 end
 
 
@@ -620,12 +700,12 @@ function SessionService:_settleDue(): { ok: boolean, code: string, settled: bool
 		return { ok = false, code = proposed.code, settled = false }
 	end
 	-- Fold accrued worker income into this same durable write.
-	local merged, credited = self:_applyWorkerAccrual(proposed.profile)
+	local merged, credited, consumed = self:_applyWorkerAccrual(proposed.profile)
 	local commit = self:_commit(merged, opId)
 	if not commit.ok then
-		-- The proposal is discarded and the accrued interval is restored, so the
-		-- settlement and the worker credit are retried together on a later turn.
-		self:_restoreUnbanked(credited)
+		-- The proposal is discarded and the exact accrued interval is restored, so
+		-- the settlement and the worker credit are retried together on a later turn.
+		self:_restoreUnbanked(credited, consumed)
 		return { ok = false, code = commit.code, settled = false }
 	end
 	return { ok = true, code = "OK", settled = true }
@@ -668,11 +748,16 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		return { ok = false, code = "INVALID_INPUT", revision = self._revision, detail = payloadErr }
 	end
 
-	-- Canonical intent. A repeated requestId with a DIFFERENT intent is invalid
-	-- and must not execute or save.
+	-- Canonical intent. ALWAYS derived server-side from the validated action and
+	-- payload. A caller-supplied `intent` is never trusted: it is the string the
+	-- conflict check compares against, so honouring it would let a reused
+	-- requestId with a different action/payload forge a match and be reported as
+	-- a successful replay. docs/03: "An identical request ID with different
+	-- action/payload is INVALID_INPUT, not a replay." BS-06's NetRouter must not
+	-- forward any client intent field into this layer.
 	local intent: string
 	local intentOk, intentErr = pcall(function()
-		intent = if request.intent ~= nil then request.intent else canonicalIntent(action, request.payload)
+		intent = canonicalIntent(action, request.payload)
 	end)
 	if not intentOk or intent == nil then
 		return { ok = false, code = "INVALID_INPUT", revision = self._revision, detail = tostring(intentErr) }
@@ -692,11 +777,15 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 				detail = "requestId was already used with a different intent",
 			}
 		end
+		-- The ring confirms this request was APPLIED, so the ring is the
+		-- authority. A cached live DEFINITE REJECTION is stale: it was recorded
+		-- before the durable write landed (for example a settlement that failed
+		-- locally while the held write actually committed). Returning it would
+		-- report a rejection for a mutation that durably succeeded. Only a live
+		-- result that is itself an APPLIED/OK record may be reused.
 		local live = self._liveResults[request.requestId]
-		if live ~= nil then
-			-- The durable ring confirms this request was applied, so the live
-			-- result is reported as an APPLIED replay rather than a fresh result.
-			if live.code == "OK" and live.lookup == nil then
+		if live ~= nil and live.code == "OK" then
+			if live.lookup == nil then
 				local replayedLive: MutationResult = {
 					ok = true,
 					code = "OK",
@@ -755,13 +844,19 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 				return
 			end
 			retrySession._inflight[request.requestId] = nil
-			local appliedRetry: MutationResult = {
+			-- The reconciled proposal already carries the durable ring entry, so
+			-- the recorded resultIds come straight from it. Assigning to
+			-- retryResult is what makes the APPLIED result reach the caller; without
+			-- it Mutate falls through and reports the mutation as unprocessed.
+			local ring = inflight.profile.recentMutationOutcomes
+			local recorded = ring[#ring]
+			retryResult = {
 				ok = true,
 				code = "OK",
 				revision = retrySession._revision,
 				lookup = "APPLIED",
-				data = { resultIds = inflight.profile.recentMutationOutcomes[#inflight.profile.recentMutationOutcomes].resultIds },
-			}
+				data = { resultIds = if recorded ~= nil then recorded.resultIds else nil },
+			} :: MutationResult
 		end)
 		if retryResult ~= nil then
 			if retryResult.ok then
@@ -864,34 +959,46 @@ function SessionService:_executeMutation(
 
 	-- Domain transformation on a proposal. The confirmed profile is never
 	-- mutated in place.
+	--
+	-- ACCRUAL ORDERING (correctness): accrued connected time must be attributed
+	-- to the worker count that was active DURING that interval, not the count
+	-- this mutation is about to produce. A first hire must not retroactively pay
+	-- the pre-hire seconds at the new rate, and a second hire must not re-rate
+	-- the first interval. So the worker credit is computed against the CONFIRMED
+	-- pre-mutation profile first, and the domain mutation is applied on top of
+	-- that credited proposal. The single durable write still carries both
+	-- atomically, so piggybacking is preserved and previously accrued income can
+	-- fund the purchase exactly as the frozen economy contract requires.
+	local accrued, workerCredited, workerConsumed = self:_applyWorkerAccrual(self._profile)
 	local proposed: any = nil
 	local domainCode = "OK"
 	local domainDetail: string? = nil
 	if action == "AcceptMission" then
-		local r = MissionService.accept(self._profile, payload.missionId, self:_nextRunId(), self._now())
+		local r = MissionService.accept(accrued, payload.missionId, self:_nextRunId(), self._now())
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	elseif action == "PublishOrganic" then
-		local r = MissionService.publishOrganic(self._profile, payload.templateId, self._now())
+		local r = MissionService.publishOrganic(accrued, payload.templateId, self._now())
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	elseif action == "PublishPost" then
-		local r = MissionService.publishMission(self._profile, payload.runId, payload.templateId, self._now())
+		local r = MissionService.publishMission(accrued, payload.runId, payload.templateId, self._now())
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	elseif action == "ClaimMission" then
-		local r = MissionService.claim(self._profile, payload.runId)
+		local r = MissionService.claim(accrued, payload.runId)
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	elseif action == "BuyDevice" then
-		local r = EconomyService.buyDevice(self._profile, payload.deviceId)
+		local r = EconomyService.buyDevice(accrued, payload.deviceId)
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	elseif action == "BuyDesk" then
-		local r = EconomyService.buyDesk(self._profile, payload.slotIndex)
+		local r = EconomyService.buyDesk(accrued, payload.slotIndex)
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	elseif action == "HireWorker" then
-		local r = EconomyService.hireWorker(self._profile, payload.slotIndex, payload.roleId)
+		local r = EconomyService.hireWorker(accrued, payload.slotIndex, payload.roleId)
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	end
-
 	if proposed == nil then
-		-- Definite rejection: cached live, no durable write.
+		-- Definite rejection: cached live, no durable write. The accrued interval
+		-- is NOT consumed, because nothing was written; it stays unbanked and is
+		-- credited on the next durable turn exactly once.
 		local rejected: MutationResult = {
 			ok = false,
 			code = domainCode,
@@ -903,12 +1010,6 @@ function SessionService:_executeMutation(
 		self._reserved[requestId] = nil
 		return rejected
 	end
-
-	-- Fold accrued worker income into this same durable write. The worker
-	-- credit becomes part of the proposal that is about to be saved, so it is
-	-- confirmed atomically with the command and never needs its own write.
-	local merged, workerCredited = self:_applyWorkerAccrual(proposed)
-	proposed = merged
 	-- Record the durable outcome in the SAME conditional write as the mutation
 	-- (docs/03: "persist the outcome in the same conditional write as the
 	-- mutation"). The ring entry is appended to the proposal before the save,
@@ -937,7 +1038,7 @@ function SessionService:_executeMutation(
 		-- The proposal is discarded. The accrued interval is restored so the
 		-- worker credit is applied on a later turn exactly once, and the
 		-- mutation itself is never confirmed.
-		self:_restoreUnbanked(workerCredited)
+		self:_restoreUnbanked(workerCredited, workerConsumed)
 		local failed: MutationResult = {
 			ok = false,
 			code = commit.code,
@@ -970,18 +1071,30 @@ function SessionService:_executeMutation(
 	return confirmed
 end
 
--- Server-owned run identifier for a newly accepted mission. Derived from the
--- durable profile so a rejoin restores the same identity.
+-- Server-owned run identifier for a newly accepted mission.
+--
+-- UNIQUENESS: the ID is derived from the persisted monotonic
+-- `nextPostSequence`, never from `#claimedRunIdsWindow`. The claimed window is a
+-- bounded 32-entry eviction structure, so its length is not a counter: once
+-- eviction begins, `#window + 1` regenerates IDs that were already claimed,
+-- and MissionService.claim would then refuse the new run with ALREADY_DONE,
+-- permanently blocking that mission. `nextPostSequence` is already part of the
+-- frozen v1 profile, is monotonic, and advances on every publish, so it can
+-- never repeat for the lifetime of the profile. No new persisted field is
+-- introduced.
 function SessionService:_nextRunId(): string
 	local profile = self._profile
 	if profile == nil then
 		return "run-1"
 	end
-	local n = 0
-	for _, claimed in ipairs(profile.claimedRunIdsWindow) do
-		n += 1
-	end
-	return `run-{n + 1}`
+	-- A fresh v1 profile carries nextPostSequence = 1, and the counter advances
+	-- once per published post. The run is created at accept time, before any of
+	-- its posts exist, so the current value is the correct base: run-1 for a
+	-- fresh profile, run-2 after one post, and so on. Because the counter is
+	-- monotonic and never reused, no generated ID can collide with an active or
+	-- previously claimed run, even after the 32-entry claimed window evicts.
+	local sequence: number = profile.nextPostSequence or 1
+	return `run-{sequence}`
 end
 
 -- ===== Snapshot =====
@@ -1002,10 +1115,16 @@ function SessionService:Snapshot(lookupRequestId: string?): SnapshotResult
 	-- Settle an already-due post through the durable lane. The settlement has
 	-- its own stable server-owned identity, so it cannot pay twice and cannot
 	-- race a concurrent command.
+	--
+	-- NON-BLOCKING (docs/03): "when write lane is busy, return last confirmed
+	-- snapshot and current lookup status without waiting." A read must never
+	-- stall behind a held write, so the settlement is attempted only when the
+	-- lane is free; otherwise the last confirmed snapshot is returned as-is and
+	-- the due post settles on the next lane turn.
 	local pending: any = self._profile.pendingPost
 	if pending ~= nil and self._now() >= pending.settleAt then
 		local session: any = self
-		self:_runLane(function()
+		self:_tryRunLane(function()
 			session:_settleDue()
 		end)
 	end
@@ -1075,7 +1194,25 @@ function SessionService:Stop(): { ok: boolean, code: string, detail: string?, ba
 	-- Final worker banking through a durable Save where possible. ProfileStore
 	-- Release does NOT accept a final profile payload, so the bank must be a
 	-- real Save before the lease is cleared.
-	local bank = self:_bankWorker()
+	--
+	-- The bank runs inside the serialized lane so it cannot race an in-progress
+	-- mutation. If the lane is held, Stop must not hang: it reports BUSY and
+	-- leaves the session open so the caller can retry once the lane drains. The
+	-- lease is retained, so a rejoin can still reconcile.
+	local bankResult: { ok: boolean, code: string, credited: number }? = nil
+	local entered = self:_runLane(function()
+		bankResult = self:_bankWorker()
+	end)
+	if not entered then
+		self._stopping = false
+		return {
+			ok = false,
+			code = "BUSY",
+			detail = "the mutation lane is busy; retry Stop once it drains",
+			banked = 0,
+		}
+	end
+	local bank = bankResult :: any
 	if bank.ok then
 		banked = bank.credited
 	else
@@ -1120,6 +1257,10 @@ function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: 
 	end
 	local session: any = self
 	session._connectedSeconds += connectedSeconds
+	-- Tag the interval with the worker rate active NOW, so a later hire cannot
+	-- re-rate time that elapsed under the current count.
+	local activeRate = EconomyService.incomePerSecond(self._profile)
+	table.insert(session._pendingAccrual, { seconds = connectedSeconds, rate = activeRate })
 	session._unbankedSeconds += connectedSeconds
 	-- A due settlement is handled by the lane through its stable identity.
 	local banked = 0
@@ -1181,5 +1322,6 @@ SessionService.LEASE_RENEW_INTERVAL = LEASE_RENEW_INTERVAL
 SessionService.MAX_TIME_CHUNK = MAX_TIME_CHUNK
 SessionService.MAX_QUEUED_ACTIONS = MAX_QUEUED_ACTIONS
 SessionService.MAX_INTENT_LENGTH = MAX_INTENT_LENGTH
+SessionService.MAX_LANE_WAITS = MAX_LANE_WAITS
 
 return SessionService

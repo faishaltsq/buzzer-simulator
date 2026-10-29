@@ -487,10 +487,15 @@ test("The guided journey totals 110 and the phone leaves 60", function()
 	advance(18)
 	session:Snapshot()
 	session:Mutate({ requestId = "mut-acc-1", action = "AcceptMission", payload = { missionId = "food_stall_launch" } })
-	session:Mutate({ requestId = "mut-pub-1", action = "PublishPost", payload = { runId = "run-1", templateId = "meal_meme" } })
+	-- The run ID is server-owned and derived from the persisted post sequence,
+	-- which the earlier organic publish advanced. Read it from the confirmed
+	-- active mission rather than assuming a literal.
+	local runId = session:GetConfirmedProfile().activeMission.runId
+	print("guided runId=", tostring(runId))
+	session:Mutate({ requestId = "mut-pub-1", action = "PublishPost", payload = { runId = runId, templateId = "meal_meme" } })
 	advance(18)
 	session:Snapshot()
-	session:Mutate({ requestId = "mut-clm-1", action = "ClaimMission", payload = { runId = "run-1" } })
+	session:Mutate({ requestId = "mut-clm-1", action = "ClaimMission", payload = { runId = runId } })
 	expectEqual(session:GetConfirmedProfile().balance, 110, "guided total is 110")
 	local buy = session:Mutate({ requestId = "mut-buy-1", action = "BuyDevice", payload = { deviceId = "phone_fast" } })
 	expectEqual(buy.ok, true, "fast phone purchase ok")
@@ -1013,6 +1018,471 @@ test("All proposed profile objects stay isolated from confirmed state", function
 	snap.snapshot.balance = 88888
 	expectEqual(session:GetConfirmedProfile().balance, 0, "snapshot mutation does not leak")
 end)
+
+-- ===== worker accrual attribution =====
+-- Regression: accrued connected time must be attributed to the worker count
+-- active DURING that interval, never to the count a later hire produces.
+-- Before the fix, `_executeMutation` accrued against the POST-mutation profile,
+-- so a first hire paid the pre-hire seconds at the new rate and a second hire
+-- re-rated the first interval.
+test("Pre-hire connected time is not credited at the new worker rate", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 500
+	p.workers = {}
+	seedEnvelope(store, p, 1)
+	withShippedTierCap(1, function()
+		local session = startSession(store, clock)
+		-- Ten connected seconds with ZERO workers.
+		session:Advance(10)
+		expectEqual(session:GetPendingWorkerCuan(), 0, "zero workers accrue nothing")
+		-- Hire worker 1.
+		local hire = session:Mutate({
+			requestId = "mut-hire-1",
+			action = "HireWorker",
+			payload = { slotIndex = 1, roleId = "trainee" },
+		})
+		expectEqual(hire.ok, true, "hire ok")
+		-- The hire must NOT credit the pre-hire interval at the new rate.
+		expectEqual(hire.data.workerCredited, 0, "10 seconds with ZERO workers credits 0, not 15")
+		expectEqual(session:GetConfirmedProfile().balance, 0, "500 - 500 hire = 0, no pre-hire income")
+		-- Ten further seconds at the new one-worker rate.
+		session:Advance(10)
+		expectEqual(session:GetPendingWorkerCuan(), 15, "post-hire 10 seconds at 1.5/s = 15")
+	end)
+end)
+
+test("A second hire does not re-rate the first interval", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 2000
+	p.lifetimeEarned = 1600
+	table.insert(p.ownedDesks, 2)
+	seedEnvelope(store, p, 1)
+	withShippedTierCap(2, function()
+		local session = startSession(store, clock)
+		-- Ten connected seconds with ONE worker.
+		session:Advance(10)
+		expectEqual(session:GetPendingWorkerCuan(), 15, "one worker for 10 seconds = 15")
+		-- Hire worker 2.
+		local hire = session:Mutate({
+			requestId = "mut-hire-2",
+			action = "HireWorker",
+			payload = { slotIndex = 2, roleId = "trainee" },
+		})
+		expectEqual(hire.ok, true, "hire ok")
+		-- The first interval is credited at the OLD one-worker rate.
+		expectEqual(hire.data.workerCredited, 15, "first 10 seconds at 1.5/s = 15, not 30")
+		-- Ten further seconds at the new two-worker rate.
+		session:Advance(10)
+		expectEqual(session:GetPendingWorkerCuan(), 30, "second 10 seconds at 3.0/s = 30")
+		-- Total worker income is 15 + 30 = 45, never 30 + 30.
+		expectEqual(
+			session:GetConfirmedProfile().balance + session:GetPendingWorkerCuan(),
+			2000 - 750 + 45,
+			"total worker income is 15 + 30 = 45"
+		)
+	end)
+end)
+
+-- ===== D-A: durable retry correctness =====
+test("A lost response resolves to APPLIED on an identical retry", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	-- The transform commits but the response is lost.
+	store.delaySeconds = 1
+	local first = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(first.ok, false, "the caller sees an uncertain outcome")
+	expectTrue(
+		first.code == "BUSY" or first.code == "SAVE_UNAVAILABLE",
+		"uncertain code reported"
+	)
+	expectEqual(session._inflight["mut-1"] ~= nil, true, "the proposal is retained in flight")
+	-- Release the write and retry the identical request.
+	store.delaySeconds = 0
+	local retry = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(retry.ok, true, "the retry resolves")
+	expectEqual(retry.lookup, "APPLIED", "the retry reports APPLIED")
+	expectTrue(retry.data ~= nil, "the retry carries data")
+	expectTrue(retry.data.resultIds ~= nil, "the retry carries the recorded resultIds")
+	expectEqual(session._inflight["mut-1"], nil, "the in-flight entry is cleared")
+	-- Exactly one durable economic effect: one pending post, one ring entry.
+	expectEqual(session:GetConfirmedProfile().pendingPost ~= nil, true, "exactly one post exists")
+	expectEqual(#session:GetConfirmedProfile().recentMutationOutcomes, 1, "one ring entry")
+end)
+
+test("A stale cached rejection never shadows a durable APPLIED outcome", function()
+	-- The held write commits durably, but the same turn records a local
+	-- rejection. The ring is the authority: the retry must report APPLIED and
+	-- must not return the stale rejection.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	store.delaySeconds = 1
+	session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	-- Confirm the durable state landed even though the caller saw a failure.
+	expectEqual(#store.data["Player_1234"].profile.recentMutationOutcomes, 1, "the write landed durably")
+	store.delaySeconds = 0
+	local retry = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(retry.ok, true, "the durable outcome wins over the stale rejection")
+	expectEqual(retry.lookup, "APPLIED", "reported as APPLIED")
+	expectEqual(#session:GetConfirmedProfile().recentMutationOutcomes, 1, "still one ring entry")
+end)
+
+test("Repeated identical retries stay idempotent", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	store.delaySeconds = 1
+	session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	store.delaySeconds = 0
+	local revisionAfterResolve: number? = nil
+	for i = 1, 3 do
+		local retry = session:Mutate({
+			requestId = "mut-1",
+			action = "PublishOrganic",
+			payload = { templateId = "snack_meme" },
+		})
+		expectEqual(retry.ok, true, `retry {i} ok`)
+		expectEqual(retry.lookup, "APPLIED", `retry {i} APPLIED`)
+		if revisionAfterResolve == nil then
+			revisionAfterResolve = retry.revision
+		else
+			expectEqual(retry.revision, revisionAfterResolve, `retry {i} does not bump the revision`)
+		end
+	end
+	expectEqual(#session:GetConfirmedProfile().recentMutationOutcomes, 1, "still one ring entry")
+	expectEqual(session:GetConfirmedProfile().pendingPost ~= nil, true, "still one post")
+end)
+
+-- ===== D-B: run ID uniqueness =====
+test("Run IDs stay unique across 40 claims and window eviction", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	-- A profile whose claimed window has already evicted: it holds the 32 most
+	-- recent of 40 completed runs, named with the REAL generated scheme.
+	local p = freshProfile()
+	for i = 9, 40 do
+		table.insert(p.claimedRunIdsWindow, `run-{i}`)
+	end
+	p.nextPostSequence = 41
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	local next = session:_nextRunId()
+	print("B next after 40 claims=", tostring(next))
+	expectEqual(#session:GetConfirmedProfile().claimedRunIdsWindow, 32, "window is at its bound")
+	-- The generated ID must not be any already-claimed run.
+	for _, claimed in ipairs(session:GetConfirmedProfile().claimedRunIdsWindow) do
+		expectTrue(claimed ~= next, `generated run ID {next} collides with claimed {claimed}`)
+	end
+	-- And it must not collide with the evicted older runs either.
+	for i = 1, 8 do
+		expectTrue(next ~= `run-{i}`, `generated run ID {next} collides with evicted run-{i}`)
+	end
+end)
+
+test("A fresh profile still generates run-1", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	expectEqual(session:_nextRunId(), "run-1", "a fresh profile starts at run-1")
+end)
+
+test("Accept then claim succeeds after window eviction", function()
+	-- The end-to-end guarantee: after 40 claims the next run must be claimable.
+	local store = FakeStore.new()
+	local clock, advance = makeClock(5000)
+	local p = freshProfile()
+	for i = 9, 40 do
+		table.insert(p.claimedRunIdsWindow, `run-{i}`)
+	end
+	p.nextPostSequence = 41
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	local accept = session:Mutate({
+		requestId = "mut-acc-1",
+		action = "AcceptMission",
+		payload = { missionId = "food_stall_launch" },
+	})
+	expectEqual(accept.ok, true, "accept ok after eviction")
+	local runId = session:GetConfirmedProfile().activeMission.runId
+	print("B accepted runId=", tostring(runId))
+	local publish = session:Mutate({
+		requestId = "mut-pub-1",
+		action = "PublishPost",
+		payload = { runId = runId, templateId = "meal_meme" },
+	})
+	expectEqual(publish.ok, true, "publish ok")
+	advance(18)
+	session:Snapshot()
+	local claim = session:Mutate({
+		requestId = "mut-clm-1",
+		action = "ClaimMission",
+		payload = { runId = runId },
+	})
+	expectEqual(claim.ok, true, "the new run is claimable, never ALREADY_DONE")
+	expectEqual(session:GetConfirmedProfile().completedMissions, 1, "one claim counted")
+end)
+
+-- ===== D-D: authoritative canonical intent =====
+test("A forged matching intent cannot turn a conflict into a replay", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local funded = freshProfile()
+	funded.balance = 200
+	seedEnvelope(store, funded, 1)
+	local session = startSession(store, clock)
+	local first = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(first.ok, true, "first request ok")
+	-- Reuse the ID with a DIFFERENT action/payload, supplying the original
+	-- request's canonical intent. The server must ignore the caller's string.
+	local forged = SessionService._canonicalIntent("PublishOrganic", { templateId = "snack_meme" })
+	local conflict = session:Mutate({
+		requestId = "mut-1",
+		action = "BuyDevice",
+		payload = { deviceId = "phone_fast" },
+		intent = forged,
+	})
+	expectEqual(conflict.ok, false, "a conflicting request must not replay")
+	expectEqual(conflict.code, "INVALID_INPUT", "conflict is INVALID_INPUT")
+	expectEqual(session:GetConfirmedProfile().deviceId, "phone_cheap", "no device was purchased")
+	expectEqual(session:GetConfirmedProfile().balance, 200, "no funds were spent")
+end)
+
+test("A legitimate identical retry still replays with the canonical intent", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	local first = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(first.ok, true, "first request ok")
+	-- The same request, with the caller ALSO supplying a (correct) intent.
+	local retry = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+		intent = SessionService._canonicalIntent("PublishOrganic", { templateId = "snack_meme" }),
+	})
+	expectEqual(retry.ok, true, "an identical retry still replays")
+	expectEqual(retry.lookup, "APPLIED", "reported as APPLIED")
+end)
+
+-- ===== D-F: non-blocking serialized lane =====
+test("A busy lane makes Snapshot return promptly without waiting", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local waitCalls = {}
+	local session = newSession(store, clock, waitCalls)
+	session:Start()
+	-- Hold the lane as a concurrent write would.
+	session._laneBusy = true
+	local snap = session:Snapshot()
+	expectEqual(snap.ok, true, "snapshot returns while the lane is held")
+	expectEqual(#waitCalls, 0, "snapshot performed zero waits")
+	expectEqual(snap.snapshot.balance, 0, "the last confirmed state is returned")
+	session._laneBusy = false
+end)
+
+test("A busy lane bounds Stop instead of spinning forever", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local waitCalls = {}
+	local session = newSession(store, clock, waitCalls)
+	session:Start()
+	session:Advance(10)
+	-- Hold the lane so the final bank cannot proceed.
+	session._laneBusy = true
+	local stop = session:Stop()
+	print("F stop.ok=", tostring(stop.ok), "code=", tostring(stop.code), "waits=", #waitCalls)
+	-- The wait loop is bounded: it must not spin without limit.
+	expectTrue(#waitCalls <= SessionService.MAX_LANE_WAITS, "waits are bounded")
+	expectEqual(stop.ok, false, "stop reports the failure rather than hanging")
+	session._laneBusy = false
+end)
+
+test("The lane serializes concurrent mutations", function()
+	-- Two different requests cannot both be inside the lane at once.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local funded = freshProfile()
+	funded.balance = 200
+	seedEnvelope(store, funded, 1)
+	local session = startSession(store, clock)
+	local reentered = false
+	local realTry = session._tryRunLane
+	session._tryRunLane = function(self2: any, fn: () -> ())
+		if self2._laneBusy then
+			reentered = true
+		end
+		return realTry(self2, fn)
+	end
+	local a = session:Mutate({
+		requestId = "mut-a",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(a.ok, true, "first mutation ok")
+	expectEqual(reentered, false, "the lane was never entered twice concurrently")
+	session._tryRunLane = realTry
+end)
+
+-- ===== section 6: fractional accrual and failed banking =====
+test("A failed bank followed by recovery credits exactly once", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	-- Fail the bank, then let it succeed.
+	store.failUpdate = true
+	session:Advance(30)
+	expectEqual(session:GetConfirmedProfile().balance, 0, "a failed bank credits nothing")
+	expectEqual(session:GetPendingWorkerCuan(), 45, "the interval is retained as pending")
+	store.failUpdate = false
+	session:Advance(30)
+	expectEqual(session:GetConfirmedProfile().balance, 90, "30s + 30s at 1.5/s = 90, credited once")
+	expectEqual(session:GetPendingWorkerCuan(), 0, "nothing left pending")
+end)
+
+test("A failed bank preserves the fractional residual exactly", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	-- 1 worker at 1.5/s: 10s -> floor(1.5*10) = 15, residual 0.
+	store.failUpdate = true
+	session:Advance(10)
+	expectEqual(session._unbankedSeconds, 10, "the exact interval is restored, not 15/1.5 reconstructed")
+	store.failUpdate = false
+	session:Advance(20)
+	-- 30 connected seconds total at 1.5/s = 45.
+	expectEqual(session:GetConfirmedProfile().balance, 45, "30 connected seconds credit 45 exactly once")
+end)
+
+test("A failed bank restores the interval even if the worker count changes", function()
+	-- The exact-accrual restore must not depend on the CURRENT rate. If the
+	-- interval were reconstructed as credited / currentRate, a worker-count
+	-- change between the failed write and its recovery would restore the wrong
+	-- number of seconds and credit connected time under the wrong rate.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	-- 30 connected seconds at 1.5/s credits 45. Fail the write so the bank is
+	-- attempted and rejected, which is the only path that restores the interval.
+	store.failUpdate = true
+	session:Advance(30)
+	expectEqual(session:GetConfirmedProfile().balance, 0, "a failed bank credits nothing")
+	expectEqual(session:GetPendingWorkerCuan(), 45, "the 30-second interval is retained as pending")
+	expectEqual(session._unbankedSeconds, 30, "all 30 seconds are restored")
+	-- Simulate the worker count changing before the recovery: the confirmed
+	-- profile now carries two workers, so the CURRENT rate is 3.0/s. A
+	-- reconstructed restore would give 45 / 3.0 = 15 seconds and silently lose
+	-- half the connected interval.
+	local prof = session:GetConfirmedProfile()
+	table.insert(prof.workers, { hireId = "trainee-slot-2", roleId = "trainee", slotIndex = 2 })
+	session._profile = prof
+	expectEqual(EconomyService.incomePerSecond(session:GetConfirmedProfile()), 3, "current rate is 3.0/s")
+	expectEqual(session._unbankedSeconds, 30, "the restored interval is still 30 seconds, not 15")
+	-- The retained interval must still be credited at its own 1.5/s rate.
+	store.failUpdate = false
+	session:Advance(10)
+	-- 30s at 1.5/s (45) + 10s at 3.0/s (30) = 75.
+	expectEqual(
+		session:GetConfirmedProfile().balance + session:GetPendingWorkerCuan(),
+		75,
+		"the restored interval is credited at its own rate, not the new one"
+	)
+	local restoredSeconds = 0
+	for _, entry in ipairs(session._pendingAccrual) do
+		if entry.rate == 1.5 then
+			restoredSeconds += entry.seconds
+		end
+	end
+	expectEqual(restoredSeconds, 30, "the 1.5/s interval is preserved as 30 seconds, not reconstructed as 15")
+end)
+
+test("An ambiguous bank response resolves without double credit", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	store.ambiguousOnce = true
+	session:Advance(30)
+	local after = session:GetConfirmedProfile().balance
+	local pending = session:GetPendingWorkerCuan()
+	print("E ambiguous balance=", tostring(after), "pending=", tostring(pending))
+	-- Whatever the resolution, the total must never exceed one 45-Cuan credit.
+	expectTrue(after + pending <= 45, "no double credit from an ambiguous bank")
+	-- And a further interval must add exactly its own value.
+	session:Advance(30)
+	expectTrue(
+		session:GetConfirmedProfile().balance + session:GetPendingWorkerCuan() <= 90,
+		"two intervals never exceed 90"
+	)
+end)
+
+test("A reconnect preserves confirmed worker income and drops no pending accrual", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(30)
+	expectEqual(session:GetConfirmedProfile().balance, 45, "45 banked while connected")
+	session:Stop()
+	local reconnected = startSession(store, clock)
+	expectEqual(reconnected:GetConfirmedProfile().balance, 45, "confirmed income survives the reconnect")
+	expectEqual(reconnected:GetPendingWorkerCuan(), 0, "no phantom pending accrual after a reconnect")
+end)
+
 
 -- ===== run =====
 local passed, failed = 0, 0
