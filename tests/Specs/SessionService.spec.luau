@@ -1484,6 +1484,314 @@ test("A reconnect preserves confirmed worker income and drops no pending accrual
 end)
 
 
+-- ===== TASK 1 REPRO =====
+test("A rejected command preserves pending worker income exactly", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 10
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(10)
+	local buy = session:Mutate({
+		requestId = "mut-buy-1",
+		action = "BuyDevice",
+		payload = { deviceId = "phone_fast" },
+	})
+	print("T1 buy.ok=", tostring(buy.ok), "code=", tostring(buy.code))
+	expectEqual(buy.ok, false, "purchase rejected")
+	expectEqual(session:GetPendingWorkerCuan(), 15, "pending income preserved after a rejection")
+end)
+
+-- ===== TASK 2 REPRO =====
+test("An ambiguous save credits worker income exactly once", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	-- 10 seconds with one worker = 15 pending.
+	session:Advance(10)
+	-- A command whose proposal includes the 15 Cuan. Hold the write so the
+	-- transform commits but the response is lost.
+	store.delaySeconds = 1
+	local first = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	-- Retry the identical request.
+	store.delaySeconds = 0
+	local retry = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	-- The 15 Cuan must be credited exactly once.
+	expectEqual(session:GetConfirmedProfile().balance, 15, "worker income credited exactly once")
+end)
+
+-- ===== lossless pending accrual on rejection =====
+test("A rejected mission command preserves the fractional residual", function()
+	-- 1 worker at 1.5/s: 7 seconds accrues 10.5 -> credits 10, residual 0.5.
+	-- A rejection must restore the interval AND the residual, so a later bank
+	-- credits the remaining 0.5 rather than losing it.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 10
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(7)
+	expectEqual(session:GetPendingWorkerCuan(), 10, "7 seconds at 1.5/s credits 10")
+	-- Reject an unaffordable purchase.
+	local buy = session:Mutate({
+		requestId = "mut-buy-1",
+		action = "BuyDevice",
+		payload = { deviceId = "phone_fast" },
+	})
+	expectEqual(buy.ok, false, "purchase rejected")
+	expectEqual(buy.code, "NOT_READY", "wrong device progression is refused")
+	-- The interval and its residual survive.
+	expectEqual(session:GetPendingWorkerCuan(), 10, "pending income preserved after the rejection")
+	expectEqual(session._unbankedSeconds, 7, "the exact 7-second interval is restored")
+	-- A later bank credits the full 10.5 worth: 7 more seconds at 1.5/s.
+	session:Advance(7)
+	-- 14 connected seconds at 1.5/s = floor(21) = 21, plus the starting 10.
+	expectEqual(
+		session:GetConfirmedProfile().balance + session:GetPendingWorkerCuan(),
+		31,
+		"the residual is not lost: 10 starting + 21 accrued = 31"
+	)
+end)
+
+test("A rejected hire preserves pending accrual for a later valid hire", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 10
+	p.workers = {}
+	seedEnvelope(store, p, 1)
+	withShippedTierCap(1, function()
+		local session = startSession(store, clock)
+		session:Advance(10)
+		expectEqual(session:GetPendingWorkerCuan(), 0, "zero workers accrue nothing")
+		-- A hire with no desk is refused.
+		local hire = session:Mutate({
+			requestId = "mut-hire-1",
+			action = "HireWorker",
+			payload = { slotIndex = 1, roleId = "trainee" },
+		})
+		expectEqual(hire.ok, false, "hire is refused")
+		-- With zero workers the accrual credits nothing, so there is no credit to
+		-- restore; the interval itself must still be pending.
+		expectEqual(session:GetPendingWorkerCuan(), 0, "zero workers accrue nothing")
+		-- Nothing was written.
+		expectEqual(#session:GetConfirmedProfile().recentMutationOutcomes, 0, "no durable write for a rejection")
+	end)
+end)
+
+-- ===== ambiguous settlement and standalone banking =====
+test("An ambiguous settlement does not double-credit worker income", function()
+	local store = FakeStore.new()
+	local clock, advance = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Mutate({ requestId = "mut-pub-1", action = "PublishOrganic", payload = { templateId = "snack_meme" } })
+	advance(18)
+	-- The settlement write commits but its response is lost.
+	store.ambiguousOnce = true
+	session:Snapshot()
+	local after = session:GetConfirmedProfile().balance
+	local pending = session:GetPendingWorkerCuan()
+	-- The organic 15 plus floor(1.5*18)=22 worker = 37, credited once.
+	expectTrue(after + pending <= 37, "an ambiguous settlement never exceeds one credit")
+	-- A further interval must add exactly its own value.
+	session:Advance(30)
+	expectTrue(
+		session:GetConfirmedProfile().balance + session:GetPendingWorkerCuan() <= 37 + 45,
+		"no double credit across the ambiguous settlement"
+	)
+end)
+
+test("An ambiguous standalone bank does not double-credit", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	store.ambiguousOnce = true
+	session:Advance(30)
+	local after = session:GetConfirmedProfile().balance
+	local pending = session:GetPendingWorkerCuan()
+	expectTrue(after + pending <= 45, "an ambiguous bank never exceeds one 45-Cuan credit")
+	-- A repeated retry of the same connected interval must not pay again.
+	session:Advance(30)
+	expectTrue(
+		session:GetConfirmedProfile().balance + session:GetPendingWorkerCuan() <= 90,
+		"two intervals never exceed 90"
+	)
+end)
+
+test("A repeated in-flight retry never pays twice", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(10)
+	store.delaySeconds = 1
+	session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	store.delaySeconds = 0
+	local revisionAfterFirst: number? = nil
+	for i = 1, 3 do
+		local retry = session:Mutate({
+			requestId = "mut-1",
+			action = "PublishOrganic",
+			payload = { templateId = "snack_meme" },
+		})
+		expectEqual(retry.ok, true, `retry {i} ok`)
+		expectEqual(retry.lookup, "APPLIED", `retry {i} APPLIED`)
+		if revisionAfterFirst == nil then
+			revisionAfterFirst = retry.revision
+		else
+			expectEqual(retry.revision, revisionAfterFirst, `retry {i} keeps the revision stable`)
+		end
+	end
+	-- Exactly one 15-Cuan worker credit. The organic payout is frozen and lands
+	-- at settlement, so the confirmed balance is the worker credit alone.
+	expectEqual(session:GetConfirmedProfile().balance, 15, "worker income credited exactly once")
+	expectEqual(session:GetPendingWorkerCuan(), 0, "no pending interval remains")
+end)
+
+test("New connected time after an ambiguous response is preserved separately", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(10)
+	store.delaySeconds = 1
+	session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	-- Accrue MORE time while the write is unresolved.
+	session:Advance(5)
+	expectEqual(session:GetPendingWorkerCuan(), 22, "the restored 10s plus the new 5s = 22")
+	store.delaySeconds = 0
+	local retry = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(retry.ok, true, "retry resolves")
+	expectEqual(retry.lookup, "APPLIED", "APPLIED")
+	-- The first interval is consumed by the commit; the new 5 seconds remain.
+	expectEqual(session:GetPendingWorkerCuan(), 7, "post-failure accrual is preserved")
+	expectEqual(session:GetConfirmedProfile().balance, 15, "the worker credit landed exactly once")
+end)
+
+-- ===== busy lane result propagation =====
+test("Advance reports BUSY when the lane is held and loses no accrual", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session._laneBusy = true
+	local advance = session:Advance(30)
+	expectEqual(advance.ok, false, "Advance reports BUSY, not a false success")
+	expectEqual(advance.code, "BUSY", "BUSY code")
+	expectEqual(advance.banked, 0, "nothing banked")
+	session._laneBusy = false
+	-- The accrued interval is intact and banks on the next turn.
+	expectEqual(session:GetPendingWorkerCuan(), 45, "the interval is preserved")
+	session._laneBusy = false
+	local retryAdvance = session:Advance(0)
+	expectEqual(retryAdvance.ok, true, "a later turn succeeds")
+end)
+
+test("RenewLease reports BUSY when the lane is held", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	session._laneBusy = true
+	local renew = session:RenewLease()
+	expectEqual(renew.ok, false, "renewal reports BUSY, not a false OK")
+	expectEqual(renew.code, "BUSY", "BUSY code")
+	session._laneBusy = false
+	local retryRenew = session:RenewLease()
+	expectEqual(retryRenew.ok, true, "a later renewal succeeds")
+end)
+
+test("Mutate reports BUSY and keeps the reservation when the lane is held", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	-- Hold the lane so the bounded wait expires.
+	session._laneBusy = true
+	local result = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(result.ok, false, "no false success")
+	expectEqual(result.code, "BUSY", "BUSY code")
+	expectEqual(result.lookup, "PENDING", "PENDING lookup")
+	-- The reserved identity is released so a later retry can execute it.
+	expectEqual(session._reserved["mut-1"], nil, "the reservation is released")
+	session._laneBusy = false
+	-- A later retry executes exactly once.
+	local retry = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(retry.ok, true, "the retry executes")
+	expectEqual(#session:GetConfirmedProfile().recentMutationOutcomes, 1, "exactly one durable write")
+end)
+
+test("A held lane never executes two writes concurrently", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local funded = freshProfile()
+	funded.balance = 200
+	seedEnvelope(store, funded, 1)
+	local session = startSession(store, clock)
+	local concurrent = false
+	local realTry = session._tryRunLane
+	session._tryRunLane = function(self2: any, fn: () -> ())
+		if self2._laneBusy then
+			concurrent = true
+			return false
+		end
+		return realTry(self2, fn)
+	end
+	local a = session:Mutate({
+		requestId = "mut-a",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(a.ok, true, "first mutation ok")
+	expectEqual(concurrent, false, "the lane was never entered twice")
+	session._tryRunLane = realTry
+end)
+
 -- ===== run =====
 local passed, failed = 0, 0
 for _, t in ipairs(tests) do

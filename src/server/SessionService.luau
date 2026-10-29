@@ -638,6 +638,48 @@ function SessionService:_bankWorker(): { ok: boolean, code: string, credited: nu
 	return { ok = true, code = "OK", credited = credited }
 end
 
+-- Discard ONLY the pending intervals that were already committed inside a
+-- reconciled in-flight proposal. The proposal's balance and fractionalIncome
+-- already include the worker credit, so any interval restored by the failed
+-- attempt is a duplicate and must be dropped rather than banked again.
+--
+-- Intervals accrued AFTER the failed response are NOT in the committed proposal
+-- and must be preserved, so this removes exactly the entries the committed
+-- proposal consumed and leaves everything else pending.
+function SessionService:_discardRestoredAccrual(committedProfile: any, consumed: { { seconds: number, rate: number } })
+	if committedProfile == nil or #consumed == 0 then
+		return
+	end
+	local session: any = self
+	local toRemove: { { seconds: number, rate: number } } = {}
+	for i = 1, #consumed do
+		table.insert(toRemove, consumed[i])
+	end
+	local remaining: { { seconds: number, rate: number } } = {}
+	for i = 1, #session._pendingAccrual do
+		local entry = session._pendingAccrual[i]
+		local matched = false
+		for j = 1, #toRemove do
+			if toRemove[j] ~= nil
+				and toRemove[j].seconds == entry.seconds
+				and toRemove[j].rate == entry.rate then
+				toRemove[j] = nil
+				matched = true
+				break
+			end
+		end
+		if not matched then
+			table.insert(remaining, entry)
+		end
+	end
+	session._pendingAccrual = remaining
+	local totalSeconds = 0
+	for i = 1, #remaining do
+		totalSeconds += remaining[i].seconds
+	end
+	session._unbankedSeconds = totalSeconds
+end
+
 -- Restore an accrued interval that could not be confirmed, so the next lane
 -- turn credits it exactly once.
 --
@@ -830,7 +872,7 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		end
 		local retryResult: MutationResult? = nil
 		local retrySession: any = self
-		self:_runLane(function()
+		local entered = self:_runLane(function()
 			local commit = retrySession:_commit(inflight.profile, inflight.opId, inflight.intent)
 			if not commit.ok then
 				local failedRetry: MutationResult = {
@@ -850,6 +892,11 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 			-- it Mutate falls through and reports the mutation as unprocessed.
 			local ring = inflight.profile.recentMutationOutcomes
 			local recorded = ring[#ring]
+			-- The original write already committed the worker credit inside this
+			-- same proposal. The failed attempt restored those intervals to the
+			-- pending list, so they must be discarded now: leaving them would let a
+			-- later bank credit the same connected time a second time.
+			retrySession:_discardRestoredAccrual(inflight.profile, inflight.consumed or {})
 			retryResult = {
 				ok = true,
 				code = "OK",
@@ -858,6 +905,18 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 				data = { resultIds = if recorded ~= nil then recorded.resultIds else nil },
 			} :: MutationResult
 		end)
+		if not entered then
+			-- The lane is held: the in-flight write is still unresolved. Report
+			-- PENDING and keep the reservation so a later retry resolves it. Never
+			-- report success for a write that did not execute.
+			return {
+				ok = false,
+				code = "BUSY",
+				revision = self._revision,
+				detail = "the mutation lane is busy; the in-flight write is still unresolved",
+				lookup = "PENDING",
+			}
+		end
 		if retryResult ~= nil then
 			if retryResult.ok then
 				self._liveResults[request.requestId] = retryResult
@@ -894,7 +953,7 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 
 	local result: MutationResult? = nil
 	local session: any = self
-	self:_runLane(function()
+	local entered = self:_runLane(function()
 		-- Drop everything queued ahead of us that is no longer relevant: a
 		-- queued request whose ID was resolved while waiting is skipped.
 		while #session._queue > 0 do
@@ -916,6 +975,26 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		end
 	end)
 
+	if not entered then
+		-- The lane never ran, so this request was NOT processed. Release the
+		-- reservation so a later retry can execute it; reporting anything else
+		-- would claim a mutation that never happened.
+		self._reserved[request.requestId] = nil
+		local queue: { { requestId: string, action: string, payload: { [string]: any }, intent: string } } = self._queue
+		for i = #queue, 1, -1 do
+			if queue[i].requestId == request.requestId then
+				table.remove(queue, i)
+				break
+			end
+		end
+		return {
+			ok = false,
+			code = "BUSY",
+			revision = self._revision,
+			detail = "the mutation lane is busy; the request was not processed",
+			lookup = "PENDING",
+		}
+	end
 	if result == nil then
 		-- Our request was resolved by an earlier turn in the same drain.
 		local settled_ = self._liveResults[request.requestId]
@@ -969,6 +1048,12 @@ function SessionService:_executeMutation(
 	-- that credited proposal. The single durable write still carries both
 	-- atomically, so piggybacking is preserved and previously accrued income can
 	-- fund the purchase exactly as the frozen economy contract requires.
+	-- Accrue against the CONFIRMED pre-mutation profile so each interval is
+	-- credited at the worker count active while it elapsed. The drained
+	-- intervals are retained locally until a durable commit succeeds, so a
+	-- definite rejection can restore them EXACTLY (rate-tagged, no rounded
+	-- reconstruction) and no pending Cuan is ever lost to an unrelated
+	-- rejected command.
 	local accrued, workerCredited, workerConsumed = self:_applyWorkerAccrual(self._profile)
 	local proposed: any = nil
 	local domainCode = "OK"
@@ -996,9 +1081,10 @@ function SessionService:_executeMutation(
 		proposed, domainCode, domainDetail = r.profile, r.code, r.detail
 	end
 	if proposed == nil then
-		-- Definite rejection: cached live, no durable write. The accrued interval
-		-- is NOT consumed, because nothing was written; it stays unbanked and is
-		-- credited on the next durable turn exactly once.
+		-- Definite rejection: no durable write. Restore the drained intervals
+		-- EXACTLY so the next valid banking operation credits them once, at
+		-- their own rates, with their fractional residuals intact.
+		self:_restoreUnbanked(workerCredited, workerConsumed)
 		local rejected: MutationResult = {
 			ok = false,
 			code = domainCode,
@@ -1032,7 +1118,12 @@ function SessionService:_executeMutation(
 	-- profile against a fingerprint of what this operationId wrote; rebuilding
 	-- the proposal would produce a different fingerprint and be rejected as a
 	-- protocol violation instead of resolving idempotently.
-	self._inflight[requestId] = { profile = proposed, opId = opId, intent = intent }
+	self._inflight[requestId] = {
+		profile = proposed,
+		opId = opId,
+		intent = intent,
+		consumed = workerConsumed,
+	}
 	local commit = self:_commit(proposed, opId, intent)
 	if not commit.ok then
 		-- The proposal is discarded. The accrued interval is restored so the
@@ -1264,7 +1355,7 @@ function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: 
 	session._unbankedSeconds += connectedSeconds
 	-- A due settlement is handled by the lane through its stable identity.
 	local banked = 0
-	self:_runLane(function()
+	local entered = self:_runLane(function()
 		local settle = self:_settleDue()
 		if not settle.ok then
 			return
@@ -1277,6 +1368,11 @@ function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: 
 			end
 		end
 	end)
+	if not entered then
+		-- The lane is held. The accrued interval is already recorded in
+		-- _pendingAccrual, so nothing is lost; it is banked on the next turn.
+		return { ok = false, code = "BUSY", banked = 0 }
+	end
 	return { ok = true, code = "OK", banked = banked }
 end
 
@@ -1288,8 +1384,8 @@ function SessionService:RenewLease(): { ok: boolean, code: string }
 		return { ok = false, code = "BUSY" }
 	end
 	local okCode = "OK"
-	self:_runLane(function()
-		local proposed, _credited = self:_piggybackWorker()
+	local entered = self:_runLane(function()
+		local proposed, _credited, _consumed = self:_piggybackWorker()
 		local opId = `{OP_PREFIX.renew}-{self._userId}-{self._connectedSeconds}`
 		local commit = self:_commit(proposed, opId)
 		if not commit.ok then
@@ -1297,6 +1393,11 @@ function SessionService:RenewLease(): { ok: boolean, code: string }
 			return
 		end
 	end)
+	if not entered then
+		-- The lane is held: the renewal did not happen. Report BUSY rather than a
+		-- false OK, and leave the accrued interval pending for the next turn.
+		return { ok = false, code = "BUSY" }
+	end
 	return { ok = okCode == "OK", code = okCode }
 end
 
