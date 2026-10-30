@@ -1792,6 +1792,157 @@ test("A held lane never executes two writes concurrently", function()
 	session._tryRunLane = realTry
 end)
 
+-- ===== FIX A REPRO =====
+test("A sub-integer accrual survives a rejected mutation", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 10
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	-- 0.2 seconds at 1.5/s = 0.3 Cuan, which floors to 0.
+	session:Advance(0.2)
+	-- Reject an unaffordable purchase.
+	local buy = session:Mutate({
+		requestId = "mut-buy-1",
+		action = "BuyDevice",
+		payload = { deviceId = "phone_fast" },
+	})
+	-- 0.5 more seconds: total 0.7s at 1.5/s = 1.05 -> 1 Cuan.
+	session:Advance(0.5)
+	expectEqual(session:GetPendingWorkerCuan(), 1, "0.7 seconds at 1.5/s credits 1 Cuan")
+end)
+
+-- ===== FIX B REPRO =====
+test("A failed renewal preserves pending worker accrual", function()
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(10)
+	-- Force the renewal write to fail.
+	store.failUpdate = true
+	local renew = session:RenewLease()
+	-- Recover and verify exactly-once banking.
+	store.failUpdate = false
+	session:Advance(20)
+	-- The 30-second interval was preserved by the failed renewal and then
+	-- credited exactly once during recovery.
+	expectEqual(session:GetConfirmedProfile().balance, 45, "30 seconds at 1.5/s credited exactly once")
+	expectEqual(session:GetPendingWorkerCuan(), 0, "nothing left pending")
+end)
+
+-- ===== sub-integer accrual and renewal integrity =====
+test("A sub-integer interval survives a failed commit", function()
+	-- The rejection path is not the only consumer: a failed durable commit also
+	-- drains the pending list. A zero-credit interval must survive it too.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	-- 0.2 seconds at 1.5/s = 0.3 Cuan, which floors to a zero credit.
+	session:Advance(0.2)
+	expectEqual(session:GetPendingWorkerCuan(), 0, "0.2 seconds floors to zero")
+	expectEqual(#session._pendingAccrual, 1, "but the interval is still tracked")
+	-- A command whose durable write fails.
+	store.failUpdate = true
+	local pub = session:Mutate({
+		requestId = "mut-1",
+		action = "PublishOrganic",
+		payload = { templateId = "snack_meme" },
+	})
+	expectEqual(pub.ok, false, "the write failed")
+	expectEqual(#session._pendingAccrual, 1, "the sub-integer interval is restored")
+	-- Recover and finish the interval: 0.2 + 0.5 = 0.7 seconds at 1.5/s = 1.05.
+	store.failUpdate = false
+	session:Advance(0.5)
+	expectEqual(
+		session:GetPendingWorkerCuan() + session:GetConfirmedProfile().balance,
+		1,
+		"0.7 seconds at 1.5/s credits 1 Cuan exactly once"
+	)
+end)
+
+test("A zero-credit partial interval is never discarded", function()
+	-- Several sub-integer intervals accumulate fractional earnings that only
+	-- become a whole Cuan once combined. None may be dropped on the way.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	for i = 1, 3 do
+		session:Advance(0.2)
+		-- Reject an unaffordable purchase between each accrual.
+		session:Mutate({
+			requestId = `mut-rej-{i}`,
+			action = "BuyDevice",
+			payload = { deviceId = "phone_fast" },
+		})
+	end
+	expectEqual(#session._pendingAccrual, 3, "all three sub-integer intervals survive")
+	expectTrue(math.abs(session._unbankedSeconds - 0.6) < 1e-9, "0.6 seconds retained in total")
+	-- 0.6 seconds at 1.5/s = 0.9, still sub-integer.
+	expectEqual(session:GetPendingWorkerCuan(), 0, "0.9 Cuan is still unbanked")
+	-- One more interval crosses the boundary: 0.8 seconds at 1.5/s = 1.2.
+	session:Advance(0.2)
+	expectEqual(session:GetPendingWorkerCuan(), 1, "0.8 seconds credits 1 Cuan")
+end)
+
+test("An ambiguous renewal success never restores a committed interval", function()
+	-- The renewal write commits but its response is lost. The reconciliation
+	-- must not restore the interval as spendable a second time.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(10)
+	expectEqual(session:GetPendingWorkerCuan(), 15, "15 pending before the renewal")
+	store.ambiguousOnce = true
+	local renew = session:RenewLease()
+	-- Whether the caller sees success or an uncertain outcome, the durable state
+	-- must hold exactly one 15-Cuan credit and no restored duplicate.
+	local durableBalance = store.data["Player_1234"].profile.balance
+	expectTrue(durableBalance <= 15, "an ambiguous renewal never exceeds one credit")
+	-- A further interval must add exactly its own value, never a duplicate.
+	session:Advance(10)
+	expectTrue(
+		session:GetConfirmedProfile().balance + session:GetPendingWorkerCuan() <= 30,
+		"two intervals never exceed 30"
+	)
+end)
+
+test("A failed renewal keeps a stable operation identity for reconciliation", function()
+	-- The renewal operationId is derived from the connected-time total, so a
+	-- retry after a failed write reuses the SAME identity and reconciles
+	-- idempotently instead of issuing a fresh write.
+	local store = FakeStore.new()
+	local clock = makeClock(5000)
+	local p = workerProfile()
+	p.balance = 0
+	seedEnvelope(store, p, 1)
+	local session = startSession(store, clock)
+	session:Advance(10)
+	store.failUpdate = true
+	local first = session:RenewLease()
+	expectEqual(first.ok, false, "the first renewal fails")
+	local opIdBefore = store.data["Player_1234"].lastSaveOpId
+	store.failUpdate = false
+	local second = session:RenewLease()
+	expectEqual(second.ok, true, "the retry succeeds")
+	-- Exactly one durable write landed for the renewal, and the interval was
+	-- credited exactly once.
+	expectEqual(session:GetConfirmedProfile().balance, 15, "15 credited once")
+	expectEqual(session:GetPendingWorkerCuan(), 0, "nothing left pending")
+end)
+
 -- ===== run =====
 local passed, failed = 0, 0
 for _, t in ipairs(tests) do

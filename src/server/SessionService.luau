@@ -692,10 +692,11 @@ end
 -- `_applyWorkerAccrual` records the exact seconds it consumed, and this
 -- function restores precisely those.
 function SessionService:_restoreUnbanked(credited: number, consumed: { { seconds: number, rate: number } }?)
-	if credited <= 0 then
-		return
-	end
 	local session: any = self
+	-- Restore based on the PRESENCE of consumed intervals, never on the integer
+	-- credited amount. A sub-integer interval (0.2s at 1.5/s = 0.3 Cuan) floors
+	-- to a zero credit but still carries positive fractional earnings, so an
+	-- early return on `credited <= 0` would silently discard it.
 	if consumed ~= nil and #consumed > 0 then
 		-- Restore each interval with its ORIGINAL rate, so a worker-count change
 		-- between the failed write and its recovery cannot re-rate the interval.
@@ -1385,10 +1386,16 @@ function SessionService:RenewLease(): { ok: boolean, code: string }
 	end
 	local okCode = "OK"
 	local entered = self:_runLane(function()
-		local proposed, _credited, _consumed = self:_piggybackWorker()
+		local proposed, credited, consumed = self:_piggybackWorker()
 		local opId = `{OP_PREFIX.renew}-{self._userId}-{self._connectedSeconds}`
 		local commit = self:_commit(proposed, opId)
 		if not commit.ok then
+			-- The renewal did not land, so the accrued interval it carried is still
+			-- unbanked. Restore it EXACTLY (rate-tagged) so the next durable turn
+			-- credits it once; discarding it would silently destroy worker income.
+			-- The operationId is stable, so a retry reconciles idempotently rather
+			-- than issuing a fresh write.
+			self:_restoreUnbanked(credited, consumed)
 			okCode = commit.code
 			return
 		end
