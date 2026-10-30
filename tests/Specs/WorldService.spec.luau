@@ -29,14 +29,15 @@ local function expectTrue(cond: boolean, label: string)
 end
 
 -- ===== fake player =====
--- The shim's Instance tree has no real Player class, so build a minimal stand-in
--- carrying the fields WorldService reads: UserId, Name, Character.
+-- WorldService reads only UserId, Name and Character; real Players are engine-owned.
 local function makePlayer(userId: number, name: string): any
-	local player = Instance.new("Player", name)
-	-- UserId is read directly by WorldService, so store it as a real field
-	-- rather than inside the shim's property table.
-	rawset(player, "UserId", userId)
-	return player
+	return { UserId = userId, Name = name, Character = nil }
+end
+
+local function namedInstance(className: string, name: string): any
+	local instance = Instance.new(className)
+	instance.Name = name
+	return instance
 end
 
 local function profileWith(deviceId: string): any
@@ -291,12 +292,12 @@ test("A valid player-owned prompt is accepted", function()
 	local prompt = WorldService.GetAnchor(player, "DashboardPromptAnchor")
 	expectTrue(prompt ~= nil, "the prompt anchor exists")
 	-- A living character standing next to the prompt.
-	local character = Instance.new("Model", "Character")
+	local character = namedInstance("Model", "Character")
 	local humanoid = Instance.new("Humanoid")
 	humanoid.Parent = character
-	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	local rootPart = namedInstance("Part", "HumanoidRootPart")
 	rootPart.Parent = character
-	rawset(rootPart, "Position", prompt.Position)
+	rootPart.Position = prompt.Position
 	rawset(player, "Character", character)
 	local ok, err = WorldService.ValidateDashboardPrompt(player, prompt)
 	expectEqual(ok, true, "a valid prompt is accepted")
@@ -322,12 +323,12 @@ test("A prompt belonging to another player is rejected", function()
 	WorldService.Spawn(intruder, profileWith("phone_cheap"))
 	local ownerPrompt = WorldService.GetAnchor(owner, "DashboardPromptAnchor")
 	expectTrue(ownerPrompt ~= nil, "the owner's prompt exists")
-	local character = Instance.new("Model", "Character")
+	local character = namedInstance("Model", "Character")
 	local humanoid = Instance.new("Humanoid")
 	humanoid.Parent = character
-	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	local rootPart = namedInstance("Part", "HumanoidRootPart")
 	rootPart.Parent = character
-	rawset(rootPart, "Position", ownerPrompt.Position)
+	rootPart.Position = ownerPrompt.Position
 	rawset(intruder, "Character", character)
 	local ok, err = WorldService.ValidateDashboardPrompt(intruder, ownerPrompt :: any)
 	expectEqual(ok, false, "another player's prompt is rejected")
@@ -340,13 +341,13 @@ test("A dead character is rejected", function()
 	local player = makePlayer(1014, "DeadTester")
 	WorldService.Spawn(player, profileWith("phone_cheap"))
 	local prompt = WorldService.GetAnchor(player, "DashboardPromptAnchor")
-	local character = Instance.new("Model", "Character")
+	local character = namedInstance("Model", "Character")
 	local humanoid = Instance.new("Humanoid")
 	humanoid.Parent = character
-	rawset(humanoid, "Health", 0)
-	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	humanoid.Health = 0
+	local rootPart = namedInstance("Part", "HumanoidRootPart")
 	rootPart.Parent = character
-	rawset(rootPart, "Position", prompt.Position)
+	rootPart.Position = prompt.Position
 	rawset(player, "Character", character)
 	local ok, err = WorldService.ValidateDashboardPrompt(player, prompt)
 	expectEqual(ok, false, "a dead character is rejected")
@@ -358,13 +359,13 @@ test("A distant character is rejected", function()
 	local player = makePlayer(1015, "DistantTester")
 	WorldService.Spawn(player, profileWith("phone_cheap"))
 	local prompt = WorldService.GetAnchor(player, "DashboardPromptAnchor")
-	local character = Instance.new("Model", "Character")
+	local character = namedInstance("Model", "Character")
 	local humanoid = Instance.new("Humanoid")
 	humanoid.Parent = character
-	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	local rootPart = namedInstance("Part", "HumanoidRootPart")
 	rootPart.Parent = character
 	-- 20 studs away, beyond the 12-stud limit.
-	rawset(rootPart, "Position", prompt.Position + Vector3.new(20, 0, 0))
+	rootPart.Position = prompt.Position + Vector3.new(20, 0, 0)
 	rawset(player, "Character", character)
 	local ok, err = WorldService.ValidateDashboardPrompt(player, prompt)
 	expectEqual(ok, false, "a distant character is rejected")
@@ -391,12 +392,12 @@ test("Prompt identity is unchanged during device sync", function()
 	local after = WorldService.GetAnchor(player, "DashboardPromptAnchor")
 	expectEqual(before == after, true, "the prompt anchor instance is identical")
 	-- And it is still valid after the swap.
-	local character = Instance.new("Model", "Character")
+	local character = namedInstance("Model", "Character")
 	local humanoid = Instance.new("Humanoid")
 	humanoid.Parent = character
-	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	local rootPart = namedInstance("Part", "HumanoidRootPart")
 	rootPart.Parent = character
-	rawset(rootPart, "Position", after.Position)
+	rootPart.Position = after.Position
 	rawset(player, "Character", character)
 	local ok, _ = WorldService.ValidateDashboardPrompt(player, after)
 	expectEqual(ok, true, "the prompt still validates after a device sync")
@@ -588,13 +589,13 @@ test("Prompt accessibility, action text and living player validation", function(
 	local anchor = WorldService.GetAnchor(player, "DashboardPromptAnchor") :: any
 
 	-- Character setup
-	local character = Instance.new("Model", "Character")
+	local character = namedInstance("Model", "Character")
 	local humanoid = Instance.new("Humanoid")
-	rawset(humanoid, "Health", 100)
+	humanoid.Health = 100
 	humanoid.Parent = character
-	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	local rootPart = namedInstance("Part", "HumanoidRootPart")
 	rootPart.Parent = character
-	rawset(rootPart, "Position", anchor.Position + Vector3.new(0, 0, 4)) -- 4 studs away
+	rootPart.Position = anchor.Position + Vector3.new(0, 0, 4) -- 4 studs away
 	rawset(player, "Character", character)
 
 	local ok, err = WorldService.ValidateDashboardPrompt(player, prompt)
@@ -602,7 +603,7 @@ test("Prompt accessibility, action text and living player validation", function(
 	expectEqual(err, nil, "no error")
 
 	-- Distance measured from anchor Part
-	rawset(rootPart, "Position", anchor.Position + Vector3.new(0, 0, 15)) -- 15 studs away > 12
+	rootPart.Position = anchor.Position + Vector3.new(0, 0, 15) -- 15 studs away > 12
 	local okDist, errDist = WorldService.ValidateDashboardPrompt(player, prompt)
 	expectEqual(okDist, false, "rejected beyond 12 studs")
 	expectTrue(errDist ~= nil and errDist:find("15 studs away") ~= nil, "reports measured distance from anchor")
@@ -650,14 +651,14 @@ test("Prompt cannot be spoofed from another player's room via ProximityPrompt in
 	local ownerPrompt = WorldService.GetPrompt(owner) :: any
 	expectTrue(ownerPrompt ~= nil, "owner's prompt exists")
 
-	local character = Instance.new("Model", "Character")
+	local character = namedInstance("Model", "Character")
 	local humanoid = Instance.new("Humanoid")
-	rawset(humanoid, "Health", 100)
+	humanoid.Health = 100
 	humanoid.Parent = character
-	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	local rootPart = namedInstance("Part", "HumanoidRootPart")
 	rootPart.Parent = character
 	local ownerAnchor = WorldService.GetAnchor(owner, "DashboardPromptAnchor") :: any
-	rawset(rootPart, "Position", ownerAnchor.Position)
+	rootPart.Position = ownerAnchor.Position
 	rawset(intruder, "Character", character)
 
 	local ok, err = WorldService.ValidateDashboardPrompt(intruder, ownerPrompt)

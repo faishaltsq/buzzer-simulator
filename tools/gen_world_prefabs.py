@@ -1,529 +1,362 @@
+"""Deterministic, original BS-05 Part kits. No downloaded assets or scripts."""
+import math
 import os
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
-# ---------------------------------------------------------------- helpers
-
 _ref_counter = 0
-
-def next_ref():
-    global _ref_counter
-    _ref_counter += 1
-    return f"RBX{_ref_counter}"
-
-BRICK_COLORS = {
-    "Cool grey": 1011,
-    "Reddish brown": 217,
-    "Institutional white": 24,
-    "Bright yellow": 226,
-    "Bright blue": 23,
-    "Bright green": 37,
-    "Bright orange": 106,
-    "Bright violet": 1026,
-    "Bright red": 21,
-    "Medium stone grey": 194,
-    "Lime green": 119,
-    "Pastel blue": 11,
-    "Really black": 1003,
-    "Terracotta": 1012,
-    "Cyan": 1028,
+PALETTE = {
+    "cream": (233, 222, 199), "plaster": (219, 211, 190),
+    "wood": (153, 112, 75), "wood_light": (180, 139, 96),
+    "wood_dark": (101, 74, 55), "sage": (132, 151, 126),
+    "sage_dark": (80, 108, 86), "navy": (52, 68, 81),
+    "ink": (32, 42, 45), "amber": (236, 186, 111),
+    "linen": (246, 236, 216), "metal": (110, 119, 115),
+    "glass": (150, 178, 177), "screen": (39, 63, 62),
+    "phosphor": (177, 206, 166), "clay": (166, 115, 88),
 }
+MATERIALS = {"SmoothPlastic": 256, "Wood": 512, "WoodPlanks": 528,
+             "Metal": 1088, "Fabric": 1312, "Neon": 288, "Glass": 1568}
 
-MATERIALS = {
-    "SmoothPlastic": 256,
-    "WoodPlanks": 512,
-    "Wood": 512,
-    "Slate": 800,
-    "Metal": 1088,
-    "Grass": 1280,
-    "Fabric": 1344,
-    "Neon": 288,
-    "Glass": 1568,
-}
-
-SHAPES = {
-    "Block": 1,
-    "Ball": 0,
-    "Cylinder": 2,
-}
 
 def item(cls, name, props=None, children=None):
-    it = ET.Element("Item", {"class": cls, "referent": next_ref()})
-    props_el = ET.SubElement(it, "Properties")
-    if name is not None:
-        str_el = ET.SubElement(props_el, "string", {"name": "Name"})
-        str_el.text = name
-    for k, v in (props or {}).items():
-        if k == "Name":
-            continue
-        if isinstance(v, tuple) and len(v) == 2:
-            tag, val = v
-            el = ET.SubElement(props_el, tag, {"name": k})
-            el.text = str(val)
-        elif isinstance(v, ET.Element):
-            props_el.append(v)
+    global _ref_counter
+    _ref_counter += 1
+    result = ET.Element("Item", {"class": cls, "referent": f"RBX{_ref_counter}"})
+    properties = ET.SubElement(result, "Properties")
+    ET.SubElement(properties, "string", {"name": "Name"}).text = name
+    for key, value in (props or {}).items():
+        if isinstance(value, ET.Element):
+            properties.append(value)
         else:
-            str_el = ET.SubElement(props_el, "string", {"name": k})
-            str_el.text = str(v)
-    for c in (children or []):
-        it.append(c)
-    return it
+            tag, text = value
+            ET.SubElement(properties, tag, {"name": key}).text = str(text)
+    result.extend(children or [])
+    return result
 
-def make_cframe(cf_str):
-    nums = [float(x.strip()) for x in cf_str.split(",")]
-    if len(nums) == 3:
-        nums.extend([1, 0, 0, 0, 1, 0, 0, 0, 1])
-    cf_el = ET.Element("CoordinateFrame", {"name": "CFrame"})
-    keys = ["X", "Y", "Z", "R00", "R01", "R02", "R10", "R11", "R12", "R20", "R21", "R22"]
-    for k, num in zip(keys, nums):
-        el = ET.SubElement(cf_el, k)
-        el.text = str(int(num) if num.is_integer() else num)
-    return cf_el
 
-def make_vector3(name, size):
-    v_el = ET.Element("Vector3", {"name": name})
-    keys = ["X", "Y", "Z"]
-    for k, num in zip(keys, size):
-        el = ET.SubElement(v_el, k)
-        el.text = str(int(num) if isinstance(num, (int, float)) and float(num).is_integer() else num)
-    return v_el
+def vector(name, values, tag="Vector3", keys=("X", "Y", "Z")):
+    result = ET.Element(tag, {"name": name})
+    for key, value in zip(keys, values):
+        ET.SubElement(result, key).text = str(round(value, 6))
+    return result
 
-def part(name, size, cframe, color, material="SmoothPlastic",
-         transparency=0, shape="Block", anchored=True, can_collide=True,
-         props=None):
-    p = {
-        "Name": name,
-        "size": make_vector3("size", size),
-        "CFrame": make_cframe(cframe),
-        "BrickColor": ("int", BRICK_COLORS.get(color, 194)),
-        "Material": ("token", MATERIALS.get(material, 256)),
-        "shape": ("token", SHAPES.get(shape, 1)),
-        "Anchored": ("bool", "true" if anchored else "false"),
-        "CanCollide": ("bool", "true" if can_collide else "false"),
-        "Transparency": ("float", str(transparency)),
-    }
-    if props:
-        p.update(props)
-    return item("Part", name, p)
 
-def anchor(name, position, size=(1, 1, 1), color="Bright green",
-           transparency=0.5, can_collide=False):
-    cf = f"{position[0]}, {position[1]}, {position[2]}, 1, 0, 0, 0, 1, 0, 0, 0, 1"
-    return part(name, size, cf, color, material="Neon",
-                transparency=transparency, can_collide=can_collide)
+def color(name, value):
+    rgb = PALETTE[value] if isinstance(value, str) else value
+    return vector(name, [v / 255 for v in rgb], "Color3", ("R", "G", "B"))
 
-def folder(name, children):
-    return item("Folder", name, children=children)
 
-def model(name, children, primary_part_name=None):
-    it = item("Model", name, children=children)
-    if primary_part_name is not None:
-        props_el = it.find("Properties")
-        for c in children:
-            if c.tag == "Item":
-                c_props = c.find("Properties")
-                if c_props is not None:
-                    name_el = c_props.find("string[@name='Name']")
-                    if name_el is not None and name_el.text == primary_part_name:
-                        ref_el = ET.SubElement(props_el, "Ref", {"name": "PrimaryPart"})
-                        ref_el.text = c.attrib.get("referent", "null")
-                        break
-    return it
-
-def write_model(path, root):
-    roblox = ET.Element("roblox", {
-        "xmlns:xmime": "http://www.w3.org/2005/05/xmlmime",
-        "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        "xsi:noNamespaceSchemaLocation": "http://www.roblox.com/roblox.xsd",
-        "version": "4",
+def part(name, size, pos, tint, material="SmoothPlastic", collide=False,
+         transparency=0, shape=1, rotation=(0, 0, 0)):
+    # Euler XYZ, serialized as an orthonormal CFrame rather than Orientation.
+    x, y, z = [math.radians(v) for v in rotation]
+    cx, sx, cy, sy, cz, sz = math.cos(x), math.sin(x), math.cos(y), math.sin(y), math.cos(z), math.sin(z)
+    matrix = (cy*cz, -cy*sz, sy, cx*sz+sx*sy*cz, cx*cz-sx*sy*sz,
+              -sx*cy, sx*sz-cx*sy*cz, sx*cz+cx*sy*sz, cx*cy)
+    return item("Part", name, {
+        "size": vector("size", size),
+        "CFrame": vector("CFrame", (*pos, *matrix), "CoordinateFrame",
+                         ("X", "Y", "Z", "R00", "R01", "R02", "R10", "R11", "R12", "R20", "R21", "R22")),
+        "Color": color("Color", tint), "Material": ("token", MATERIALS[material]),
+        "shape": ("token", shape), "Anchored": ("bool", "true"),
+        "CanCollide": ("bool", str(collide).lower()),
+        "CanTouch": ("bool", "false"), "CanQuery": ("bool", str(collide).lower()),
+        "CastShadow": ("bool", str(transparency == 0).lower()),
+        "TopSurface": ("token", 0), "BottomSurface": ("token", 0),
+        "Transparency": ("float", transparency),
     })
-    roblox.append(root)
-    xml = ET.tostring(roblox, encoding="unicode")
-    pretty = minidom.parseString(xml).toprettyxml(indent="  ")
-    lines = [l for l in pretty.split("\n") if l.strip()]
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write("\n".join(lines))
-        f.write("\n")
-    print("wrote", path)
+
+
+def model(name, children, primary=None):
+    result = item("Model", name, children=children)
+    if primary:
+        target = next(c for c in children if c.find("Properties/string[@name='Name']").text == primary)
+        ET.SubElement(result.find("Properties"), "Ref", {"name": "PrimaryPart"}).text = target.attrib["referent"]
+    return result
+
+
+def anchor(name, pos, size=(1, 1, 1)):
+    return part(name, size, pos, "cream", transparency=1)
+
+
+def light(parent, name, brightness, reach, tint="amber"):
+    parent.append(item("PointLight", name, {
+        "Color": color("Color", tint), "Brightness": ("float", brightness),
+        "Range": ("float", reach), "Shadows": ("bool", "true"),
+    }))
+    return parent
+
+
+def rounded(name, size, pos, tint, radius, material="SmoothPlastic", collide=False):
+    """Six-part rounded XY silhouette; cylinder axes face Z."""
+    w, h, d = size
+    x, y, z = pos
+    pieces = [part(name, (w-2*radius, h, d), pos, tint, material, collide=collide),
+              part(name+"Cross", (w, h-2*radius, d), pos, tint, material, collide=collide)]
+    for dx in (-1, 1):
+        for dy in (-1, 1):
+            pieces.append(part(name+"Corner", (d, 2*radius, 2*radius),
+                               (x+dx*(w/2-radius), y+dy*(h/2-radius), z),
+                               tint, material, shape=2, rotation=(0, 90, 0)))
+    return pieces
 
 
 def build_bedroom():
-    """A cosy rented bedroom: floor, walls, door, desk, CRT slot, phone pad,
-    two future worker stations, a camera focus and a light group."""
+    c = []
+    def add(name, size, pos, tint, material="SmoothPlastic", **kw):
+        p = part(name, size, pos, tint, material, **kw)
+        c.append(p)
+        return p
 
-    children = []
-
-    # ---- floor: 24 x 24 studs, centred on the origin
-    children.append(part(
-        "Floor", (24, 1, 24),
-        "0, -0.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cool grey", material="Slate",
-    ))
-
-    # ---- walls: four sides, 10 studs tall
-    wall_h = 10
-    wall_t = 1
-    span = 24
-    walls = [
-        ("WallNorth", (span, wall_h, wall_t), "0, %d, -%d" % (wall_h / 2, span / 2)),
-        ("WallSouth", (span, wall_h, wall_t), "0, %d, %d" % (wall_h / 2, span / 2)),
-        ("WallEast", (wall_t, wall_h, span), "%d, %d, 0" % (span / 2, wall_h / 2)),
-        ("WallWest", (wall_t, wall_h, span), "-%d, %d, 0" % (span / 2, wall_h / 2)),
-    ]
-    for name, size, pos in walls:
-        cf = "%s, 1, 0, 0, 0, 1, 0, 0, 0, 1" % pos
-        children.append(part(name, size, cf, "Cool grey", material="Slate"))
-
-    # ---- ceiling (keeps the room feeling enclosed, cheap on overdraw)
-    children.append(part(
-        "Ceiling", (span, 1, span),
-        "0, %d, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1" % wall_h,
-        "Cool grey", material="Slate", can_collide=False,
-    ))
-
-    # ---- door on the south wall
-    children.append(part(
-        "Door", (4, 7, 0.4),
-        "-6, 3.5, %d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % (span / 2),
-        "Reddish brown", material="WoodPlanks",
-    ))
-    children.append(part(
-        "DoorFrame", (4.6, 7.6, 0.3),
-        "-6, 3.8, %d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % (span / 2 - 0.1),
-        "Reddish brown", material="WoodPlanks", can_collide=False,
-    ))
-
-    # ---- baseboard trim for warmth
+    add("Floor", (24, 1, 24), (0, -.5, 0), "wood_dark", "Wood", collide=True)
+    # Broad, low-contrast boards avoid a noisy checkerboard at phone resolution.
+    for i in range(12):
+        add("Floorboard", (1.98, .06, 23), (-11+i*2, .03, 0),
+            (160, 119, 81) if i % 3 == 0 else (153, 112, 75), "Wood")
+    # The north wall has an actual window opening, not glass over opaque plaster.
     for name, size, pos in [
-        ("TrimNorth", (span, 0.8, 0.3), "0, 0.4, -%d" % (span / 2 - 0.3)),
-        ("TrimSouth", (span, 0.8, 0.3), "0, 0.4, %d" % (span / 2 - 0.3)),
-        ("TrimEast", (0.3, 0.8, span), "%d, 0.4, 0" % (span / 2 - 0.3)),
-        ("TrimWest", (0.3, 0.8, span), "-%d, 0.4, 0" % (span / 2 - 0.3)),
+        ("WallNorthLeft", (12, 10, .5), (-6, 5, -12)),
+        ("WallNorthRight", (6, 10, .5), (9, 5, -12)),
+        ("WindowWallBelow", (6, 3, .5), (3, 1.5, -12)),
+        ("WindowWallAbove", (6, 2, .5), (3, 9, -12)),
+        ("WallEast", (.5, 10, 24), (12, 5, 0)),
+        ("WallWest", (.5, 10, 24), (-12, 5, 0)),
+        ("WallSouth", (24, 10, .5), (0, 5, 12)),
     ]:
-        cf = "%s, 1, 0, 0, 0, 1, 0, 0, 0, 1" % pos
-        children.append(part(name, size, cf, "Reddish brown",
-                             material="WoodPlanks", can_collide=False))
+        # Solid lower walls, no ceiling lid: Roblox's normal camera can orbit above.
+        add(name, size, pos, "plaster", collide=True)
+    for name, size, pos in [
+        ("TrimNorth", (23.5, .4, .15), (0, .2, -11.7)),
+        ("TrimSouth", (23.5, .4, .15), (0, .2, 11.7)),
+        ("TrimEast", (.15, .4, 23.5), (11.7, .2, 0)),
+        ("TrimWest", (.15, .4, 23.5), (-11.7, .2, 0)),
+        ("CorniceNorth", (24, .25, .35), (0, 9.75, -11.7)),
+        ("CorniceEast", (.35, .25, 24), (11.7, 9.75, 0)),
+        ("CorniceWest", (.35, .25, 24), (-11.7, 9.75, 0)),
+        ("CorniceSouth", (24, .25, .35), (0, 9.75, 11.7)),
+    ]:
+        add(name, size, pos, "cream", "Wood")
+    add("Door", (3.7, 7.3, .18), (-6, 3.65, 11.6), "sage", "Wood", collide=True)
+    for x in (-8, -4):
+        add("DoorJamb", (.18, 7.6, .28), (x, 3.8, 11.45), "cream", "Wood")
+    add("DoorLintel", (4.2, .2, .28), (-6, 7.6, 11.45), "cream", "Wood")
+    add("DoorInset", (3.1, 5.7, .05), (-6, 3.7, 11.48), "sage_dark", "Wood")
+    add("DoorHandle", (.45, .1, .2), (-4.6, 3.5, 11.25), "amber", "Metal")
 
-    # ---- player desk against the east wall, facing the room
-    desk_z = -4
-    children.append(part(
-        "DeskTop", (7, 0.3, 3),
-        "7, 3.2, %d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % desk_z,
-        "Reddish brown", material="WoodPlanks",
-    ))
-    for lx, lz in [(4.2, -2.6), (9.8, -2.6), (4.2, -5.4), (9.8, -5.4)]:
-        children.append(part(
-            "DeskLeg", (0.4, 3, 0.4),
-            "%s, 1.5, %s, 1, 0, 0, 0, 1, 0, 0, 0, 1" % (lx, lz),
-            "Reddish brown", material="WoodPlanks",
-        ))
-    # desk drawer unit for silhouette interest
-    children.append(part(
-        "DeskDrawers", (2.2, 2.2, 2.6),
-        "9.4, 1.9, %d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % desk_z,
-        "Reddish brown", material="WoodPlanks",
-    ))
+    add("WindowGlass", (5.8, 4.8, .08), (3, 5.5, -12.08), "glass", "Glass", transparency=.35)
+    for x in (0, 3, 6):
+        add("WindowMullion", (.16, 5.2, .24), (x, 5.5, -11.83), "cream", "Wood")
+    for y in (3, 5.5, 8):
+        add("WindowRail", (6.2, .16, .24), (3, y, -11.83), "cream", "Wood")
+    add("WindowSill", (6.7, .2, .8), (3, 2.95, -11.65), "wood_light", "Wood")
+    add("CurtainRail", (7.7, .1, .1), (3, 8.45, -11.4), "wood_dark", "Wood")
+    for x in (-.55, 6.55):
+        for dx in (-.26, 0, .26):
+            add("CurtainFold", (.28, 5.3, .22), (x+dx, 5.6, -11.35),
+                "sage" if dx else "sage_dark", "Fabric")
 
-    # ---- a simple bed for the "rented bedroom" read
-    children.append(part(
-        "BedFrame", (5, 1.2, 7),
-        "-7, 0.6, 5, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Reddish brown", material="WoodPlanks",
-    ))
-    children.append(part(
-        "Mattress", (4.6, 0.8, 6.6),
-        "-7, 1.6, 5, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cool grey", material="Fabric",
-    ))
-    children.append(part(
-        "Pillow", (3.4, 0.5, 1.4),
-        "-7, 2.2, 2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Institutional white", material="Fabric",
-    ))
-    children.append(part(
-        "Blanket", (4.7, 0.3, 4.2),
-        "-7, 2.15, 6.2, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Bright blue", material="Fabric", can_collide=False,
-    ))
+    # Exact desktop upper surface and slot positions are frozen.
+    add("DeskTop", (7, .3, 3), (7, 3.2, -4), "wood_light", "Wood", collide=True)
+    add("DeskFrontApron", (6.6, .4, .18), (7, 2.85, -2.68), "wood", "Wood")
+    for x, z in ((3.85, -2.8), (3.85, -5.2), (10.15, -5.2)):
+        add("DeskLeg", (.32, 3, .32), (x, 1.5, z), "wood_dark", "Wood", collide=True)
+    add("DrawerCarcass", (1.5, 2.65, 2.55), (9.55, 1.65, -4.05), "wood_dark", "Wood", collide=True)
+    for y in (.8, 1.65, 2.5):
+        add("DrawerFront", (1.38, .75, .12), (9.55, y, -2.72), "wood", "Wood")
+        add("DrawerPull", (.48, .08, .12), (9.55, y+.12, -2.6), "amber", "Metal")
+    add("DeskRearRail", (6.2, .3, .18), (7, 1, -5.18), "wood", "Wood")
 
-    # ---- window on the north wall for warm light
-    children.append(part(
-        "Window", (5, 4, 0.3),
-        "4, 5, -%d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % (span / 2 - 0.2),
-        "Pastel blue", material="Glass", transparency=0.55,
-        can_collide=False,
-    ))
+    # Raised frame with a visible under-bed shadow, rather than a solid plinth.
+    for x in (-9.15, -4.85):
+        for z in (1.8, 8.15):
+            add("BedFoot", (.35, .85, .35), (x, .425, z), "wood_dark", "Wood", collide=True)
+    add("BedFrame", (5, .5, 7.2), (-7, .95, 5), "wood", "Wood", collide=True)
+    add("Headboard", (5.1, 2.65, .25), (-7, 1.85, 1.4), "wood_dark", "Wood", collide=True)
+    add("HeadboardInset", (4.5, 1.4, .1), (-7, 2.2, 1.58), "sage")
+    c.extend(rounded("Mattress", (4.65, .68, 6.8), (-7, 1.54, 5), "linen", .22, collide=True))
+    add("MattressPiping", (4.7, .07, 6.85), (-7, 1.6, 5), "cream", "Fabric")
+    add("Blanket", (4.72, .2, 4.6), (-7, 1.98, 6), "sage", "Fabric")
+    for x in (-9.32, -4.68):
+        add("BlanketDrape", (.12, .68, 4.6), (x, 1.68, 6), "sage", "Fabric")
+    add("BlanketFold", (4.75, .16, .65), (-7, 2.13, 3.85), "sage_dark", "Fabric")
+    add("BlanketHem", (4.72, .06, .14), (-7, 2.1, 8.1), "cream", "Fabric")
+    for x, z in ((-8.05, 2.55), (-5.95, 2.65)):
+        c.extend(rounded("Pillow", (1.95, .38, 1.25), (x, 2.02, z), "linen", .16))
+    add("BedsideTable", (1.5, .16, 1.5), (-10.6, 1.9, 3), "wood_light", "Wood")
+    for x in (-11.1, -10.1):
+        add("BedsideLeg", (.15, 1.85, 1.15), (x, .925, 3), "wood_dark", "Wood")
+    add("BedsideBook", (.7, .12, .9), (-10.6, 2.05, 3), "navy")
+    add("RugBorder", (7.1, .035, 4.3), (-2, .08, 5), "cream", "Fabric")
+    add("Rug", (6.8, .035, 4), (-2, .102, 5), "navy", "Fabric")
+    for z in (3.25, 6.75):
+        add("RugStripe", (6.7, .01, .12), (-2, .126, z), "sage", "Fabric")
 
-    # ---- poster / shelf dressing
-    children.append(part(
-        "Shelf", (4, 0.2, 1),
-        "-4, 5.5, -%d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % (span / 2 - 0.6),
-        "Reddish brown", material="WoodPlanks", can_collide=False,
-    ))
+    # Dressing concentrated at the north/east edges; west worker footprints stay empty.
+    for x in (-3.8, -.2):
+        add("BookcaseSide", (.18, 4.7, 1.15), (x, 2.35, -10.9), "wood", "Wood", collide=True)
+    add("BookcaseBack", (3.7, 4.7, .12), (-2, 2.35, -11.45), "wood_dark", "Wood")
+    for y in (.2, 1.7, 3.2, 4.7):
+        add("Bookshelf", (3.8, .16, 1.2), (-2, y, -10.9), "wood_light", "Wood")
+    for i in range(7):
+        h = .7 + (i % 3)*.16
+        add("BookSpine", (.25, h, .65), (-3.35+i*.4, 3.28+h/2, -10.8),
+            ("sage", "cream", "navy")[i % 3])
+    add("StorageBox", (2, .8, .95), (-2.3, .68, -10.9), "sage", "Fabric")
+    add("BoxPull", (.4, .13, .04), (-2.3, .8, -10.4), "cream")
+    # Original abstract sunset print, assembled from geometry; no image license.
+    add("PosterFrame", (2.8, 3.4, .12), (8.6, 6.8, -11.65), "wood_dark", "Wood")
+    add("PosterPaper", (2.5, 3.1, .03), (8.6, 6.8, -11.56), "linen")
+    add("PosterSun", (.035, 1.1, 1.1), (8.6, 7.25, -11.53), "amber", shape=2, rotation=(0, 90, 0))
+    add("PosterHorizon", (2.15, .7, .04), (8.6, 6.15, -11.51), "sage")
+    add("PosterSea", (2.15, .25, .045), (8.6, 5.92, -11.5), "navy")
+    add("PlantPot", (.9, .85, .9), (10.65, .485, -9.4), "clay")
+    add("PotRim", (1, .12, 1), (10.65, .88, -9.4), "clay")
+    add("Soil", (.78, .07, .78), (10.65, .92, -9.4), "wood_dark")
+    for dx, dy, dz, tilt in ((-.35, 1.5, 0, -30), (.3, 1.65, .1, 30), (0, 1.9, -.1, 0), (.1, 1.5, .4, 45)):
+        add("PlantLeaf", (.38, 1.15, .22), (10.65+dx, dy, -9.4+dz), "sage_dark", shape=0, rotation=(0, 0, tilt))
+    add("Notebook", (.7, .08, .8), (10.05, 3.4, -4.65), "navy", rotation=(0, -8, 0))
+    add("NotebookPages", (.65, .035, .75), (10.05, 3.445, -4.65), "linen", rotation=(0, -8, 0))
+    add("Mug", (.33, .4, .33), (5.25, 3.55, -5), "cream")
+    add("Coffee", (.27, .015, .27), (5.25, 3.755, -5), "wood_dark")
+    add("MugHandle", (.14, .23, .12), (5.47, 3.56, -5), "cream")
+    for name, size, pos in [("CableAcrossDesk", (1.25, .045, .045), (8.85, 3.39, -5.25)),
+                            ("CableDownDesk", (.045, 2.95, .045), (9.45, 1.9, -5.3))]:
+        add(name, size, pos, "ink")
 
-    # ---- plant for life
-    children.append(part(
-        "PlantPot", (1.2, 1.2, 1.2),
-        "10, 0.6, 8, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Reddish brown", material="Terracotta",
-    ))
-    children.append(part(
-        "PlantLeaves", (1.6, 2.4, 1.6),
-        "10, 2.2, 8, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Bright green", material="Grass", shape="Ball",
-        can_collide=False,
-    ))
-
-    # ---- anchors (stable, server-owned references)
-    prompt_anchor = part(
-        "DashboardPromptAnchor", (1.5, 1.5, 0.4),
-        "7.4, 3.6, -2.4, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Bright violet", material="Neon", transparency=0.5, can_collide=False,
-    )
-    prompt = item("ProximityPrompt", "DashboardPrompt", {
-        "ActionText": ("string", "Open BuzzerOS"),
-        "ObjectText": ("string", "BuzzerOS Terminal"),
-        "MaxActivationDistance": ("float", "10"),
-        "HoldDuration": ("float", "0"),
+    prompt = anchor("DashboardPromptAnchor", (7.4, 3.6, -2.4), (1.5, 1.5, .4))
+    prompt.append(item("ProximityPrompt", "DashboardPrompt", {
+        "ActionText": ("string", "Open BuzzerOS"), "ObjectText": ("string", "BuzzerOS Terminal"),
+        "MaxActivationDistance": ("float", 10), "HoldDuration": ("float", 0),
         "RequiresLineOfSight": ("bool", "false"),
-    })
-    prompt_anchor.append(prompt)
-
-    anchors = [
-        anchor("Spawn", (0, 0.6, 6), size=(4, 1, 4), color="Bright green"),
-        anchor("PlayerDesk", (7, 3.35, desk_z), size=(7, 0.3, 3), color="Bright green"),
-        prompt_anchor,
-        anchor("TerminalSlot", (7.4, 3.35, -4.0), size=(3.0, 0.2, 2.6),
-               color="Bright orange"),
-        anchor("PhoneSlot", (4.6, 3.35, -3.8), size=(1.4, 0.2, 1.4),
-               color="Bright yellow"),
-        anchor("WorkerDeskSlot1", (-8, 3.2, -8), size=(4, 0.4, 2.4),
-               color="Medium stone grey"),
-        anchor("WorkerSeat1", (-8, 1.6, -6.2), size=(2, 2, 2),
-               color="Medium stone grey"),
-        anchor("WorkerDeskSlot2", (-8, 3.2, -2), size=(4, 0.4, 2.4),
-               color="Medium stone grey"),
-        anchor("WorkerSeat2", (-8, 1.6, -0.2), size=(2, 2, 2),
-               color="Medium stone grey"),
-        anchor("CameraFocus", (7, 5.5, desk_z + 7), size=(1, 1, 1),
-               color="Cyan", transparency=0.8),
+    }))
+    c.append(prompt)
+    for name, pos, size in [
+        ("Spawn", (0, .6, 6), (4, 1, 4)), ("PlayerDesk", (7, 3.35, -4), (7, .3, 3)),
+        ("TerminalSlot", (7.4, 3.35, -4), (3, .2, 2.6)),
+        ("PhoneSlot", (4.6, 3.35, -3.8), (1.4, .2, 1.4)),
+        ("WorkerDeskSlot1", (-8, 3.2, -8), (4, .4, 2.4)),
+        ("WorkerSeat1", (-8, 1.6, -6.2), (2, 2, 2)),
+        ("WorkerDeskSlot2", (-8, 3.2, -2), (4, .4, 2.4)),
+        ("WorkerSeat2", (-8, 1.6, -.2), (2, 2, 2)),
+        ("CameraFocus", (7, 5.5, 3), (1, 1, 1)),
+    ]:
+        c.append(anchor(name, pos, size))
+    fixtures = [
+        part("PendantCanopy", (.12, .5, .5), (1, 9.92, 0), "wood_dark", shape=2, rotation=(0, 0, 90)),
+        part("PendantCord", (.055, .8, .055), (1, 9.5, 0), "ink"),
+        part("PendantShade", (.45, 1.65, 1.65), (1, 8.9, 0), "cream", shape=2, rotation=(0, 0, 90)),
+        light(part("PendantDiffuser", (.06, 1.4, 1.4), (1, 8.65, 0), "linen", shape=2, rotation=(0, 0, 90)), "RoomWarmth", .75, 23, (255, 232, 202)),
+        part("LampBase", (.6, .1, .6), (10.05, 3.4, -3.4), "sage_dark"),
+        part("LampStem", (.08, 1.25, .08), (10.05, 4.05, -3.4), "metal", "Metal"),
+        part("LampShade", (.4, .8, .8), (10.05, 4.65, -3.4), "sage", shape=2, rotation=(0, 0, 90)),
+        light(part("LampDiffuser", (.04, .65, .65), (10.05, 4.43, -3.4), "linen", shape=2, rotation=(0, 0, 90)), "DeskPool", .4, 8),
+        light(anchor("WindowFill", (3, 6, -11)), "SoftDaylight", .65, 17, (208, 227, 224)),
     ]
-    children.extend(anchors)
+    c.append(item("Folder", "LightGroup", children=fixtures))
+    return model("Bedroom", c)
 
-    # ---- LightGroup: a warm ceiling light plus a desk lamp
-    light_children = [
-        part("CeilingLight", (6, 0.4, 6),
-             "0, %d, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1" % (wall_h - 0.4),
-             "Institutional white", material="Neon", can_collide=False,
-             props={"Name": "CeilingLight"}),
-        part("DeskLamp", (0.8, 0.3, 0.8),
-             "10.6, 3.4, %d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % desk_z,
-             "Bright yellow", material="Neon", can_collide=False),
-        part("LampStem", (0.15, 1.4, 0.15),
-             "10.6, 4.1, %d, 1, 0, 0, 0, 1, 0, 0, 0, 1" % desk_z,
-             "Really black", material="Metal", can_collide=False),
-    ]
-    children.append(folder("LightGroup", light_children))
-
-    return model("Bedroom", children)
-
-
-# ---------------------------------------------------------------- OldCRT
 
 def build_old_crt():
-    """A battered old CRT: beige tower, curved glass, chunky bezel.
-
-    Dashboard access ONLY. It is never a productive device and carries no
-    yield, multiplier or currency source.
-    """
-    children = []
-
-    # monitor body
-    children.append(part(
-        "MonitorBody", (3.2, 2.8, 2.6),
-        "0, 1.4, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Institutional white", material="SmoothPlastic",
-    ))
-    # chunky bezel
-    children.append(part(
-        "Bezel", (2.7, 2.3, 0.3),
-        "0, 1.45, -1.3, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cool grey", material="SmoothPlastic",
-    ))
-    # screen (dim green, clearly obsolete)
-    children.append(part(
-        "Screen", (2.1, 1.7, 0.15),
-        "0, 1.45, -1.42, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Lime green", material="Neon", transparency=0.25,
-        can_collide=False,
-    ))
-    # back hump for the curved-tube silhouette
-    children.append(part(
-        "TubeHump", (2.0, 1.6, 1.4),
-        "0, 1.5, 1.1, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Institutional white", material="SmoothPlastic",
-    ))
-    # stand
-    children.append(part(
-        "StandNeck", (0.6, 0.7, 0.6),
-        "0, 0.35, 0.2, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cool grey", material="SmoothPlastic",
-    ))
-    children.append(part(
-        "StandBase", (2.2, 0.2, 1.6),
-        "0, 0.1, 0.2, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cool grey", material="SmoothPlastic",
-    ))
-    # worn details: a scuffed corner and a sticker
-    children.append(part(
-        "Scuff", (0.5, 0.5, 0.1),
-        "1.2, 2.5, -1.35, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Reddish brown", material="CorrodedMetal", can_collide=False,
-    ))
-    children.append(part(
-        "Sticker", (0.7, 0.7, 0.08),
-        "-0.9, 0.5, -1.36, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Bright red", material="SmoothPlastic", can_collide=False,
-    ))
-
-    # a small dashboard label so the player can read the terminal's purpose
-    gui_size = ET.Element("UDim2", {"name": "Size"})
-    for k, v in [("XS", 4), ("XO", 0), ("YS", 1.4), ("YO", 0)]:
-        ET.SubElement(gui_size, k).text = str(v)
-    gui_offset = ET.Element("Vector3", {"name": "StudsOffset"})
-    for k, v in [("X", 0), ("Y", 2.4), ("Z", 0)]:
-        ET.SubElement(gui_offset, k).text = str(v)
-    label = item("BillboardGui", "DashboardLabel", {
-        "Size": gui_size,
-        "StudsOffset": gui_offset,
-        "AlwaysOnTop": ("bool", "true"),
+    # PrimaryPart remains at (0, 1.4, 0): WorldService's frozen pivot offset.
+    c = [part("MonitorBody", (3.1, 2.15, 1.65), (0, 1.4, 0), "cream"),
+         part("UpperShell", (2.92, .18, 1.55), (0, 2.565, .02), "linen"),
+         part("TubeHousing", (2.45, 1.7, .65), (0, 1.5, 1.1), "plaster"),
+         part("TubeRear", (1.9, 1.3, .3), (0, 1.5, 1.52), "cream"),
+         part("StandNeck", (.6, .35, .6), (0, .225, .25), "plaster"),
+         part("StandBase", (2.15, .15, 1.3), (0, .075, .2), "cream"),
+         part("Bezel", (2.78, 1.97, .12), (0, 1.42, -.87), "wood_light"),
+         part("ScreenRecess", (2.52, 1.66, .06), (0, 1.52, -.96), "ink"),
+         part("Screen", (2.32, 1.46, .045), (0, 1.52, -1.005), "screen"),
+         part("ScreenHighlight", (2.15, .025, .01), (0, 2.19, -1.033), "metal"),
+         part("PowerButton", (.16, .12, .06), (1.12, .59, -.97), "wood_dark"),
+         part("PowerLED", (.055, .055, .02), (.93, .59, -.98), "phosphor"),
+         part("ServiceSticker", (.35, .18, .015), (-1.1, .59, -.94), "linen"),
+         part("Scuff", (.22, .035, .012), (1.3, 2.29, -.835), "wood_light"),
+         part("KeyboardBase", (2.65, .14, .64), (0, .07, -1.07), "plaster"),
+    ]
+    for side in (-1, 1):
+        for z in (.15, .4, .65, .9):
+            c.append(part("Vent", (.018, .5, .065), (side*1.235, 1.55, z+.3), "wood_dark"))
+    for row in range(3):
+        for col in range(8):
+            c.append(part("Keycap", (.25, .055, .125), (-1.08+col*.31, .1675, -1.26+row*.17), "linen"))
+    c.append(part("Spacebar", (1.2, .055, .1), (0, .1675, -.79), "cream"))
+    # Physical screen graphics, no floating billboard or fake interactive controls.
+    for name, size, pos, tint in [
+        ("ScreenRule", (1.8, .025, .012), (-.1, 1.8, -1.035), "sage"),
+        ("ScreenLine", (1.2, .055, .012), (-.4, 1.62, -1.035), "sage"),
+        ("ScreenLine", (1.55, .055, .012), (-.225, 1.48, -1.035), "sage"),
+        ("ScreenCursor", (.09, .14, .012), (-.95, 1.17, -1.035), "phosphor"),
+    ]:
+        c.append(part(name, size, pos, tint))
+    # Small on-screen, world-occluded title; no always-on-top scene label.
+    screen = next(p for p in c if p.find("Properties/string[@name='Name']").text == "Screen")
+    gui = item("SurfaceGui", "BuzzerOSScreen", {
+        "Face": ("token", 5), "CanvasSize": vector("CanvasSize", (512, 320), "Vector2", ("X", "Y")),
+        "AlwaysOnTop": ("bool", "false"), "LightInfluence": ("float", 1),
     })
-    txt_size = ET.Element("UDim2", {"name": "Size"})
-    for k, v in [("XS", 1), ("XO", 0), ("YS", 1), ("YO", 0)]:
-        ET.SubElement(txt_size, k).text = str(v)
-    txt = item("TextLabel", "Label", {
-        "Size": txt_size,
-        "BackgroundTransparency": ("float", "1"),
-        "Text": ("string", "BUZZEROS TERMINAL"),
-        "TextColor3": ("Color3uint8", "4294967295"),
-        "TextScaled": ("bool", "true"),
-    })
-    label.append(txt)
-    children.append(label)
+    gui.append(item("TextLabel", "Title", {
+        "Size": vector("Size", (1, 0, .3, 0), "UDim2", ("XS", "XO", "YS", "YO")),
+        "BackgroundTransparency": ("float", 1), "Text": ("string", "BuzzerOS"),
+        "TextColor3": color("TextColor3", "phosphor"), "TextSize": ("float", 42),
+        "Font": ("token", 3),
+    }))
+    screen.append(gui)
+    return model("OldCRT", c, "MonitorBody")
 
-    return model("OldCRT", children, primary_part_name="MonitorBody")
-
-
-# ---------------------------------------------------------------- PhoneCheap
 
 def build_phone_cheap():
-    """A battered cheap phone: chunky, worn, small dim screen."""
-    children = []
-    # body
-    children.append(part(
-        "Body", (1.1, 2.0, 0.22),
-        "0, 1.0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Bright yellow", material="SmoothPlastic",
-    ))
-    # worn back plate
-    children.append(part(
-        "BackPlate", (1.0, 1.9, 0.1),
-        "0, 1.0, 0.14, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cool grey", material="CorrodedMetal", can_collide=False,
-    ))
-    # small dim screen
-    children.append(part(
-        "Screen", (0.85, 1.35, 0.06),
-        "0, 1.05, -0.13, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Pastel blue-green", material="Neon", transparency=0.35,
-        can_collide=False,
-    ))
-    # cracked corner
-    children.append(part(
-        "Crack", (0.3, 0.3, 0.04),
-        "0.28, 1.55, -0.16, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Institutional white", material="Glass", can_collide=False,
-    ))
-    # physical keypad (cheap phones have buttons)
-    for i in range(3):
-        for j in range(4):
-            children.append(part(
-                "Key", (0.16, 0.1, 0.05),
-                "%s, %s, -0.15, 1, 0, 0, 0, 1, 0, 0, 0, 1" % (
-                    -0.3 + j * 0.2, 0.35 + i * 0.18),
-                "Cool grey", material="SmoothPlastic", can_collide=False,
-            ))
-    # rubber bumper
-    children.append(part(
-        "Bumper", (1.16, 0.2, 0.26),
-        "0, 0.12, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Really black", material="SmoothPlastic",
-    ))
-    return model("PhoneCheap", children, primary_part_name="Body")
+    c = rounded("Body", (1.1, 2, .28), (0, 1, 0), "wood_light", .12)
+    c += [part("BackPlate", (.88, 1.7, .055), (0, 1, .16), "wood_dark"),
+          part("ScreenBezel", (.88, .88, .04), (0, 1.32, -.16), "ink"),
+          part("Screen", (.73, .69, .025), (0, 1.32, -.195), "sage"),
+          part("Earpiece", (.35, .045, .015), (0, 1.85, -.15), "ink"),
+          part("NavigationKey", (.22, .13, .04), (0, .79, -.17), "cream"),
+          part("ScreenLine", (.47, .04, .012), (-.04, 1.4, -.215), "screen"),
+          part("ScreenLine", (.32, .04, .012), (-.115, 1.27, -.215), "screen"),
+          part("CornerWear", (.13, .035, .015), (.34, .16, -.15), "cream"),
+          part("Camera", (.16, .16, .02), (0, 1.7, .2), "ink")]
+    for row in range(3):
+        for col in range(3):
+            c.append(part("Key", (.21, .115, .035), (-.28+col*.28, .22+row*.18, -.16), "cream"))
+    # Small rear foot makes the upright display visibly supported.
+    c.append(part("RestFoot", (.65, .09, .5), (0, .045, .08), "wood_dark"))
+    return model("PhoneCheap", c, "Body")
 
-
-# ---------------------------------------------------------------- PhoneFast
 
 def build_phone_fast():
-    """A fast phone: slimmer, larger brighter screen, distinct silhouette."""
-    children = []
-    # slimmer body, different colour
-    children.append(part(
-        "Body", (1.0, 2.2, 0.16),
-        "0, 1.1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Bright blue", material="SmoothPlastic",
-    ))
-    # metallic back
-    children.append(part(
-        "BackPlate", (0.92, 2.1, 0.06),
-        "0, 1.1, 0.11, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Medium stone grey", material="Metal", can_collide=False,
-    ))
-    # large bright screen
-    children.append(part(
-        "Screen", (0.9, 1.9, 0.04),
-        "0, 1.15, -0.11, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cyan", material="Neon", transparency=0.1,
-        can_collide=False,
-    ))
-    # notch
-    children.append(part(
-        "Notch", (0.28, 0.08, 0.05),
-        "0, 2.02, -0.13, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Really black", material="SmoothPlastic", can_collide=False,
-    ))
-    # camera bump (the fast phone has a visible camera)
-    children.append(part(
-        "CameraBump", (0.34, 0.34, 0.1),
-        "-0.26, 1.82, 0.15, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Really black", material="SmoothPlastic",
-    ))
-    children.append(part(
-        "CameraLens", (0.16, 0.16, 0.06),
-        "-0.26, 1.82, 0.2, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Cyan", material="Glass", can_collide=False,
-    ))
-    # slim edge accent
-    children.append(part(
-        "EdgeAccent", (1.02, 0.08, 0.18),
-        "0, 0.06, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
-        "Institutional white", material="Metal", can_collide=False,
-    ))
-    return model("PhoneFast", children, primary_part_name="Body")
+    c = rounded("Body", (1, 2.2, .16), (0, 1.1, 0), "navy", .1)
+    c += rounded("Screen", (.88, 1.96, .025), (0, 1.13, -.095), "ink", .07)
+    c += [part("BackPlate", (.82, 1.95, .035), (0, 1.1, .0975), "sage_dark", "Metal"),
+          part("Notch", (.22, .045, .012), (0, 2.03, -.115), "metal"),
+          part("ScreenHeader", (.66, .16, .015), (0, 1.79, -.115), "sage"),
+          part("ScreenCard", (.66, .62, .015), (0, 1.3, -.115), "navy"),
+          part("ScreenAccent", (.4, .045, .015), (-.08, 1.4, -.13), "phosphor"),
+          part("HomeIndicator", (.28, .025, .015), (0, .24, -.115), "cream"),
+          part("CameraBump", (.38, .53, .055), (-.22, 1.76, .14), "navy"),
+          part("VolumeRocker", (.035, .35, .09), (-.515, 1.45, 0), "metal", "Metal"),
+          part("RestFoot", (.6, .08, .45), (0, .04, .08), "navy")]
+    for y in (1.63, 1.87):
+        c.append(part("CameraLens", (.14, .14, .025), (-.22, y, .18), "ink", shape=0))
+    return model("PhoneFast", c, "Body")
 
 
-# ---------------------------------------------------------------- main
+def write_model(path, root):
+    roblox = ET.Element("roblox", {"version": "4"})
+    roblox.append(root)
+    xml = minidom.parseString(ET.tostring(roblox)).toprettyxml(indent="  ")
+    with open(path, "w", encoding="utf-8", newline="\n") as output:
+        output.write("\n".join(line for line in xml.splitlines() if line.strip()) + "\n")
+    print("wrote", path)
+
 
 def main():
-    out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           "..", "assets", "world")
-    out_dir = os.path.normpath(out_dir)
-    os.makedirs(out_dir, exist_ok=True)
-
-    write_model(os.path.join(out_dir, "Bedroom.rbxmx"), build_bedroom())
-    write_model(os.path.join(out_dir, "OldCRT.rbxmx"), build_old_crt())
-    write_model(os.path.join(out_dir, "PhoneCheap.rbxmx"), build_phone_cheap())
-    write_model(os.path.join(out_dir, "PhoneFast.rbxmx"), build_phone_fast())
+    output = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "world")
+    os.makedirs(output, exist_ok=True)
+    for name, builder in (("Bedroom", build_bedroom), ("OldCRT", build_old_crt),
+                          ("PhoneCheap", build_phone_cheap), ("PhoneFast", build_phone_fast)):
+        write_model(os.path.join(output, name + ".rbxmx"), builder())
 
 
 if __name__ == "__main__":
