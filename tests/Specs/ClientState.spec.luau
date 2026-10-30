@@ -660,6 +660,26 @@ test("Uncorrelated old SESSION_EXPIRED reply cannot close current session", func
 	expectEqual(state:Get().dashboardSessionId, "sess_active_01", "Active session ID preserved")
 end)
 
+-- 29. GetStatus returns current status string matching Get().status
+test("GetStatus returns current status string matching Get().status", function()
+	local state = ClientState.new(sampleSnapshot(1, 100))
+	expectEqual(state:GetStatus(), "Closed", "initial status is Closed")
+	state:ApplyOpenComputer({
+		kind = "OpenComputer",
+		dashboardSessionId = "sess_status_test",
+		expiresAt = 1600,
+		serverTime = 1000,
+		state = sampleSnapshot(1, 100),
+	}, 1000)
+	expectEqual(state:GetStatus(), "Opening", "status is Opening")
+	state:OnCameraOpened()
+	expectEqual(state:GetStatus(), "Open", "status is Open")
+	state:CloseLocally()
+	expectEqual(state:GetStatus(), "Closing", "status is Closing")
+	state:OnCameraRestored()
+	expectEqual(state:GetStatus(), "Closed", "status is Closed")
+end)
+
 -- Runner loop
 local passed = 0
 local failures: { string } = {}

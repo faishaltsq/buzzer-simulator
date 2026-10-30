@@ -88,6 +88,10 @@ function ClientState:Get(): StateData
 	return self._data
 end
 
+function ClientState:GetStatus(): DashboardStatus
+	return self._data.status
+end
+
 function ClientState:Subscribe(listener: (StateData) -> ()): () -> ()
 	table.insert(self._listeners, listener)
 	listener(self._data)

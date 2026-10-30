@@ -893,6 +893,10 @@ function Desktop:SetVisible(visible: boolean, reducedMotion: boolean?)
 	end
 end
 
+function Desktop:IsVisible(): boolean
+	return self._gui.Enabled
+end
+
 function Desktop:Destroy()
 	for _, c in ipairs(self._connections) do
 		c:Disconnect()

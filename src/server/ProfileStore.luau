@@ -66,11 +66,64 @@ export type StoreAdapter = {
 	RemoveAsync: (self: any, key: string) -> any,
 }
 
+-- ===== deep copy (immutable snapshots in/out) =====
+local function deepCopy(value: any): any
+	if typeof(value) ~= "table" then
+		return value
+	end
+	local copy = {}
+	for k, v in pairs(value) do
+		copy[deepCopy(k)] = deepCopy(v)
+	end
+	return copy
+end
+ProfileStore._deepCopy = deepCopy
+
+local _inMemoryFallback: StoreAdapter? = nil
+local function getInMemoryFallback(): StoreAdapter
+	if _inMemoryFallback then
+		return _inMemoryFallback
+	end
+	local backend: { [string]: any } = {}
+	local fallback: StoreAdapter = {
+		GetAsync = function(_self, key: string, _options: any?)
+			local val = backend[key]
+			return if val ~= nil then deepCopy(val) else nil
+		end,
+		UpdateAsync = function(_self, key: string, transform: (any) -> any)
+			local old = backend[key]
+			local oldCopy = if old ~= nil then deepCopy(old) else nil
+			local new = transform(oldCopy)
+			if new ~= nil then
+				backend[key] = deepCopy(new)
+			end
+			return if new ~= nil then deepCopy(new) else nil
+		end,
+		RemoveAsync = function(_self, key: string)
+			backend[key] = nil
+			return true
+		end,
+	}
+	_inMemoryFallback = fallback
+	return fallback
+end
+
 -- Resolved lazily (not at require time) so specs can inject a fake adapter
 -- and the module stays requireable outside Roblox.
 local function defaultStore(): StoreAdapter
 	local dataStoreService = game:GetService("DataStoreService")
-	return dataStoreService:GetDataStore(STORE_NAME) :: any
+	local ok, store = pcall(function()
+		return dataStoreService:GetDataStore(STORE_NAME)
+	end)
+	if ok and store ~= nil then
+		return store :: any
+	end
+	local RunService = game:GetService("RunService")
+	if RunService:IsStudio() then
+		warn(`[ProfileStore] DataStore '{STORE_NAME}' unavailable in Studio ({tostring(store)}); using ephemeral in-memory fallback store for Studio play.`)
+		return getInMemoryFallback()
+	end
+	error(`Failed to access DataStore '{STORE_NAME}': {tostring(store)}`, 0)
 end
 local function defaultHttpService(): any
 	return game:GetService("HttpService")
@@ -591,18 +644,6 @@ local function validateEnvelope(envelope: any): (boolean, { string })
 end
 ProfileStore._validateEnvelope = validateEnvelope
 
--- ===== deep copy (immutable snapshots in/out) =====
-local function deepCopy(value: any): any
-	if typeof(value) ~= "table" then
-		return value
-	end
-	local copy = {}
-	for k, v in pairs(value) do
-		copy[deepCopy(k)] = deepCopy(v)
-	end
-	return copy
-end
-ProfileStore._deepCopy = deepCopy
 
 -- ===== construction =====
 -- opts.store: injected adapter (specs). opts.jobId: server identity for lease.

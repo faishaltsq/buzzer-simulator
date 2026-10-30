@@ -268,11 +268,15 @@ desktop = Desktop.new({
 		state:SetTab(tabId :: any)
 	end,
 })
--- Expose references for verification and testing
-_G.BuzzerState = state
-_G.BuzzerDesktop = desktop
-_G.BuzzerHud = hud
-
+-- Development-gated references for Studio verification and automated tests
+if RunService:IsStudio() then
+	_G.BuzzerState = state
+	_G.BuzzerDesktop = desktop
+	_G.BuzzerHud = hud
+	shared.BuzzerState = state
+	shared.BuzzerDesktop = desktop
+	shared.BuzzerHud = hud
+end
 
 -- Subscribe to state mutations
 state:Subscribe(function(stateData)
