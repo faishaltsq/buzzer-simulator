@@ -1,0 +1,142 @@
+{
+  "implementationCommit": "a577eec85b59384a85cef7423e32935ad8b74dcf",
+  "environment": "Actual Windows Roblox Studio, StudioTestService.ExecuteMultiplayerTestAsync(2)",
+  "adapters": "Actual Players, client/server RemoteEvents, Heartbeat, WorldService, SessionService, ProfileStore. Isolated in-memory persistence adapter; not real DataStore G2.",
+  "promptScope": "Automated scenario invokes the same server HandlePrompt entry point with the actual owned ProximityPrompt and a living real character. Separately, a single-client native keyboard E check exercised ProximityPromptService.PromptTriggered and received OpenComputer.",
+  "reconnectScope": "Runtime RemovePlayer/AddPlayer for the same actual Player, not a transport disconnect/reconnect.",
+  "result": {
+    "players": 2,
+    "realDataStore": false,
+    "sessionRecreation": "same real Player server lifecycle; not transport reconnect",
+    "failed": 0,
+    "passed": 31,
+    "results": [
+      {
+        "ok": true,
+        "name": "two real clients connected",
+        "detail": 2
+      },
+      {
+        "ok": true,
+        "name": "both clients loaded confirmed starters",
+        "detail": "ready plus actual client listeners"
+      },
+      {
+        "ok": true,
+        "name": "exactly three production remotes"
+      },
+      {
+        "ok": true,
+        "name": "distinct server-owned rooms"
+      },
+      {
+        "ok": true,
+        "name": "one terminal and one phone per room"
+      },
+      {
+        "ok": true,
+        "name": "private actual remote snapshots"
+      },
+      {
+        "ok": true,
+        "name": "sanitized confirmed projection"
+      },
+      {
+        "ok": true,
+        "name": "validated prompt private OpenComputer"
+      },
+      {
+        "ok": true,
+        "name": "foreign-room prompt denied"
+      },
+      {
+        "ok": true,
+        "name": "denial delivered without opening"
+      },
+      {
+        "ok": true,
+        "name": "second client cannot forge first user identity"
+      },
+      {
+        "ok": true,
+        "name": "second client cannot borrow first dashboard ID"
+      },
+      {
+        "ok": true,
+        "name": "forgery changes neither profile"
+      },
+      {
+        "ok": true,
+        "name": "real remote publish succeeds"
+      },
+      {
+        "ok": true,
+        "name": "same-ID retry creates no new transaction"
+      },
+      {
+        "ok": true,
+        "name": "query and mutation correlations independent"
+      },
+      {
+        "ok": true,
+        "name": "no speculative Cuan before settlement"
+      },
+      {
+        "ok": true,
+        "name": "second client state isolated after first publish"
+      },
+      {
+        "ok": true,
+        "name": "aggregate scheduler settles due post"
+      },
+      {
+        "ok": true,
+        "name": "confirmed settled credit only once"
+      },
+      {
+        "ok": true,
+        "name": "late replay cannot publish or pay again"
+      },
+      {
+        "ok": true,
+        "name": "real mission accepted"
+      },
+      {
+        "ok": true,
+        "name": "real mission publish accepted"
+      },
+      {
+        "ok": true,
+        "name": "mission settlement through scheduler"
+      },
+      {
+        "ok": true,
+        "name": "real claim confirmed"
+      },
+      {
+        "ok": true,
+        "name": "confirmed purchase and world sync"
+      },
+      {
+        "ok": true,
+        "name": "leave clears lease and room"
+      },
+      {
+        "ok": true,
+        "name": "same actor session recreation restores confirmed progress"
+      },
+      {
+        "ok": true,
+        "name": "reconnect-safe durable APPLIED lookup"
+      },
+      {
+        "ok": true,
+        "name": "other actual client remains unchanged"
+      },
+      {
+        "ok": true,
+        "name": "clean aggregate shutdown"
+      }
+    ]
+  }
+}

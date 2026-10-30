@@ -66,6 +66,8 @@ local MAX_TIME_CHUNK = 60
 local MAX_RECENT_OUTCOMES = 32
 local MAX_QUEUED_ACTIONS = 32
 
+local MAX_LIVE_RESULTS = 64
+local MAX_PENDING_INTERVALS = 32
 -- Server-owned operation-ID namespaces. Client request IDs never enter these.
 local OP_PREFIX = {
 	command = "cmd",
@@ -112,6 +114,7 @@ export type SessionOptions = {
 	noCacheOptions: (() -> any)?, -- injected DataStoreGetOptions factory (specs)
 	jobId: string?,
 	now: (() -> number)?, -- epoch-second clock (specs inject a fake)
+	connectedNow: (() -> number)?, -- optional monotonic connected-time sampler
 	wait: ((number) -> ())?, -- retry sleep (specs inject a fake)
 }
 
@@ -268,6 +271,15 @@ function SessionService.new(opts: SessionOptions): SessionServiceInstance
 		now = self._now,
 		wait = self._wait,
 	})
+	self._connectedNow = opts.connectedNow
+	self._connectedBaseline = nil :: number?
+	self._emptyLeaseConfirmed = false
+	self._starterOpId = nil :: string?
+	self._pendingWrite = nil :: any?
+	self._stopRequested = false
+	self._liveOrder = {} :: { string }
+	self._liveIntents = {} :: { [string]: string }
+	self._reservedIntents = {} :: { [string]: string }
 	-- Last confirmed state. Never nil once started successfully.
 	self._profile = nil :: any?
 	self._revision = 0
@@ -282,6 +294,7 @@ function SessionService.new(opts: SessionOptions): SessionServiceInstance
 	-- worker count active while it elapsed.
 	self._pendingAccrual = {} :: { { seconds: number, rate: number } }
 	self._lastBankAt = 0
+	self._workerBankDueAt = nil :: number?
 	-- Live reservation/replay bookkeeping. The durable ring is the authority
 	-- after a reconnect; this table only answers within the live session.
 	self._reserved = {} :: { [string]: boolean }
@@ -308,6 +321,15 @@ export type SessionServiceInstance = {
 	_now: () -> number,
 	_wait: (number) -> (),
 	_store: any,
+	_connectedNow: (() -> number)?,
+	_connectedBaseline: number?,
+	_emptyLeaseConfirmed: boolean,
+	_starterOpId: string?,
+	_pendingWrite: any?,
+	_stopRequested: boolean,
+	_liveOrder: { string },
+	_liveIntents: { [string]: string },
+	_reservedIntents: { [string]: string },
 	_profile: any?,
 	_revision: number,
 	_saveStatus: SaveStatusCode,
@@ -315,6 +337,7 @@ export type SessionServiceInstance = {
 	_unbankedSeconds: number,
 	_pendingAccrual: { { seconds: number, rate: number } },
 	_lastBankAt: number,
+	_workerBankDueAt: number?,
 	_reserved: { [string]: boolean },
 	_liveResults: { [string]: MutationResult },
 	_inflight: { [string]: { profile: any, opId: string, intent: string } },
@@ -331,10 +354,13 @@ export type SessionServiceInstance = {
 -- retained; outstanding pending-post state is recovered, never rerolled. No
 -- offline worker income is awarded here.
 function SessionService:Start(): { ok: boolean, code: string, detail: string?, snapshot: any? }
-	if self._started then
+	if self._started or self._stopped or self._stopRequested or self._stopping or self._emptyLeaseConfirmed or self._laneBusy then
 		return { ok = false, code = "BUSY", detail = "session already started" }
 	end
+	self._emptyLeaseConfirmed = false
+	self._laneBusy = true
 	local load = self._store:Load()
+	self._laneBusy = false
 	if not load.ok then
 		-- Never seed a starter profile after a failed load (docs/03).
 		self._profile = nil
@@ -343,14 +369,13 @@ function SessionService:Start(): { ok: boolean, code: string, detail: string?, s
 		return { ok = false, code = load.code, detail = load.detail }
 	end
 	local envelope = load.envelope
-	if envelope == nil or envelope.profile == nil then
-		-- A freshly leased key with no profile yet: the caller (BS-06 Bootstrap)
-		-- owns starter-profile creation. BS-04 refuses to invent one.
-		local freshEnvelope: any = envelope
+	if envelope ~= nil and envelope.profile == nil then
 		self._profile = nil
-		self._revision = if freshEnvelope ~= nil then freshEnvelope.revision else 0
+		self._revision = envelope.revision
 		self._saveStatus = "healthy"
-		return { ok = false, code = "NOT_READY", detail = "no profile written yet; starter profile is owned by Bootstrap" }
+		self._emptyLeaseConfirmed = self:_hasLocalLease()
+		self._starterOpId = `starter-{self._userId}-{self._store:GetLeaseToken()}`
+		return { ok = false, code = "NOT_READY", detail = "empty profile lease acquired; InitializeStarter is required" }
 	end
 	local confirmed: any = self._store:GetConfirmedEnvelope()
 	self._profile = confirmed.profile
@@ -363,7 +388,92 @@ function SessionService:Start(): { ok: boolean, code: string, detail: string?, s
 	-- worker count active while it elapsed.
 	self._pendingAccrual = {} :: { { seconds: number, rate: number } }
 	self._lastBankAt = 0
+	self._connectedBaseline = if self._connectedNow ~= nil then self._connectedNow() else nil
 	return { ok = true, code = "OK", snapshot = self:_buildSnapshot() }
+end
+
+function SessionService:_hasLocalLease(): boolean
+	local token = self._store:GetLeaseToken()
+	-- Inspect only the local lease, not a copied full profile on every clock sample.
+	local envelope = self._store._envelope
+	local lease = if envelope ~= nil then envelope.lease else nil
+	return token ~= nil and lease ~= nil and lease.token == token
+		and isFiniteNumber(lease.expiresAt) and lease.expiresAt > self._now()
+end
+
+-- Server-owned operation IDs must be unique per acquired lease generation.
+-- `lastSaveOpId` survives a release, so a uid-only ID reused by a later
+-- session would short-circuit as already-applied and report success without
+-- clearing the live backend lease (locking the next join for 240 seconds).
+function SessionService:_leaseGeneration(): string
+	local token = self._store:GetLeaseToken()
+	return if typeof(token) == "string" and #token > 0 then token else "unleased"
+end
+
+function SessionService:GetLeaseExpiresAt(): number
+	local envelope = self._store._envelope
+	return if envelope ~= nil and envelope.lease ~= nil then envelope.lease.expiresAt else 0
+end
+
+function SessionService:IsWritable(): (boolean, string?)
+	if not self._started or self._profile == nil then
+		return false, "NOT_READY"
+	end
+	if self._stopped or self._stopping or self._stopRequested then
+		return false, "BUSY"
+	end
+	if self._saveStatus ~= "healthy" then
+		return false, self._saveStatus
+	end
+	if not self:_hasLocalLease() then
+		return false, "LOCKED"
+	end
+	return true, nil
+end
+
+function SessionService:InitializeStarter(): { ok: boolean, code: string, snapshot: any? }
+	if self._started and not self._stopped and not self._stopping and not self._stopRequested then
+		return { ok = true, code = "OK", snapshot = self:_buildSnapshot() }
+	end
+	if self._stopped or self._stopping or self._stopRequested or not self._emptyLeaseConfirmed then
+		return { ok = false, code = "NOT_READY" }
+	end
+	if not self:_hasLocalLease() then
+		return { ok = false, code = "LOCKED" }
+	end
+	local result: any = { ok = false, code = "BUSY" }
+	local entered = self:_tryRunLane(function()
+		local pending = self._pendingWrite
+		local starter = if pending ~= nil then pending.profile else {
+			balance = 0, lifetimeEarned = 0, completedMissions = 0,
+			deviceId = "phone_cheap", propertyId = "bedroom",
+			ownedDesks = {}, workers = {}, fractionalIncome = 0,
+			claimedRunIdsWindow = {}, recentMutationOutcomes = {},
+			missionVariantCounters = {}, nextOrganicSequence = 0,
+			activeMission = nil, pendingPost = nil, ownPosts = {}, nextPostSequence = 1,
+		}
+		result = self:_commit(starter, self._starterOpId)
+		if result.ok then
+			self._started = true
+			self._emptyLeaseConfirmed = false
+			self._connectedBaseline = if self._connectedNow ~= nil then self._connectedNow() else nil
+			result.snapshot = self:_buildSnapshot()
+		end
+	end)
+	return if entered then result else { ok = false, code = "BUSY" }
+end
+
+function SessionService:_cacheResult(requestId: string, intent: string, result: MutationResult)
+	if self._liveResults[requestId] == nil then
+		table.insert(self._liveOrder, requestId)
+	end
+	self._liveResults[requestId] = result
+	self._liveIntents[requestId] = intent
+	while #self._liveOrder > MAX_LIVE_RESULTS do
+		local oldest = table.remove(self._liveOrder, 1)
+		self._liveResults[oldest] = nil
+		self._liveIntents[oldest] = nil
+	end
 end
 
 -- ===== snapshot projection =====
@@ -398,7 +508,7 @@ function SessionService:_buildSnapshot(): any
 		nextOrganicContextId = self:_nextOrganicContextId(),
 		ownPosts = self._store._deepCopy(profile.ownPosts),
 		feedVersion = self._revision,
-		saveStatus = self._saveStatus,
+		saveStatus = if self._saveStatus == "healthy" and not self:IsWritable() then "BUSY" else self._saveStatus,
 	}
 end
 
@@ -533,31 +643,45 @@ function SessionService:_runLane(fn: () -> ()): boolean
 	return self:_tryRunLane(fn)
 end
 
--- Advance connected time in bounded chunks without dropping the remainder.
---
--- RATE-AWARE PENDING ACCRUAL: each pending interval is stored with the
--- worker RATE that was active while it accrued, not just its duration. A
--- hire or a worker-count change must not retroactively re-rate time that
--- elapsed under a different count, and a failed write must restore the
--- interval at its ORIGINAL rate rather than the rate current at recovery.
--- `_unbankedSeconds` remains the total unbanked duration for reporting.
-function SessionService:_drainChunks(): { { seconds: number, rate: number } }
-	local session: any = self
-	local pending: { { seconds: number, rate: number } } = session._pendingAccrual
-	local drained: { { seconds: number, rate: number } } = {}
-	local remaining: { { seconds: number, rate: number } } = {}
-	for i = 1, #pending do
-		local entry = pending[i]
-		local seconds = entry.seconds
-		while seconds > 0 do
-			local chunk = math.min(seconds, MAX_TIME_CHUNK)
-			table.insert(drained, { seconds = chunk, rate = entry.rate })
-			seconds -= chunk
+-- Keep short interval lists intact; at the bound, merge equal-rate entries.
+-- V1 has only three possible worker rates, so this remains bounded regardless
+-- of write latency. Zero-worker and zero-duration samples need no storage.
+function SessionService:_appendAccrual(seconds: number, rate: number)
+	if seconds <= 0 or rate <= 0 then
+		return
+	end
+	local pending = self._pendingAccrual
+	if #pending >= MAX_PENDING_INTERVALS then
+		local totals: { [number]: number } = {}
+		for _, entry in ipairs(pending) do
+			totals[entry.rate] = (totals[entry.rate] or 0) + entry.seconds
+		end
+		table.clear(pending)
+		for existingRate, total in pairs(totals) do
+			table.insert(pending, { seconds = total, rate = existingRate })
 		end
 	end
-	session._pendingAccrual = remaining
-	session._unbankedSeconds = 0
-	return drained
+	table.insert(pending, { seconds = seconds, rate = rate })
+	self._unbankedSeconds += seconds
+	if self._unbankedSeconds >= WORKER_BANK_INTERVAL then
+		self._workerBankDueAt = self._connectedSeconds
+	end
+end
+
+function SessionService:CaptureConnectedTime()
+	if self._connectedNow == nil then
+		return
+	end
+	local now = self._connectedNow()
+	local previous = self._connectedBaseline
+	self._connectedBaseline = now
+	local writable = self:IsWritable()
+	if not writable or previous == nil or not isFiniteNumber(now) or now < previous then
+		return
+	end
+	local seconds = now - previous
+	self._connectedSeconds += seconds
+	self:_appendAccrual(seconds, EconomyService.incomePerSecond(self._profile))
 end
 
 -- Apply accrued worker income to a PROPOSED profile. Returns the proposed
@@ -567,27 +691,27 @@ end
 -- never touched: the caller commits the proposal only after a durable save
 -- succeeds, so a failed or ambiguous write cannot publish unconfirmed Cuan.
 function SessionService:_applyWorkerAccrual(base: any): (any, number, { { seconds: number, rate: number } })
-	local chunks = self:_drainChunks()
-	if #chunks == 0 then
+	local consumed = self._pendingAccrual
+	if #consumed == 0 then
 		return base, 0, {}
 	end
 	local current = base
 	local totalCredited = 0
-	local consumed: { { seconds: number, rate: number } } = {}
-	for i = 1, #chunks do
-		local chunk = chunks[i]
-		-- Credit this interval using the worker count it accrued under, by
-		-- ticking a profile whose worker list reflects that rate.
-		local tick = EconomyService.tickAtRate(current, chunk.seconds, chunk.rate)
-		if not tick.ok then
-			-- Refuse rather than clamp: the caller must not persist a partial or
-			-- silently reduced credit.
-			error(`SessionService: worker accrual refused ({tick.code}: {tostring(tick.detail)})`, 0)
+	for _, entry in ipairs(consumed) do
+		local remaining = entry.seconds
+		while remaining > 0 do
+			local seconds = math.min(remaining, MAX_TIME_CHUNK)
+			local tick = EconomyService.tickAtRate(current, seconds, entry.rate)
+			if not tick.ok then
+				error(`SessionService: worker accrual refused ({tick.code}: {tostring(tick.detail)})`, 0)
+			end
+			current = tick.profile
+			totalCredited += tick.earned or 0
+			remaining -= seconds
 		end
-		current = tick.profile
-		totalCredited += tick.earned or 0
-		table.insert(consumed, chunk)
 	end
+	self._pendingAccrual = {}
+	self._unbankedSeconds = 0
 	self._lastBankAt = self._connectedSeconds
 	return current, totalCredited, consumed
 end
@@ -609,25 +733,93 @@ function SessionService:_commit(proposed: any, operationId: string, intent: stri
 	revision: number?,
 	detail: string?,
 }
-	local save = self._store:Save(proposed, operationId, intent)
+	local pending = self._pendingWrite
+	if pending ~= nil and pending.opId ~= operationId then
+		return { ok = false, code = "BUSY", detail = "an earlier durable proposal must reconcile first" }
+	end
+	if pending == nil then
+		pending = {
+			profile = proposed, opId = operationId, intent = intent, consumed = nil,
+			base = self._profile, baseRevision = self._revision, bankAt = self._lastBankAt,
+		}
+		self._pendingWrite = pending
+	end
+	if pending.base ~= self._profile or pending.baseRevision ~= self._revision then
+		return { ok = false, code = "BUSY", detail = "retained proposal no longer has the same confirmed base" }
+	end
+	local save = self._store:Save(pending.profile, pending.opId, pending.intent)
 	if not save.ok then
+		-- Include the healthy interval spent waiting for this response, then
+		-- freeze the clock until this exact proposal is reconciled.
+		self:CaptureConnectedTime()
 		self._saveStatus = if save.code == "SAVE_UNAVAILABLE" then "SAVE_UNAVAILABLE" else "BUSY"
 		return { ok = false, code = save.code, detail = save.detail }
 	end
+	self:CaptureConnectedTime()
+	if pending.consumed ~= nil then
+		self:_discardRestoredAccrual(pending.profile, pending.consumed)
+	end
+	-- Reconciliation may confirm only an older prefix of an overdue interval.
+	-- Keep that deadline latched until a confirmed proposal covers its watermark.
+	local dueAt = self._workerBankDueAt
+	if self._unbankedSeconds == 0 or (dueAt ~= nil and pending.bankAt >= dueAt) then
+		self._workerBankDueAt = nil
+	end
+	self._pendingWrite = nil
 	self._profile = self._store:GetConfirmedEnvelope().profile
 	self._revision = save.revision or self._revision
 	self._saveStatus = "healthy"
 	return { ok = true, code = "OK", revision = save.revision }
 end
 
+-- Only retained server-owned Save proposals are retried. Domain operations are
+-- never reconstructed from UNKNOWN requests, and a held lane never blocks reads.
+function SessionService:Reconcile(): { ok: boolean, code: string }
+	if self._stopped then
+		return { ok = false, code = "BUSY" }
+	end
+	if self._pendingWrite == nil then
+		return { ok = true, code = "OK" }
+	end
+	local result: any = { ok = false, code = "BUSY" }
+	local entered = self:_tryRunLane(function()
+		local pending = self._pendingWrite
+		if pending == nil then
+			result = { ok = true, code = "OK" }
+			return
+		end
+		result = self:_commit(pending.profile, pending.opId, pending.intent)
+		if result.ok then
+			if self._emptyLeaseConfirmed then
+				self._emptyLeaseConfirmed = false
+				self._started = true
+				self._connectedBaseline = if self._connectedNow ~= nil then self._connectedNow() else nil
+			end
+			for requestId, proposal in pairs(self._inflight) do
+				if proposal.opId == pending.opId then
+					local durable = findOutcome(self._profile, requestId)
+					self:_cacheResult(requestId, proposal.intent, {
+						ok = true, code = "OK", revision = self._revision, lookup = "APPLIED",
+						data = { resultIds = if durable ~= nil then durable.resultIds else nil },
+					})
+					self._inflight[requestId] = nil
+					self._reserved[requestId] = nil
+					self._reservedIntents[requestId] = nil
+				end
+			end
+		end
+	end)
+	return if entered then result else { ok = false, code = "BUSY" }
+end
+
 -- A standalone worker bank write, used only when no other durable write is
 -- already carrying the accrued interval.
 function SessionService:_bankWorker(): { ok: boolean, code: string, credited: number }
 	local proposed, credited, consumed = self:_piggybackWorker()
-	if credited == 0 then
+	if credited == 0 and #consumed == 0 then
 		return { ok = true, code = "OK", credited = 0 }
 	end
-	local commit = self:_commit(proposed, `{OP_PREFIX.bank}-{self._userId}-{self._lastBankAt}`)
+	local commit = self:_commit(proposed, `{OP_PREFIX.bank}-{self._userId}-{self:_leaseGeneration()}-{self._lastBankAt}`)
 	if not commit.ok then
 		-- The proposal is discarded. The confirmed wallet is unchanged, and the
 		-- exact accrued interval is restored so it is credited on a later turn
@@ -646,38 +838,24 @@ end
 -- Intervals accrued AFTER the failed response are NOT in the committed proposal
 -- and must be preserved, so this removes exactly the entries the committed
 -- proposal consumed and leaves everything else pending.
-function SessionService:_discardRestoredAccrual(committedProfile: any, consumed: { { seconds: number, rate: number } })
-	if committedProfile == nil or #consumed == 0 then
-		return
+function SessionService:_discardRestoredAccrual(_committedProfile: any, consumed: { { seconds: number, rate: number } })
+	local amounts: { [number]: number } = {}
+	for _, entry in ipairs(consumed) do
+		amounts[entry.rate] = (amounts[entry.rate] or 0) + entry.seconds
 	end
-	local session: any = self
-	local toRemove: { { seconds: number, rate: number } } = {}
-	for i = 1, #consumed do
-		table.insert(toRemove, consumed[i])
-	end
-	local remaining: { { seconds: number, rate: number } } = {}
-	for i = 1, #session._pendingAccrual do
-		local entry = session._pendingAccrual[i]
-		local matched = false
-		for j = 1, #toRemove do
-			if toRemove[j] ~= nil
-				and toRemove[j].seconds == entry.seconds
-				and toRemove[j].rate == entry.rate then
-				toRemove[j] = nil
-				matched = true
-				break
-			end
-		end
-		if not matched then
-			table.insert(remaining, entry)
+	local remaining = {}
+	local seconds = 0
+	for _, entry in ipairs(self._pendingAccrual) do
+		local removed = math.min(entry.seconds, amounts[entry.rate] or 0)
+		amounts[entry.rate] = (amounts[entry.rate] or 0) - removed
+		local retained = entry.seconds - removed
+		if retained > 0 then
+			table.insert(remaining, { seconds = retained, rate = entry.rate })
+			seconds += retained
 		end
 	end
-	session._pendingAccrual = remaining
-	local totalSeconds = 0
-	for i = 1, #remaining do
-		totalSeconds += remaining[i].seconds
-	end
-	session._unbankedSeconds = totalSeconds
+	self._pendingAccrual = remaining
+	self._unbankedSeconds = seconds
 end
 
 -- Restore an accrued interval that could not be confirmed, so the next lane
@@ -691,34 +869,16 @@ end
 -- divided by a different rate and the restored time would be wrong.
 -- `_applyWorkerAccrual` records the exact seconds it consumed, and this
 -- function restores precisely those.
-function SessionService:_restoreUnbanked(credited: number, consumed: { { seconds: number, rate: number } }?)
-	local session: any = self
-	-- Restore based on the PRESENCE of consumed intervals, never on the integer
-	-- credited amount. A sub-integer interval (0.2s at 1.5/s = 0.3 Cuan) floors
-	-- to a zero credit but still carries positive fractional earnings, so an
-	-- early return on `credited <= 0` would silently discard it.
-	if consumed ~= nil and #consumed > 0 then
-		-- Restore each interval with its ORIGINAL rate, so a worker-count change
-		-- between the failed write and its recovery cannot re-rate the interval.
-		for i = 1, #consumed do
-			local entry = consumed[i]
-			table.insert(session._pendingAccrual, entry)
-			session._unbankedSeconds += entry.seconds
-		end
+function SessionService:_restoreUnbanked(_credited: number, consumed: { { seconds: number, rate: number } }?)
+	if consumed == nil or #consumed == 0 then
 		return
 	end
-	-- Fallback for a caller that did not record the interval: recover from the
-	-- credit using the CURRENT rate. Approximate, and only reached on a path
-	-- that did not change the worker count.
-	local profile = self._profile
-	if profile == nil then
-		return
+	for _, entry in ipairs(consumed) do
+		self:_appendAccrual(entry.seconds, entry.rate)
 	end
-	local rate = EconomyService.incomePerSecond(profile)
-	if rate <= 0 then
-		return
+	if self._pendingWrite ~= nil then
+		self._pendingWrite.consumed = consumed
 	end
-	session._unbankedSeconds += credited / rate
 end
 
 
@@ -767,20 +927,6 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 	end
 	if not isNonEmptyString(request.requestId) then
 		return { ok = false, code = "INVALID_INPUT", revision = self._revision, detail = "requestId is required" }
-	end
-	if (self._saveStatus :: string) ~= "healthy" then
-		-- docs/03: on lease loss or repeated failure, block economic commands.
-		-- A retry of a request whose in-flight proposal is retained is the one
-		-- exception: it reuses the SAME operationId and payload, so it resolves
-		-- an ambiguous write instead of issuing a new economic action.
-		if self._inflight[request.requestId] == nil then
-			return {
-				ok = false,
-				code = (self._saveStatus :: string),
-				revision = self._revision,
-				detail = "economic actions are blocked until the save lane is healthy",
-			}
-		end
 	end
 	local action = request.action
 	if MUTATING_ACTIONS[action] == nil then
@@ -836,7 +982,7 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 					lookup = "APPLIED",
 					data = live.data,
 				}
-				self._liveResults[request.requestId] = replayedLive
+				self:_cacheResult(request.requestId, intent, replayedLive)
 				return replayedLive
 			end
 			return live
@@ -848,14 +994,23 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 			lookup = "APPLIED",
 			data = { resultIds = durable.resultIds },
 		}
-		self._liveResults[request.requestId] = replayed
+		self:_cacheResult(request.requestId, intent, replayed)
 		return replayed
 	end
 	-- No durable record: a live definite rejection is still cached, because a
 	-- validation error never reaches the store and so never enters the ring.
 	local live = self._liveResults[request.requestId]
 	if live ~= nil then
+		if self._liveIntents[request.requestId] ~= intent then
+			return { ok = false, code = "INVALID_INPUT", revision = self._revision, detail = "requestId was already used with a different intent" }
+		end
 		return live
+	end
+	if self._reserved[request.requestId] then
+		if self._reservedIntents[request.requestId] ~= intent then
+			return { ok = false, code = "INVALID_INPUT", revision = self._revision, detail = "requestId was already reserved with a different intent" }
+		end
+		return { ok = false, code = "BUSY", revision = self._revision, lookup = "PENDING" }
 	end
 	-- An ambiguous write left an in-flight proposal. A retry of the identical
 	-- request reuses that SAME proposal and operationId, so ProfileStore's
@@ -873,7 +1028,7 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		end
 		local retryResult: MutationResult? = nil
 		local retrySession: any = self
-		local entered = self:_runLane(function()
+		local entered = self:_tryRunLane(function()
 			local commit = retrySession:_commit(inflight.profile, inflight.opId, inflight.intent)
 			if not commit.ok then
 				local failedRetry: MutationResult = {
@@ -893,11 +1048,6 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 			-- it Mutate falls through and reports the mutation as unprocessed.
 			local ring = inflight.profile.recentMutationOutcomes
 			local recorded = ring[#ring]
-			-- The original write already committed the worker credit inside this
-			-- same proposal. The failed attempt restored those intervals to the
-			-- pending list, so they must be discarded now: leaving them would let a
-			-- later bank credit the same connected time a second time.
-			retrySession:_discardRestoredAccrual(inflight.profile, inflight.consumed or {})
 			retryResult = {
 				ok = true,
 				code = "OK",
@@ -920,21 +1070,15 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		end
 		if retryResult ~= nil then
 			if retryResult.ok then
-				self._liveResults[request.requestId] = retryResult
+				self:_cacheResult(request.requestId, intent, retryResult)
 			end
 			return retryResult
 		end
 	end
 
-	-- Reservation before the lane, so a duplicate cannot enter twice.
-	if self._reserved[request.requestId] then
-		return {
-			ok = false,
-			code = "BUSY",
-			revision = self._revision,
-			detail = "request is already in flight",
-			lookup = "PENDING",
-		}
+	local writable, unavailable = self:IsWritable()
+	if not writable or self._pendingWrite ~= nil then
+		return { ok = false, code = unavailable or "BUSY", revision = self._revision, detail = "economic actions are blocked until the save lane is healthy" }
 	end
 	if #self._queue >= MAX_QUEUED_ACTIONS then
 		return {
@@ -945,6 +1089,7 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		}
 	end
 	self._reserved[request.requestId] = true
+	self._reservedIntents[request.requestId] = intent
 	table.insert(self._queue, {
 		requestId = request.requestId,
 		action = action,
@@ -960,6 +1105,8 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		while #session._queue > 0 do
 			local head = session._queue[1]
 			if session._liveResults[head.requestId] ~= nil then
+				session._reserved[head.requestId] = nil
+				session._reservedIntents[head.requestId] = nil
 				table.remove(session._queue, 1)
 				continue
 			end
@@ -981,6 +1128,7 @@ function SessionService:Mutate(request: MutationRequest): MutationResult
 		-- reservation so a later retry can execute it; reporting anything else
 		-- would claim a mutation that never happened.
 		self._reserved[request.requestId] = nil
+		self._reservedIntents[request.requestId] = nil
 		local queue: { { requestId: string, action: string, payload: { [string]: any }, intent: string } } = self._queue
 		for i = #queue, 1, -1 do
 			if queue[i].requestId == request.requestId then
@@ -1022,6 +1170,12 @@ function SessionService:_executeMutation(
 	payload: { [string]: any },
 	intent: string
 ): MutationResult
+	local writable, unavailable = self:IsWritable()
+	if not writable or self._pendingWrite ~= nil then
+		self._reserved[requestId] = nil
+		self._reservedIntents[requestId] = nil
+		return { ok = false, code = unavailable or "BUSY", revision = self._revision }
+	end
 	-- A due settlement is processed first through its own stable identity, so
 	-- the command never races an outstanding post.
 	local settle = self:_settleDue()
@@ -1032,8 +1186,9 @@ function SessionService:_executeMutation(
 			revision = self._revision,
 			detail = "pending settlement could not be confirmed",
 		}
-		self._liveResults[requestId] = blocked
+		self:_cacheResult(requestId, intent, blocked)
 		self._reserved[requestId] = nil
+		self._reservedIntents[requestId] = nil
 		return blocked
 	end
 
@@ -1093,8 +1248,9 @@ function SessionService:_executeMutation(
 			detail = domainDetail,
 			lookup = "REJECTED",
 		}
-		self._liveResults[requestId] = rejected
+		self:_cacheResult(requestId, intent, rejected)
 		self._reserved[requestId] = nil
+		self._reservedIntents[requestId] = nil
 		return rejected
 	end
 	-- Record the durable outcome in the SAME conditional write as the mutation
@@ -1141,16 +1297,11 @@ function SessionService:_executeMutation(
 		-- Never cache an ambiguous outcome as a definite result. The in-flight
 		-- entry is kept so a retry can resolve through the same identity.
 		self._reserved[requestId] = nil
+		self._reservedIntents[requestId] = nil
 		return failed
 	end
 	self._inflight[requestId] = nil
 
-	-- Confirmed. The durable profile is the authority: it already carries the
-	-- ring entry written in this same conditional save, so a reconnect can
-	-- replay this request without re-running domain logic.
-	self._profile = self._store:GetConfirmedEnvelope().profile
-	self._revision = commit.revision or self._revision
-	self._saveStatus = "healthy"
 
 	local confirmed: MutationResult = {
 		ok = true,
@@ -1158,8 +1309,9 @@ function SessionService:_executeMutation(
 		revision = self._revision,
 		data = { resultIds = ids, workerCredited = workerCredited },
 	}
-	self._liveResults[requestId] = confirmed
+	self:_cacheResult(requestId, intent, confirmed)
 	self._reserved[requestId] = nil
+	self._reservedIntents[requestId] = nil
 	return confirmed
 end
 
@@ -1198,11 +1350,7 @@ end
 -- returned with the lookup status, without waiting.
 function SessionService:Snapshot(lookupRequestId: string?): SnapshotResult
 	if self._profile == nil then
-		return { ok = false, code = "LOCKED" }
-	end
-	local lookup = nil
-	if lookupRequestId ~= nil and isNonEmptyString(lookupRequestId) then
-		lookup = self:_lookup(lookupRequestId)
+		return { ok = false, code = "NOT_READY" }
 	end
 	-- Settle an already-due post through the durable lane. The settlement has
 	-- its own stable server-owned identity, so it cannot pay twice and cannot
@@ -1214,12 +1362,21 @@ function SessionService:Snapshot(lookupRequestId: string?): SnapshotResult
 	-- lane is free; otherwise the last confirmed snapshot is returned as-is and
 	-- the due post settles on the next lane turn.
 	local pending: any = self._profile.pendingPost
-	if pending ~= nil and self._now() >= pending.settleAt then
+	if pending ~= nil and self._now() >= pending.settleAt and self:IsWritable() and self._pendingWrite == nil then
 		local session: any = self
 		self:_tryRunLane(function()
 			session:_settleDue()
 		end)
 	end
+	return self:ReadSnapshot(lookupRequestId)
+end
+
+function SessionService:ReadSnapshot(lookupRequestId: string?): SnapshotResult
+	if self._profile == nil then
+		return { ok = false, code = "NOT_READY" }
+	end
+	local lookup = if lookupRequestId ~= nil and isNonEmptyString(lookupRequestId)
+		then self:_lookup(lookupRequestId) else nil
 	return { ok = true, code = "OK", snapshot = self:_buildSnapshot(), lookup = lookup }
 end
 
@@ -1231,35 +1388,22 @@ function SessionService:_lookup(requestId: string): {
 	status: LookupStatus,
 	originalResult: { ok: boolean, code: string, revision: number, data: { [string]: any }? }?,
 }
-	local live = self._liveResults[requestId]
-	if live ~= nil then
-		if live.code == "OK" then
-			return {
-				originalRequestId = requestId,
-				status = "APPLIED",
-				originalResult = { ok = true, code = "OK", revision = live.revision, data = live.data },
-			}
-		end
-		return {
-			originalRequestId = requestId,
-			status = "REJECTED",
-			originalResult = { ok = false, code = (live.code :: string), revision = live.revision, data = live.data },
-		}
-	end
-	if self._reserved[requestId] then
-		return { originalRequestId = requestId, status = "PENDING" }
-	end
 	local durable = findOutcome(self._profile, requestId)
 	if durable ~= nil then
 		return {
+			originalRequestId = requestId, status = "APPLIED",
+			originalResult = { ok = true, code = "OK", revision = durable.revision, data = { resultIds = durable.resultIds } },
+		}
+	end
+	if self._reserved[requestId] or self._inflight[requestId] ~= nil then
+		return { originalRequestId = requestId, status = "PENDING" }
+	end
+	local live = self._liveResults[requestId]
+	if live ~= nil then
+		return {
 			originalRequestId = requestId,
-			status = "APPLIED",
-			originalResult = {
-				ok = true,
-				code = "OK",
-				revision = durable.revision,
-				data = { resultIds = durable.resultIds },
-			},
+			status = if live.ok then "APPLIED" else "REJECTED",
+			originalResult = { ok = live.ok, code = live.code, revision = live.revision, data = live.data },
 		}
 	end
 	return { originalRequestId = requestId, status = "UNKNOWN" }
@@ -1277,11 +1421,24 @@ function SessionService:Stop(): { ok: boolean, code: string, detail: string?, ba
 	if self._stopping then
 		return { ok = false, code = "BUSY", detail = "stop already in progress" }
 	end
-	if self._profile == nil then
-		self._stopped = true
-		return { ok = true, code = "OK", detail = "nothing to stop", banked = 0 }
+	self:CaptureConnectedTime()
+	self._stopRequested = true
+	if self._laneBusy then
+		return { ok = false, code = "BUSY", detail = "an admitted write is still running", banked = 0 }
 	end
 	self._stopping = true
+	if self._pendingWrite ~= nil then
+		local reconcile = self:Reconcile()
+		if not reconcile.ok then
+			self._stopping = false
+			return { ok = false, code = reconcile.code, detail = "admitted write remains unresolved; lease retained", banked = 0 }
+		end
+	end
+	if self._profile == nil and self._store:GetLeaseToken() == nil then
+		self._stopping = false
+		self._stopped = true
+		return { ok = true, code = "OK", banked = 0 }
+	end
 	local banked = 0
 	-- Final worker banking through a durable Save where possible. ProfileStore
 	-- Release does NOT accept a final profile payload, so the bank must be a
@@ -1292,8 +1449,13 @@ function SessionService:Stop(): { ok: boolean, code: string, detail: string?, ba
 	-- leaves the session open so the caller can retry once the lane drains. The
 	-- lease is retained, so a rejoin can still reconcile.
 	local bankResult: { ok: boolean, code: string, credited: number }? = nil
+	local release: any = nil
 	local entered = self:_runLane(function()
-		bankResult = self:_bankWorker()
+		local bank = if self._profile ~= nil then self:_bankWorker() else { ok = true, code = "OK", credited = 0 }
+		bankResult = bank
+		if bank.ok then
+			release = self._store:Release(`{OP_PREFIX.final}-{self._userId}-{self:_leaseGeneration()}`)
+		end
 	end)
 	if not entered then
 		self._stopping = false
@@ -1311,7 +1473,6 @@ function SessionService:Stop(): { ok: boolean, code: string, detail: string?, ba
 		-- Unresolved failure: report it explicitly. The confirmed wallet is
 		-- unchanged and the lease is NOT released, so a rejoin can reconcile.
 		self._stopping = false
-		self._stopped = true
 		return {
 			ok = false,
 			code = bank.code,
@@ -1319,9 +1480,8 @@ function SessionService:Stop(): { ok: boolean, code: string, detail: string?, ba
 			banked = 0,
 		}
 	end
-	local release = self._store:Release(`{OP_PREFIX.final}-{self._userId}`)
 	self._stopping = false
-	self._stopped = true
+	self._stopped = release.ok
 	if not release.ok then
 		return {
 			ok = false,
@@ -1334,11 +1494,11 @@ function SessionService:Stop(): { ok: boolean, code: string, detail: string?, ba
 end
 
 -- ===== scheduler surface (BS-06 Bootstrap integration) =====
--- One shared aggregate scheduler interface. Deterministic under a fake clock:
--- the caller supplies monotonic connected elapsed time, never a wall-clock
--- difference, so no offline income can be fabricated.
+-- Production uses CaptureConnectedTime() for admission and Advance(0) to pump
+-- the lane. Without connectedNow, explicit dt means trusted ALREADY-ADMITTED
+-- connected intervals, including intervals captured before an observed failure.
 function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: string, banked: number }
-	if self._stopped or self._stopping then
+	if self._stopped or self._stopping or self._stopRequested then
 		return { ok = false, code = "BUSY", banked = 0 }
 	end
 	if self._profile == nil then
@@ -1347,26 +1507,42 @@ function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: 
 	if not isFiniteNumber(connectedSeconds) or connectedSeconds < 0 then
 		return { ok = false, code = "INVALID_INPUT", banked = 0 }
 	end
+	if self._connectedNow ~= nil and connectedSeconds > 0 then
+		return { ok = false, code = "INVALID_INPUT", banked = 0 }
+	end
+	self:CaptureConnectedTime()
+	-- Without connectedNow, explicit dt is trusted, already-admitted elapsed
+	-- time. It may have been captured before a failed save became observable.
+	if connectedSeconds > 0 then
+		self._connectedSeconds += connectedSeconds
+		self:_appendAccrual(connectedSeconds, EconomyService.incomePerSecond(self._profile))
+	end
+	if self._pendingWrite ~= nil and not self._laneBusy then
+		local reconciliation = self:Reconcile()
+		if not reconciliation.ok then
+			return { ok = false, code = reconciliation.code, banked = 0 }
+		end
+	end
+	local writable, unavailable = self:IsWritable()
+	if not writable then
+		return { ok = false, code = unavailable or "BUSY", banked = 0 }
+	end
 	local session: any = self
-	session._connectedSeconds += connectedSeconds
-	-- Tag the interval with the worker rate active NOW, so a later hire cannot
-	-- re-rate time that elapsed under the current count.
-	local activeRate = EconomyService.incomePerSecond(self._profile)
-	table.insert(session._pendingAccrual, { seconds = connectedSeconds, rate = activeRate })
-	session._unbankedSeconds += connectedSeconds
 	-- A due settlement is handled by the lane through its stable identity.
-	local banked = 0
-	local entered = self:_runLane(function()
-		local settle = self:_settleDue()
+	local result: { ok: boolean, code: string, banked: number } = { ok = true, code = "OK", banked = 0 }
+	local entered = self:_tryRunLane(function()
+		local settle = session:_settleDue()
 		if not settle.ok then
+			result.ok = false
+			result.code = settle.code
 			return
 		end
-		-- Bank at most every 30 connected seconds while healthy.
-		if self._unbankedSeconds >= WORKER_BANK_INTERVAL then
-			local bank = self:_bankWorker()
-			if bank.ok then
-				banked = bank.credited
-			end
+		-- A partial reconciliation cannot postpone an already-overdue bank.
+		if session._unbankedSeconds > 0 and (session._workerBankDueAt ~= nil or session._unbankedSeconds >= WORKER_BANK_INTERVAL) then
+			local bank = session:_bankWorker()
+			result.ok = bank.ok
+			result.code = bank.code
+			result.banked = bank.credited
 		end
 	end)
 	if not entered then
@@ -1374,7 +1550,7 @@ function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: 
 		-- _pendingAccrual, so nothing is lost; it is banked on the next turn.
 		return { ok = false, code = "BUSY", banked = 0 }
 	end
-	return { ok = true, code = "OK", banked = banked }
+	return result
 end
 
 -- Renew the lease when it is close to expiry, piggybacking any accrued worker
@@ -1384,10 +1560,18 @@ function SessionService:RenewLease(): { ok: boolean, code: string }
 	if self._stopped or self._stopping or self._profile == nil then
 		return { ok = false, code = "BUSY" }
 	end
+	if self._pendingWrite ~= nil then
+		return self:Reconcile()
+	end
+	local writable, unavailable = self:IsWritable()
+	if not writable then
+		return { ok = false, code = unavailable or "BUSY" }
+	end
+	self:CaptureConnectedTime()
 	local okCode = "OK"
-	local entered = self:_runLane(function()
+	local entered = self:_tryRunLane(function()
 		local proposed, credited, consumed = self:_piggybackWorker()
-		local opId = `{OP_PREFIX.renew}-{self._userId}-{self._connectedSeconds}`
+		local opId = `{OP_PREFIX.renew}-{self._userId}-{self:_leaseGeneration()}-{self._connectedSeconds}`
 		local commit = self:_commit(proposed, opId)
 		if not commit.ok then
 			-- The renewal did not land, so the accrued interval it carried is still
@@ -1429,6 +1613,8 @@ SessionService.WORKER_BANK_INTERVAL = WORKER_BANK_INTERVAL
 SessionService.LEASE_RENEW_INTERVAL = LEASE_RENEW_INTERVAL
 SessionService.MAX_TIME_CHUNK = MAX_TIME_CHUNK
 SessionService.MAX_QUEUED_ACTIONS = MAX_QUEUED_ACTIONS
+SessionService.MAX_LIVE_RESULTS = MAX_LIVE_RESULTS
+SessionService.MAX_PENDING_INTERVALS = MAX_PENDING_INTERVALS
 SessionService.MAX_INTENT_LENGTH = MAX_INTENT_LENGTH
 SessionService.MAX_LANE_WAITS = MAX_LANE_WAITS
 

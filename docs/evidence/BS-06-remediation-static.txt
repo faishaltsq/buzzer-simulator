@@ -1,0 +1,490 @@
+BS-06 remediation targeted static-analysis results
+
+No luau-lsp, luau-analyze, or selene binary was found; LSP integration reports no configured server.
+Lute is not a Roblox-aware configured gate. No global checks were disabled.
+The demonstrated denial/open message-shape and mutation-result data/lookup diagnostics were removed by narrow callable/result annotations.
+Remaining engine-global, Instance-require and receiver/inference diagnostics are not claimed resolved.
+
+COMMAND: lute check src/server/ProfileStore.luau src/server/SessionService.luau src/server/BootstrapRuntime.luau src/server/NetRouter.luau src/server/Bootstrap.server.luau
+EXIT: 1
+./src/server/ProfileStore.luau:27:17-108: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/ProfileStore.luau:27:25-28: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/ProfileStore.luau:40:2-5: (W0) TypeError: Unknown global 'task'; consider assigning to it first
+
+./src/server/ProfileStore.luau:72:27-30: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/ProfileStore.luau:76:9-12: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/ProfileStore.luau:84:18-25: (W0) TypeError: Unknown global 'Instance'; consider assigning to it first
+
+./src/server/ProfileStore.luau:146:46-60: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator <
+
+./src/server/ProfileStore.luau:146:65-79: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator >
+
+./src/server/ProfileStore.luau:178:46-60: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator >
+
+./src/server/ProfileStore.luau:206:42-58: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator <
+
+./src/server/ProfileStore.luau:209:39-52: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator <
+
+./src/server/ProfileStore.luau:243:42-58: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator <
+
+./src/server/ProfileStore.luau:275:24-34: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:327:25-42: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:346:22-36: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:364:23-49: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:375:22-51: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:401:22-37: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:420:25-42: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:425:22-36: (W0) TypeError: Expected this to be '{V}', but got 'table'
+
+./src/server/ProfileStore.luau:548:52-72: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator <
+
+./src/server/ProfileStore.luau:554:47-68: (W0) TypeError: Types 'unknown' and 'number' cannot be compared with relational operator <
+
+./src/server/ProfileStore.luau:579:20-30: (W0) TypeError: Type 'table' does not have key 'token'
+
+./src/server/ProfileStore.luau:579:42-56: (W0) TypeError: Key 'expiresAt' not found in table '{ read token: "" }'
+
+./src/server/ProfileStore.luau:580:27-37: (W0) TypeError: Type 'table' does not have key 'token'
+
+./src/server/ProfileStore.luau:583:27-37: (W0) TypeError: Type 'table' does not have key 'jobId'
+
+./src/server/ProfileStore.luau:586:25-39: (W0) TypeError: Type 'table' does not have key 'expiresAt'
+
+./src/server/ProfileStore.luau:586:54-68: (W0) TypeError: Type 'table' does not have key 'expiresAt'
+
+./src/server/ProfileStore.luau:619:10-18: (W0) TypeError: Unknown global 'workspace'; consider assigning to it first
+
+./src/server/ProfileStore.luau:816:18-37: (W0) TypeError: Operator '+' could not be applied to operands of types unknown and number; there is no corresponding overload for __add
+
+./src/server/ProfileStore.luau:807:23-100: (W0) TypeError: Operator '+' could not be applied to operands of types unknown and number; there is no corresponding overload for __add
+
+./src/server/ProfileStore.luau:946:21-26: (W0) TypeError: Expected this to be 'string', but got 'unknown?'; 
+this is because 
+	 * the 1st component of the union is `unknown`, which is not a subtype of `string`
+	 * the 2nd component of the union is `nil`, which is not a subtype of `string`
+
+./src/server/ProfileStore.luau:989:21-36: (W0) TypeError: Type function instance singleton<a> depends on generic function parameters but does not appear in the function signature; this construct cannot be type-checked at this time
+
+./src/server/SessionService.luau:30:17-55: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/SessionService.luau:31:15-51: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/SessionService.luau:32:20-60: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/SessionService.luau:43:11-24: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/SessionService.luau:28:27-30: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/SessionService.luau:40:19-22: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/SessionService.luau:54:1-14: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:259:2-5: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:261:10-18: (W0) TypeError: Unknown global 'workspace'; consider assigning to it first
+
+./src/server/SessionService.luau:264:3-6: (W0) TypeError: Unknown global 'task'; consider assigning to it first
+
+./src/server/SessionService.luau:391:62-79: (W0) TypeError: Cannot call a value of type unknown & ~nil
+
+./src/server/SessionService.luau:400:43-53: (W0) TypeError: Key 'token' is missing from 'table' in the type '{ read expiresAt: any, read token: unknown } & ~nil'
+
+./src/server/SessionService.luau:415:59-82: (W0) TypeError: Type 'unknown & ~nil' does not have key 'expiresAt'
+
+./src/server/SessionService.luau:459:64-81: (W0) TypeError: Cannot call a value of type unknown & ~nil
+
+./src/server/SessionService.luau:474:21-26: (W0) TypeError: Expected this to be 'string', but got 'unknown?'; 
+this is because 
+	 * the 1st component of the union is `unknown`, which is not a subtype of `string`
+	 * the 2nd component of the union is `nil`, which is not a subtype of `string`
+
+./src/server/SessionService.luau:475:21-26: (W0) TypeError: Expected this to be 'string', but got 'unknown?'; 
+this is because 
+	 * the 1st component of the union is `unknown`, which is not a subtype of `string`
+	 * the 2nd component of the union is `nil`, which is not a subtype of `string`
+
+./src/server/SessionService.luau:657:11-20: (W0) TypeError: Type 'unknown' does not have key 'rate'
+
+./src/server/SessionService.luau:657:33-42: (W0) TypeError: Type 'unknown' does not have key 'rate'
+
+./src/server/SessionService.luau:657:53-65: (W0) TypeError: Type 'unknown' does not have key 'seconds'
+
+./src/server/SessionService.luau:665:2-22: (W0) TypeError: Property _unbankedSeconds of table '{ read _connectedSeconds: a, read _pendingAccrual: {  } & {b} & {{ rate: number, seconds: number }} & {{ rate: number, seconds: number }}, read _unbankedSeconds: number, _workerBankDueAt: a }' is read-only
+
+./src/server/SessionService.luau:671:1-100: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:672:5-8: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:675:14-17: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:678:19-35: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:679:67-80: (W0) TypeError: Types '~nil' and '~nil' cannot be compared with relational operator <
+
+./src/server/SessionService.luau:682:18-31: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:683:2-23: (W0) TypeError: Property _connectedSeconds of table 't1 where t1 = { read IsWritable: (t1) -> (unknown, ...unknown), read _appendAccrual: (t1, sub<~nil, (~nil & ~nil) | ~nil>, ...any) -> (...unknown), _connectedBaseline: ~nil, read _connectedNow: () -> (~nil, ...unknown), read _connectedSeconds: unknown, read _profile: unknown } & { read _connectedNow: ~nil }' is read-only
+
+./src/server/SessionService.luau:683:2-23: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:684:2-76: (W0) TypeError: Operator '-' could not be applied to operands of types ~nil and (~nil & ~nil) | ~nil; there is no corresponding overload for __sub
+
+./src/server/SessionService.luau:701:21-33: (W0) TypeError: Type 'unknown' does not have key 'seconds'
+
+./src/server/SessionService.luau:704:61-70: (W0) TypeError: Type 'unknown' does not have key 'rate'
+
+./src/server/SessionService.luau:765:53-75: (W0) TypeError: Types '(~nil & ~nil) | ~nil' and '~nil & ~nil' cannot be compared with relational operator >=
+
+./src/server/SessionService.luau:766:27-29: (W0) TypeError: Expected this to be '~nil', but got 'nil'; 
+the negation `nil`, and `nil` is not a subtype of `nil`
+
+./src/server/SessionService.luau:768:23-25: (W0) TypeError: Expected this to be '{ read bankAt: ~nil, read base: a, read baseRevision: b, read consumed: c, read intent: d, read opId: e, read profile: f }', but got 'nil'
+
+./src/server/SessionService.luau:791:25-39: (W0) TypeError: Type 'unknown & ~nil & ~nil' does not have key 'profile'
+
+./src/server/SessionService.luau:791:42-53: (W0) TypeError: Type 'unknown & ~nil & ~nil' does not have key 'opId'
+
+./src/server/SessionService.luau:791:56-69: (W0) TypeError: Type 'unknown & ~nil & ~nil' does not have key 'intent'
+
+./src/server/SessionService.luau:796:65-82: (W0) TypeError: Cannot call a value of type unknown & ~nil
+
+./src/server/SessionService.luau:799:8-20: (W0) TypeError: Type 'unknown' does not have key 'opId'
+
+./src/server/SessionService.luau:799:25-36: (W0) TypeError: Key 'opId' is missing from 'boolean', 'userdata', 'number', 'string', 'thread', 'buffer', 'function' in the type 'unknown & ~nil & ~nil'
+
+./src/server/SessionService.luau:800:49-57: (W0) TypeError: Expected this to be 'string', but got '~nil'; 
+the negation `nil`, which is not a subtype of `string`
+
+./src/server/SessionService.luau:801:35-49: (W0) TypeError: Key 'intent' not found in table '{ read opId: unknown }'
+
+./src/server/SessionService.luau:819:23-31: (W0) TypeError: Expected type table, got 'a' instead
+
+./src/server/SessionService.luau:849:28-40: (W0) TypeError: Type 'unknown' does not have key 'seconds'
+
+./src/server/SessionService.luau:849:51-60: (W0) TypeError: Type 'unknown' does not have key 'rate'
+
+./src/server/SessionService.luau:850:11-20: (W0) TypeError: Type 'unknown' does not have key 'rate'
+
+./src/server/SessionService.luau:850:34-43: (W0) TypeError: Type 'unknown' does not have key 'rate'
+
+./src/server/SessionService.luau:851:20-32: (W0) TypeError: Type 'unknown' does not have key 'seconds'
+
+./src/server/SessionService.luau:853:57-66: (W0) TypeError: Type 'unknown' does not have key 'rate'
+
+./src/server/SessionService.luau:903:31-43: (W0) TypeError: Expected this to be 'string', but got '((string & ~"NO_PENDING_POST") | boolean | buffer | function | integer | number | table | thread | userdata)?'; 
+this is because 
+	 * the 10th component of the union is `table`, which is not a subtype of `string`
+	 * the 1st component of the union is `boolean`, which is not a subtype of `string`
+	 * the 2nd component of the union is `userdata`, which is not a subtype of `string`
+	 * the 3rd component of the union is `function`, which is not a subtype of `string`
+	 * the 4th component of the union is `nil`, which is not a subtype of `string`
+	 * the 5th component of the union is `number`, which is not a subtype of `string`
+	 * the 6th component of the union is `integer`, which is not a subtype of `string`
+	 * the 8th component of the union is `thread`, which is not a subtype of `string`
+	 * the 9th component of the union is `buffer`, which is not a subtype of `string`
+
+./src/server/SessionService.luau:923:50-63: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:926:52-65: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:929:59-72: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:933:60-73: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:937:59-72: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:952:59-72: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:965:16-29: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:985:42-47: (W0) TypeError: Expected this to be 'singleton<a> & string', but got 'string'; 
+in the 1st component of the intersectionreduces to `never`, and `string` is not a subtype of `never`
+
+./src/server/SessionService.luau:985:50-61: (W0) TypeError: Expected this to be
+	'MutationResult' from './src/server/SessionService.luau'
+but got
+	'MutationResult' from './src/server/SessionService.luau'; 
+accessing `ok` results in `boolean` in the latter type and `true` in the former type, and `boolean` is not a subtype of `true`
+
+./src/server/SessionService.luau:997:40-45: (W0) TypeError: Expected this to be 'singleton<a> & string', but got 'string'; 
+in the 1st component of the intersectionreduces to `never`, and `string` is not a subtype of `never`
+
+./src/server/SessionService.luau:997:48-55: (W0) TypeError: Expected this to be
+	'MutationResult' from './src/server/SessionService.luau'
+but got
+	'MutationResult' from './src/server/SessionService.luau'; 
+accessing `ok` results in `boolean` in the latter type and `true` in the former type, and `boolean` is not a subtype of `true`
+
+./src/server/SessionService.luau:1005:60-73: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1011:60-73: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1013:50-63: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1025:16-29: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1066:16-29: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1081:65-78: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1087:15-28: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1142:15-28: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1156:15-28: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1177:65-78: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1186:15-28: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1247:15-28: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1267:14-31: (W0) TypeError: Operator '+' could not be applied to operands of types unknown and number; there is no corresponding overload for __add
+
+./src/server/SessionService.luau:1261:26-100: (W0) TypeError: Operator '+' could not be applied to operands of types unknown and number; there is no corresponding overload for __add
+
+./src/server/SessionService.luau:1293:15-28: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1309:14-27: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/SessionService.luau:1517:3-24: (W0) TypeError: Property _connectedSeconds of table 't1 where t1 = t2 & { read _profile: ~nil, read _stopRequested: false?, read _stopped: false?, read _stopping: false? } ; t2 = { read CaptureConnectedTime: (t1) -> (...unknown), read IsWritable: (t1) -> (unknown, string, ...unknown), read Reconcile: (t2 & { read _laneBusy: false?, read _pendingWrite: ~nil, read _profile: ~nil, read _stopRequested: false?, read _stopped: false?, read _stopping: false? }) -> ({ read code: string, read ok: unknown }, ...unknown), read _appendAccrual: (t1, number, ...... *TRUNCATED*' is read-only
+
+./src/server/SessionService.luau:1517:3-24: (W0) TypeError: Expected this to be 'number', but got 'unknown'
+
+./src/server/BootstrapRuntime.luau:7:11-24: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/BootstrapRuntime.luau:5:17-20: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/BootstrapRuntime.luau:45:46-49: (W0) TypeError: Unknown global 'task'; consider assigning to it first
+
+./src/server/BootstrapRuntime.luau:46:31-34: (W0) TypeError: Unknown global 'task'; consider assigning to it first
+
+./src/server/BootstrapRuntime.luau:47:35-38: (W0) TypeError: Unknown global 'warn'; consider assigning to it first
+
+./src/server/BootstrapRuntime.luau:94:71-93: (W0) TypeError: Type 'unknown' does not have key 'Character'
+
+./src/server/BootstrapRuntime.luau:102:38-43: (W0) TypeError: Unknown global 'CFrame'; consider assigning to it first
+
+./src/server/BootstrapRuntime.luau:103:34-40: (W0) TypeError: Unknown global 'Vector3'; consider assigning to it first
+
+./src/server/BootstrapRuntime.luau:120:4-100: (W0) TypeError: None of the overloads for function that accept 1 arguments are compatible.
+
+:120:4-100: (W0) TypeError: Available overloads: <V>({V}, V) -> (); and <V>({V}, number, V) -> ()
+
+./src/server/BootstrapRuntime.luau:126:2-83: (W0) TypeError: None of the overloads for function that accept 1 arguments are compatible.
+
+:126:2-83: (W0) TypeError: Available overloads: <V>({V}, V) -> (); and <V>({V}, number, V) -> ()
+
+./src/server/BootstrapRuntime.luau:127:2-100: (W0) TypeError: None of the overloads for function that accept 1 arguments are compatible.
+
+:127:2-100: (W0) TypeError: Available overloads: <V>({V}, V) -> (); and <V>({V}, number, V) -> ()
+
+./src/server/BootstrapRuntime.luau:157:53-59: (W0) TypeError: Expected this to be 'nil', but got 'string'
+
+./src/server/BootstrapRuntime.luau:158:46-65: (W0) TypeError: Type 'unknown' does not have key 'UserId'
+
+./src/server/BootstrapRuntime.luau:171:45-47: (W0) TypeError: Expected this to be 'boolean', but got 'nil'
+
+./src/server/BootstrapRuntime.luau:172:2-100: (W0) TypeError: None of the overloads for function that accept 1 arguments are compatible.
+
+:172:2-100: (W0) TypeError: Available overloads: <V>({V}, V) -> (); and <V>({V}, number, V) -> ()
+
+./src/server/BootstrapRuntime.luau:175:2-100: (W0) TypeError: None of the overloads for function that accept 1 arguments are compatible.
+
+:175:2-100: (W0) TypeError: Available overloads: <V>({V}, V) -> (); and <V>({V}, number, V) -> ()
+
+./src/server/BootstrapRuntime.luau:200:25-50: (W0) TypeError: Cannot compare unrelated types 'boolean' and '"NOT_READY"' with '=='
+
+./src/server/BootstrapRuntime.luau:185:30-35: (W0) TypeError: No valid instantiation could be inferred for generic type parameter E. It was expected to be at least:
+	
+and at most:
+	string? & thread
+but these types are not compatible with one another.
+
+./src/server/BootstrapRuntime.luau:185:20-26: (W0) TypeError: Function only returns 1 value, but 2 are required here
+
+./src/server/BootstrapRuntime.luau:222:48-65: (W0) TypeError: Expected this to be 'boolean', but got 'string'
+
+./src/server/BootstrapRuntime.luau:243:46-64: (W0) TypeError: Type '~(false?)' does not have key 'Stop'
+
+./src/server/BootstrapRuntime.luau:259:5-18: (W0) TypeError: Type 'weakoptional<a & ~(false?)>' does not have key 'session'
+
+./src/server/BootstrapRuntime.luau:259:24-35: (W0) TypeError: Type 'weakoptional<a & ~(false?)> & { read session: ~(false?) }' does not have key 'ready'
+
+./src/server/BootstrapRuntime.luau:260:2-16: (W0) TypeError: Cannot add property 'removing' to table 'weakoptional<a & ~(false?)>'
+
+./src/server/BootstrapRuntime.luau:261:2-13: (W0) TypeError: Cannot add property 'ready' to table 'weakoptional<a & ~(false?)>'
+
+./src/server/BootstrapRuntime.luau:264:16-33: (W0) TypeError: Type 'weakoptional<a & ~(false?)>' does not have key 'connections'
+
+./src/server/BootstrapRuntime.luau:265:16-42: (W0) TypeError: Type 'weakoptional<a & ~(false?)>' does not have key 'characterConnections'
+
+./src/server/BootstrapRuntime.luau:277:6-17: (W0) TypeError: Type 'unknown' does not have key 'ready'
+
+./src/server/BootstrapRuntime.luau:278:4-17: (W0) TypeError: Key 'session' not found in table '{ read ready: ~(false?) }'
+
+./src/server/BootstrapRuntime.luau:279:11-24: (W0) TypeError: Key 'pumping' not found in table '{ read ready: ~(false?) }'
+
+./src/server/BootstrapRuntime.luau:280:5-18: (W0) TypeError: Property pumping of table '{ read pumping: false?, read ready: ~(false?) }' is read-only
+
+./src/server/BootstrapRuntime.luau:284:23-36: (W0) TypeError: Key 'session' not found in table '{ read pumping: false?, read ready: ~(false?) }'
+
+./src/server/BootstrapRuntime.luau:306:11-33: (W0) TypeError: Key 'schedulerFailure' not found in table '{ read pumping: false?, read ready: ~(false?) }'
+
+./src/server/BootstrapRuntime.luau:307:9-31: (W0) TypeError: Property schedulerFailure of table '{ read pumping: false?, read ready: ~(false?), read schedulerFailure: unknown }' is read-only
+
+./src/server/BootstrapRuntime.luau:308:57-69: (W0) TypeError: Key 'player' not found in table '{ read pumping: false?, read ready: ~(false?), read schedulerFailure: unknown }'
+
+./src/server/BootstrapRuntime.luau:311:8-30: (W0) TypeError: Cannot add property 'schedulerFailure' to table '{ read pumping: false?, read ready: ~(false?) }'
+
+./src/server/BootstrapRuntime.luau:313:38-60: (W0) TypeError: Key 'lastWorldAttempt' not found in table '{ read pumping: false?, read ready: ~(false?) }'
+
+./src/server/BootstrapRuntime.luau:316:30-42: (W0) TypeError: Key 'player' not found in table '{ read pumping: false?, read ready: ~(false?) }'
+
+./src/server/BootstrapRuntime.luau:282:26-31: (W0) TypeError: No valid instantiation could be inferred for generic type parameter E. It was expected to be at least:
+	
+and at most:
+	string? & thread
+but these types are not compatible with one another.
+
+./src/server/BootstrapRuntime.luau:282:16-22: (W0) TypeError: Function only returns 1 value, but 2 are required here
+
+./src/server/BootstrapRuntime.luau:318:6-19: (W0) TypeError: Property pumping of table '{ read pumping: false?, read ready: ~(false?) }' is read-only
+
+./src/server/BootstrapRuntime.luau:346:6-25: (W0) TypeError: Type function instance sub<a, a> depends on generic function parameters but does not appear in the function signature; this construct cannot be type-checked at this time
+
+./src/server/NetRouter.luau:4:17-89: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/NetRouter.luau:2:27-30: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/NetRouter.luau:3:21-24: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/NetRouter.luau:53:2-5: (W0) TypeError: Unknown global 'warn'; consider assigning to it first
+
+./src/server/NetRouter.luau:90:25-31: (W0) TypeError: Expected this to be '{ [any]: any }', but got 'nil'
+
+./src/server/NetRouter.luau:119:6-25: (W0) TypeError: Expected type table, got 'unknown' instead
+
+./src/server/NetRouter.luau:119:30-51: (W0) TypeError: Expected type table, got 'unknown' instead
+
+./src/server/NetRouter.luau:137:14-34: (W0) TypeError: Expected type table, got 'table' instead
+
+./src/server/NetRouter.luau:143:43-50: (W0) TypeError: Unknown type 'Instance'
+
+./src/server/NetRouter.luau:144:16-23: (W0) TypeError: Unknown type 'Instance'
+
+./src/server/NetRouter.luau:146:6-15: (W0) TypeError: Type 'unknown' does not have key 'Name'
+
+./src/server/NetRouter.luau:147:29-37: (W0) TypeError: Key 'IsA' not found in table '{ read Name: "BuzzerRemotes" }'
+
+./src/server/NetRouter.luau:152:12-19: (W0) TypeError: Unknown global 'Instance'; consider assigning to it first
+
+./src/server/NetRouter.luau:164:19-26: (W0) TypeError: Unknown global 'Instance'; consider assigning to it first
+
+./src/server/NetRouter.luau:199:17-20: (W0) TypeError: Unknown global 'warn'; consider assigning to it first
+
+./src/server/NetRouter.luau:228:56-77: (W0) TypeError: Type '~(false?)' does not have key 'revision'
+
+./src/server/NetRouter.luau:262:49-63: (W0) TypeError: Key 'ok' is missing from 'boolean', 'userdata', 'number', 'string', 'thread', 'buffer', 'function' in the type '~nil'
+
+./src/server/NetRouter.luau:263:10-24: (W0) TypeError: Type '~nil' does not have key 'ok'
+
+./src/server/NetRouter.luau:263:43-59: (W0) TypeError: Type '~nil' does not have key 'code'
+
+./src/server/NetRouter.luau:263:74-94: (W0) TypeError: Type '~nil' does not have key 'revision'
+
+./src/server/NetRouter.luau:264:23-39: (W0) TypeError: Type '~nil' does not have key 'data'
+
+./src/server/NetRouter.luau:282:5-28: (W0) TypeError: Type function instance sub<a & b, a> depends on generic function parameters but does not appear in the function signature; this construct cannot be type-checked at this time
+
+./src/server/NetRouter.luau:336:22-24: (W0) TypeError: Expected this to be '{ deadline: add<a & b, number>, expiresAt: add<c, number>, read id: d }', but got 'nil'
+
+./src/server/NetRouter.luau:349:66-89: (W0) TypeError: Type function instance sub<a & b, b> depends on generic function parameters but does not appear in the function signature; this construct cannot be type-checked at this time
+
+./src/server/NetRouter.luau:376:23-26: (W0) TypeError: Unknown global 'warn'; consider assigning to it first
+
+./src/server/NetRouter.luau:403:3-6: (W0) TypeError: Unknown global 'warn'; consider assigning to it first
+
+./src/server/NetRouter.luau:413:66-97: (W0) TypeError: Operator '+' could not be applied to operands of types unknown and number; there is no corresponding overload for __add
+
+./src/server/NetRouter.luau:413:21-129: (W0) TypeError: Operator '+' could not be applied to operands of types unknown and number; there is no corresponding overload for __add
+
+./src/server/NetRouter.luau:430:22-56: (W0) TypeError: Type function instance sub<a, a> depends on generic function parameters but does not appear in the function signature; this construct cannot be type-checked at this time
+
+./src/server/NetRouter.luau:126:26-35: (W0) UnknownType: Unknown type 'Instance'
+
+./src/server/NetRouter.luau:238:51-55: (W0) SameLineStatement: A new statement is on the same line; add semi-colon on previous statement to silence
+
+./src/server/NetRouter.luau:397:23-32: (W0) UnknownType: Unknown type 'Instance'
+
+./src/server/Bootstrap.server.luau:8:24-76: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/Bootstrap.server.luau:9:22-72: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/Bootstrap.server.luau:10:26-80: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/Bootstrap.server.luau:11:17-89: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/Bootstrap.server.luau:12:24-76: (W0) TypeError: Unknown require: unsupported path
+
+./src/server/Bootstrap.server.luau:3:17-20: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:4:27-30: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:5:32-35: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:6:20-23: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:7:21-24: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:8:32-37: (W0) TypeError: Unknown global 'script'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:9:30-35: (W0) TypeError: Unknown global 'script'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:10:34-39: (W0) TypeError: Unknown global 'script'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:12:32-37: (W0) TypeError: Unknown global 'script'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:22:44-52: (W0) TypeError: Unknown global 'workspace'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:24:18-21: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:24:40-43: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+./src/server/Bootstrap.server.luau:30:35-38: (W0) TypeError: Unknown global 'game'; consider assigning to it first
+
+
+COMMAND: lute lint src/server/ProfileStore.luau src/server/SessionService.luau src/server/BootstrapRuntime.luau src/server/NetRouter.luau src/server/Bootstrap.server.luau
+EXIT: 1
+warning[unused_variable]: Unused variable detected. Prefix this variable with '_' to indicate that it's intentionally unused.
+
+   ┌── C:\Users\cubeb\orca\projects\Buzzer Simulator Roblox\src\server\NetRouter.luau:2:7-24 ──
+   │
+ 2 │ local ReplicatedStorage = game:GetService("ReplicatedStorage")
+   │       ^^^^^^^^^^^^^^^^^
+   │
+
+For additional info: https://lute.luau.org/cli/lint/unused_variable.html
+
+warning[unused_variable]: Unused variable detected. Prefix this variable with '_' to indicate that it's intentionally unused.
+
+    ┌── C:\Users\cubeb\orca\projects\Buzzer Simulator Roblox\src\server\SessionService.luau:29:7-13 ──
+    │
+ 29 │ local Shared = ReplicatedStorage:WaitForChild("Shared")
+
+    │       ^^^^^^
+    │
+
+For additional info: https://lute.luau.org/cli/lint/unused_variable.html
+

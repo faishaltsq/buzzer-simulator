@@ -1,0 +1,498 @@
+BS-06 remediation: actual Roblox Studio Play
+All 461 existing cases retained; ten focused cases added.
+One obsolete success assertion for a failed bank removed; all legacy safety assertions retained.
+Filtered native case/suite output; not the full engine log.
+
+[PASS] Fresh join durably initializes once and creates the correct V0 room
+[PASS] Failed reads never initialize or spawn a room
+[PASS] A competing lease prevents initialization and world ownership
+[PASS] Leaving during a held first read does not initialize after departure
+[PASS] Confirmed phone purchase recovers presentation without charging twice
+[PASS] Long scheduler stalls retain bounded-chunk connected income exactly once
+[PASS] Worker banks piggyback lease renewal instead of competing durable loops
+[PASS] Idle State pushes never write and lease renewal waits90 seconds
+[PASS] Post settlement runs behind scheduler and exposes confirmed credit only
+[PASS] Character loss expires once and player leave disposes listeners and lease
+[PASS] Shutdown banks connected remainder and disconnects aggregate listeners
+[PASS] Failed final banking is reported without fictional shutdown success
+[PASS] Expired lease prevents scheduler from inventing long-stall worker income
+[PASS] Remediation: scheduler surfaces settlement and reconciliation failures without log spam
+[PASS] Remediation: scheduler surfaces banking and reconciliation failures without log spam
+[PASS] Remediation: scheduler surfaces renewal and reconciliation failures without log spam
+[PASS] Remediation: held durable lane reports BUSY without overlapping writes or error spam
+Bootstrap spec: 17/17 passed, 0 failed
+[PASS] The starter device is the cheap phone
+[PASS] Fast phone purchase at exactly 50 succeeds
+[PASS] Insufficient funds at 49 is refused
+[PASS] Duplicate device purchase is refused
+[PASS] Device progression bypass is refused
+[PASS] Unshipped PC purchase is refused in V0
+[PASS] An unknown device is refused
+[PASS] Buying the fast phone raises the strong organic payout 15 -> 24
+[PASS] The guided journey totals 110 and the phone leaves 60
+[PASS] M1 PC fixture: yield 2.5 changes the strong payout 15 -> 37
+[PASS] M1 PC fixture: device yields never stack
+[PASS] Desk 1 requires PC ownership
+[PASS] Desk 1 requires tier 1
+[PASS] Desk 1 at exactly 180 succeeds and 179 is refused
+[PASS] Desk slots must progress sequentially
+[PASS] Desk 2 at exactly 250 succeeds
+[PASS] A duplicate desk purchase is refused
+[PASS] Desk slot indices outside 1..2 are refused
+[PASS] Hiring requires the corresponding desk
+[PASS] Hiring requires PC ownership
+[PASS] Trainee 1 at exactly 500 succeeds and 499 is refused
+[PASS] A duplicate worker in the same slot is refused
+[PASS] Worker slots must progress sequentially and cap at two
+[PASS] A non-trainee role is refused
+[PASS] Worker slot indices outside 1..2 are refused
+[PASS] Zero workers accrue nothing
+[PASS] One worker for 30 seconds banks exactly 45
+[PASS] Two workers for 30 seconds bank exactly 90
+[PASS] Fractional carry is preserved across ticks
+[PASS] A 75-second connected interval processes 60 + 15 without loss
+[PASS] Chunking an exact multiple of 60 leaves no remainder
+[PASS] Chunking zero and sub-chunk intervals
+[PASS] Negative, NaN and infinite connected time are refused
+[PASS] Worker accrual past the economy limit is refused, not clamped
+[PASS] Worker accrual just below the limit succeeds
+[PASS] No offline earnings: accrual is driven only by injected connected time
+[PASS] Spending reduces the wallet but never lifetime earned
+[PASS] A malformed profile is refused rather than repaired
+[PASS] The fixture restores the exact original shipped values
+EconomyService spec: 39/39 passed, 0 failed
+[PASS] Authored feed has exactly six NPC cards
+[PASS] Every authored card carries an NPC identity and authored body
+[PASS] Authored cards use only the eight bounded NPC identities
+[PASS] Authored cards are ordered deterministically by publish time
+[PASS] Authored cards carry clues for their supported contexts
+[PASS] Both V0 contexts resolve to readable authored clue text
+[PASS] Clue text never reveals the winning template
+[PASS] Engagement is derived, not random
+[PASS] Own cards project from saved summaries, bounded to ten
+[PASS] Own cards carry the frozen result values
+[PASS] Own cards never contain user text
+[PASS] An empty profile yields no own cards
+[PASS] The combined feed is bounded and deterministic
+[PASS] Own posts surface above authored cards at the same timestamp
+[PASS] The feed never grows without bound
+[PASS] Reply pools are bounded and authored
+[PASS] An unknown context has no reply pool
+[PASS] The feed never leaks private scoring affinities
+FeedService spec: 18/18 passed, 0 failed
+[PASS] V0 organic context has snack_meme as its unique strong template
+[PASS] V0 mission context has meal_meme as its unique strong template
+[PASS] Scoring formula is exactly 2*trendMatch + audienceMatch
+[PASS] fitForTemplate classifies strong and weak correctly
+[PASS] A tie is rejected, never resolved randomly
+[PASS] A missing affinity is rejected
+[PASS] A context with no templates is rejected
+[PASS] An unknown template is rejected by fitForTemplate
+[PASS] V0 shipped content validates with unique winners
+[PASS] M1-style fixtures rotate winners per context without shipping M1
+[PASS] Private affinities are not present in the public Catalog
+[PASS] First V0 mission uses meal_time and freezes the run
+[PASS] Accept increments the variant counter only in the proposed state
+[PASS] A second active mission is rejected
+[PASS] An unknown mission ID is rejected
+[PASS] Accept requires a nonempty runId
+[PASS] A tier-0 player is rejected from a tier-1 mission
+[PASS] A tier-1 mission requires BOTH lifetime and claim thresholds
+[PASS] The shipped tier cap blocks a tier above the shipped cap
+[PASS] The V0 food mission remains available at tier 0
+[PASS] The tier gate does not advance the variant counter
+[PASS] Accept is rejected while a mission is already active
+[PASS] Accept is allowed while an organic post is resolving
+[PASS] Accepting a mission does not disturb the pending organic settlement
+[PASS] An organic settlement does not advance a newly accepted campaign
+[PASS] Accept is still rejected while a mission post is resolving
+[PASS] Rejoin preserves the frozen context and does not reroll
+[PASS] Counter rotation works with a multi-context fixture
+[PASS] A strong organic post publishes with frozen values and no reward
+[PASS] A weak organic post publishes with weak frozen values
+[PASS] An invalid organic template is rejected
+[PASS] A second organic post is refused while one is resolving
+[PASS] An organic post is allowed alongside an accepted mission
+[PASS] An organic post never advances mission impact
+[PASS] A strong campaign post publishes and reaches readyToClaim on settle
+[PASS] The two-weak-post journey works end to end
+[PASS] A third campaign post is rejected
+[PASS] An incorrect run ID is rejected for campaign publish
+[PASS] An invalid campaign template is rejected
+[PASS] Campaign publish is refused with no active mission
+[PASS] Cross-mode pending-post conflict is refused
+[PASS] A frozen campaign result survives a serialized profile reconstruction
+[PASS] Settlement before settleAt is rejected
+[PASS] Settlement exactly at settleAt succeeds
+[PASS] Settlement after settleAt succeeds
+[PASS] Duplicate settlement does not pay again
+[PASS] Settlement with no pending post is rejected
+[PASS] Own post history is capped at ten
+[PASS] The input profile is never mutated on success or failure
+[PASS] Mission impact is credited exactly once
+[PASS] Settlement does not alias own-post summaries with the input profile
+[PASS] Settlement refuses a credit that reaches the economy limit
+[PASS] A credit just below the economy limit still succeeds
+[PASS] Claim refuses a bonus that reaches the economy limit
+[PASS] Publish rejects NaN, infinities and negative timestamps
+[PASS] Settle rejects NaN, infinities and negative timestamps
+[PASS] Accept rejects NaN, infinities and negative timestamps
+[PASS] A successful claim awards the fixed 80 Cuan exactly once
+[PASS] A claim before readyToClaim is rejected
+[PASS] A duplicate claim is rejected
+[PASS] A claim with an incorrect run ID is rejected
+[PASS] A claimed run stays claimable-proof within the 32-entry bound
+[PASS] A new eligible mission can be accepted after a claim
+[PASS] Settlement does not auto-claim the mission
+[PASS] Recovery: state reconstructs without reroll or double-pay at each step
+[PASS] Recovery: a restored accepted mission keeps its frozen context
+[PASS] V0 mission posts score 120 strong / 75 weak (B=100)
+[PASS] A B=130 mission scores 156 strong / 97 weak
+[PASS] A B=160 mission scores 192 strong / 120 weak
+[PASS] A B=220 mission scores 264 strong / 165 weak
+[PASS] Organic posts still use B=100 regardless of the active mission
+[PASS] A known mission context resolves its authored tags
+[PASS] An unknown mission context fails instead of falling back to V0 tags
+[PASS] Publishing against an unknown mission context is refused
+[PASS] Shipped V0 content passes the validation gate
+[PASS] The validation gate rejects a shipped context with no affinities
+[PASS] The validation gate rejects a shipped mission context with no tags
+[PASS] The validation gate ignores unshipped M1 content
+[PASS] The validation gate rejects a shipped mission missing from the catalog
+[PASS] assertShippedContentValid raises on a missing shipped mission
+[PASS] validateContent rejects an unknown mission context instead of defaulting tags
+[PASS] validateContent rejects mission entries when no tag lookup is supplied
+[PASS] A failing catalog fixture restores the exact original references
+[PASS] A failing tier-cap fixture restores the exact original cap
+[PASS] assertShippedContentValid raises on invalid content
+MissionService spec: 85/85 passed, 0 failed
+[PASS] EnsureRemotes rejects folder class
+[PASS] EnsureRemotes rejects duplicate folder
+[PASS] EnsureRemotes rejects remote class
+[PASS] EnsureRemotes rejects duplicate remote
+[PASS] EnsureRemotes rejects extra child
+[PASS] EnsureRemotes creates exactly three private RemoteEvents idempotently
+[PASS] Rejects forged shape: extra userId
+[PASS] Rejects forged shape: extra intent
+[PASS] Rejects forged shape: money
+[PASS] Rejects forged shape: price
+[PASS] Rejects forged shape: score
+[PASS] Rejects forged shape: context
+[PASS] Rejects forged shape: timestamp
+[PASS] Rejects forged shape: rate
+[PASS] Rejects forged shape: unknown template
+[PASS] Rejects forged shape: nested scalar
+[PASS] Rejects forged shape: cyclic payload
+[PASS] Rejects forged shape: cyclic envelope
+[PASS] Rejects forged shape: array envelope
+[PASS] Rejects forged shape: array payload
+[PASS] Rejects forged shape: metatable
+[PASS] Rejects forged shape: missing payload
+[PASS] Rejects forged shape: non-table payload
+[PASS] Rejects forged shape: missing dashboard
+[PASS] Rejects forged shape: nested dashboard
+[PASS] Drops uncorrelatable request ID length 5
+[PASS] Drops uncorrelatable request ID length 65
+[PASS] Drops uncorrelatable request ID length 11
+[PASS] Rejects invalid numeric slot 0
+[PASS] Rejects invalid numeric slot 3
+[PASS] Rejects invalid numeric slot 1.5
+[PASS] Rejects invalid numeric slot inf
+[PASS] Rejects invalid numeric slot -inf
+[PASS] Rejects invalid numeric slot nan
+[PASS] Rejects invalid numeric slot 1
+[PASS] Rejects action-specific invalid AcceptMission payload
+[PASS] Rejects action-specific invalid BuyDevice payload
+[PASS] Rejects action-specific invalid HireWorker payload
+[PASS] Rejects action-specific invalid PublishPost payload
+[PASS] Rejects action-specific invalid ClaimMission payload
+[PASS] Rejects action-specific invalid CloseComputer payload
+[PASS] Client cannot command OpenComputer
+[PASS] Snapshot union forbids dashboard IDs and query equaling original lookup ID
+[PASS] Snapshot is available with dashboard closed and never writes ordinary reads
+[PASS] Prompt opens sanitized state only and always replaces generation
+[PASS] Old generation cannot mutate or close a reopened dashboard
+[PASS] Economic admission extends deadline even when domain refuses funds
+[PASS] Queries and close never extend deadline or enter accounting hook
+[PASS] Idle expiry emits once, without scheduler, and cannot reopen on command
+[PASS] Monotonic deadline does not follow epoch clock rollback
+[PASS] Character validity rejects commands without scheduler: death
+[PASS] Character validity rejects commands without scheduler: missing root
+[PASS] Character validity rejects commands without scheduler: removed character
+[PASS] Character validity rejects commands without scheduler: replaced character
+[PASS] Commands use actual registered Player identity, never equal user IDs
+[PASS] Eight commands per second are bounded and independent per registered actor
+[PASS] Malformed traffic consumes limiter without economic admission
+[PASS] Duplicate successful publish recovers before cooldown and does not republish
+[PASS] Same request ID with different live intent never reaches domain
+[PASS] Lookup query ID is distinct and private; absent ID is UNKNOWN without retry
+[PASS] Ordinary push uses non-writing projection even when post is due
+[PASS] PushState is at least two seconds apart
+[PASS] Held write queries are nonblocking PENDING and confirmed-only
+[PASS] Held identical retry and conflicting intent cannot execute another mutation
+[PASS] Held result finishes after idle expiry without reopening dashboard
+[PASS] Late result contains current reopened generation, never captured old metadata
+[PASS] Unregister suppresses all late held completion delivery and presentation
+[PASS] Replacing registration suppresses completion from previous record
+[PASS] Durable replay after session reconnect preserves ring authority
+[PASS] Live rejection identity conflicts are rejected and cache stays bounded
+[PASS] Query IDs cannot overwrite a known durable mutation identity
+[PASS] Projection failure blocks opening and writes; expired lease also blocks
+[PASS] Transport errors permit explicit replay without a second charge
+[PASS] Visual failure never rolls back confirmed device purchase
+[PASS] Unexpected accounting callback error is surfaced and releases router pending flag
+[PASS] World adapter errors deny recoverably without granting dashboard
+[PASS] Prompt requires exact ProximityPrompt, rejecting anchor and foreign clone
+[PASS] Real WorldService prompt enforces exact identity, living character and 12 studs
+[PASS] Destroy is idempotent and removes admission and lifecycle delivery
+[PASS] Real mission claim settles due post once and duplicate claims never credit again
+[PASS] Two registered real sessions receive only their own projections
+[PASS] Real room prompt from another owner cannot open this player's dashboard
+[PASS] Unstarted real session cannot open or admit economic work
+[PASS] Failed durable save leaves confirmed-only state and blocks fresh mutations
+[PASS] Canonical budget rejects long run ID before idle and accounting admission
+[PASS] Canonical budget rejects escaped ASCII run ID before idle and accounting admission
+[PASS] A close request ID cannot become an economic intent after reopening
+[PASS] A durable mutation ID cannot close a fresh dashboard after router cache replacement
+[PASS] Registered session before Start replies NOT_READY to well-shaped economic commands
+NetRouter spec: 89/89 passed, 0 failed
+[PASS] Load on a fresh key acquires a 240s lease and no profile
+[PASS] Load validates the v1 envelope before handing it out
+[PASS] Load preserves an unsupported future schema without migrating
+[PASS] A failed read yields no starter profile and no key
+[PASS] A live foreign lease is LOCKED; an expired one is acquirable
+[PASS] A competing token cannot overwrite the live token
+[PASS] Save bumps the revision once and stores the operation ID
+[PASS] An identical operation ID is idempotent: no duplicate durable state
+[PASS] An ambiguous write resolves through the same operation ID
+[PASS] A stale snapshot revision aborts instead of overwriting
+[PASS] Save is denied after the lease is lost
+[PASS] Persistent write failure yields SAVE_UNAVAILABLE, never a fake success
+[PASS] Invalid profiles are rejected before any store write
+[PASS] A fully populated v1 profile round-trips unchanged
+[PASS] Save rejects a missing operation ID
+[PASS] Release clears the lease without bumping the revision; rejoin works
+[PASS] Release is idempotent under a repeated operation ID
+[PASS] Release is denied without a lease
+[PASS] Confirmed envelopes are deep copies; mutation cannot alias the store
+[PASS] _deepCopy does not alias nested tables
+[PASS] _validateEnvelope accepts a well-formed envelope and rejects tampering
+[PASS] Ambiguous-write reconciliation bypasses the local cache
+[PASS] A stale cached read never drives reconciliation decisions
+[PASS] Release reconciliation also bypasses the local cache
+[PASS] The local cache expires after four seconds
+[PASS] An idle lease expires after 240s and is acquirable without data loss
+[PASS] A renewal extends the lease without an unnecessary profile mutation
+[PASS] Renewal preserves the pending post and mission state exactly
+[PASS] Idle renewal cannot hand ownership to a competing server
+[PASS] Legitimate recoverable states are accepted, not rejected
+[PASS] Invalid cross-field states are rejected
+[PASS] First in-flight campaign post (postCount=1) is a legal state
+[PASS] Second in-flight campaign post (postCount=2) is a legal state
+[PASS] A third campaign post (postCount>2) is rejected
+[PASS] postCount of 0 with a mission post in flight contradicts the atomic publish
+[PASS] Malformed postCount never raises; it fails validation structurally
+[PASS] A readyToClaim mission holds no pending post and its count is final
+[PASS] The same operationId with a different payload is INVALID_PROFILE
+[PASS] The same operationId with an identical payload still replays
+[PASS] A different operationId with a different payload is a normal save
+[PASS] Transient write failures retry with a bounded exponential backoff
+[PASS] A single transient failure recovers after one backoff
+[PASS] Retrying a transient failure never violates lease safety
+[PASS] A retry cannot resurrect a lease lost mid-retry
+[PASS] Equal-value tables in separate allocations fingerprint identically
+[PASS] A reused requestId with a different intent is rejected after a reconnect
+[PASS] An identical retry with the same intent is idempotent after a reconnect
+[PASS] Equivalent tables with different key insertion order fingerprint identically
+[PASS] A save without an intent keeps per-session transaction identity only
+[PASS] A fresh operationId still saves normally after a reconnect
+[PASS] The in-memory guard still applies within a single session
+[PASS] Mission journey: accept, weak publish, short settle, weak publish, claim-ready
+[PASS] Mission journey: a strong first post reaches readyToClaim in one publish
+[PASS] Mission journey: a pending organic post may coexist with an accepted mission
+[PASS] Mission journey: an organic pending post may NOT coexist with resolvingPost
+[PASS] An evicted requestId is not treated as applied after a reconnect
+[PASS] A full 32-entry ring is accepted and a 33rd entry is rejected
+[PASS] Server-owned settlement IDs are distinct from client request IDs
+[PASS] Lease constants match the docs/03 contract
+ProfileStore spec: 59/59 passed, 0 failed
+[PASS] Catalog validates structurally
+[PASS] Catalog V0 content: mission, context, templates
+[PASS] Catalog devices: order, yield, reveal, price
+[PASS] Catalog tiers: planned thresholds 300/3 and 1600/3; V0 cap tier 0
+[PASS] Catalog carries no affinity tags / answer keys
+[PASS] postImpact strong/weak at B=100 yield=1: 120 / 75
+[PASS] postImpact weak at PC yield 2.5 is 94 and remains < 100
+[PASS] two weak starter posts always reach required impact 100
+[PASS] postImpact strong food post reaches requiredImpact 100
+[PASS] postImpact floors and stays integral for fractional yields
+[PASS] postImpact rejects nonfinite/negative/garbage input
+[PASS] organicCuan cheap 15/9, fast 24/14, PC 37/22
+[PASS] organicCuan rejects invalid input
+[PASS] eligibleTier: tier0 start, both thresholds, max shipped clamp
+[PASS] eligibleTier rejects invalid input
+[PASS] GameTypes loads as ModuleScript with type contract intact
+Rules spec: 16/16 passed, 0 failed
+[PASS] Initialization requires an explicitly acquired empty lease
+[PASS] Reads and initialization remain unavailable during a yielding Start
+[PASS] Fresh join conditionally writes the exact frozen v1 starter
+[PASS] Repeated initialization never overwrites confirmed progress
+[PASS] A second Start cannot reacquire the empty session's lease
+[PASS] Failed initial reads cannot seed or acquire a profile
+[PASS] Failed lease acquisition cannot authorize starter initialization
+[PASS] Corrupt saved data is preserved byte-for-byte
+[PASS] Unsupported schema is preserved without migration or starter data
+[PASS] A competing lease cannot initialize an existing profile
+[PASS] A competing lease cannot initialize an empty transitional envelope
+[PASS] Failed initialization retries its exact proposal and stable identity
+[PASS] Lost initialization responses remain unconfirmed until exact reconciliation
+[PASS] Leaving after failed initialization reconciles before releasing
+[PASS] Leaving an unused empty lease permits a later clean initialization
+[PASS] Rejoin preserves durable progress without starter replacement
+[PASS] Local lease expiry denies writes without consulting the backend
+[PASS] A local token mismatch is not a writable lease
+[PASS] ReadSnapshot cannot settle a due post or write
+[PASS] Snapshot cannot settle a due post after local lease expiry
+[PASS] Snapshot cannot launch another settlement while a save is unhealthy
+[PASS] A yielding mutation stays PENDING and reads never wait for its lane
+[PASS] Conflicting held request identities are rejected before a second Save
+[PASS] A cached domain rejection cannot replay under a conflicting intent
+[PASS] Live results and their identities have a finite eviction bound
+[PASS] Durable success outranks a stale live rejection during lookup
+[PASS] Unresolved writes prevent scheduler settlement and unrelated operations
+[PASS] Unknown lookup and empty reconciliation never execute domain operations
+[PASS] Production clock admission freezes on save failure and resumes without catch-up
+[PASS] Production clock stops accrual at local lease loss
+[PASS] Held first hire cannot retroactively pay zero-worker save latency
+[PASS] Held second hire tags sampled and unsampled latency at the old rate
+[PASS] Zero-worker clock samples never accumulate interval records
+[PASS] Rate-tagged pending intervals remain bounded without losing connected income
+[PASS] A retained proposal cannot overwrite an unexpectedly replaced confirmed base
+[PASS] Stopping during a held write freezes admission but permits admitted completion
+[PASS] Fractional worker banks retain the exact proposal across failed renewal
+[PASS] A released lease is cleared for the next generation without a prior save
+[PASS] Server transaction fingerprints remain bounded while recent payload conflicts are rejected
+[PASS] Remediation: applied recovery never acquires a successor's lease
+[PASS] Remediation: real HttpService recovers an applied publish after lost response and read failures
+[PASS] Remediation: profile identity preserves nested numeric arrays across insertion orders
+[PASS] Remediation: unrepresentable profile identities fail closed before any write
+[PASS] Remediation: Advance reports failed settlement and recovers the same payout once
+[PASS] Remediation: Advance reports failed worker bank without losing its accrued interval
+SessionIntegration spec: 45/45 passed, 0 failed
+[PASS] Fresh profile load yields a confirmed snapshot
+[PASS] A lease conflict is reported explicitly with no starter profile
+[PASS] A failed load yields no starter profile
+[PASS] A leased key with no profile yet is NOT_READY, not a blank profile
+[PASS] The snapshot never exposes lease tokens or private affinities
+[PASS] Organic publication and durable settlement credit 15 exactly once
+[PASS] A duplicate settlement does not pay again
+[PASS] A failed settlement save never publishes speculative Cuan
+[PASS] Strong-first campaign lifecycle: 15 organic then 80 bonus
+[PASS] Two-weak campaign lifecycle reaches the bonus on the second post
+[PASS] A duplicate claim does not pay again
+[PASS] The guided journey totals 110 and the phone leaves 60
+[PASS] After the fast phone, a strong organic post earns 24
+[PASS] The same requestId with a different intent is rejected
+[PASS] The same requestId replays during the active session without a second write
+[PASS] The same requestId replays after a reconnect from the durable ring
+[PASS] Critical regression: Save A, Save B, late replay of A
+[PASS] Save A, Save B, late replay of A after a reconnect
+[PASS] An ambiguous committed write resolves through the same operationId
+[PASS] An uncertain UNKNOWN mutation is blocked, never auto-retried
+[PASS] A known APPLIED mutation replays its result without another write
+[PASS] An evicted or absent outcome is UNKNOWN, not evidence of non-application
+[PASS] A concurrent command and worker tick do not race
+[PASS] Worker banking is piggybacked onto a purchase, not written twice
+[PASS] Worker banking happens exactly once across a claim
+[PASS] A failed worker bank leaves the confirmed balance unchanged
+[PASS] A 75-second connected interval banks all 75 seconds
+[PASS] No offline earnings after a reconnect
+[PASS] An ordinary snapshot performs no durable write
+[PASS] A definite rejection performs no durable write
+[PASS] A malformed payload is rejected before the lane
+[PASS] Bounded queued command handling
+[PASS] An idle lease renewal banks pending worker income in one write
+[PASS] Stop performs the final bank then releases the lease
+[PASS] Stop called twice does not double-save or double-release
+[PASS] A failed final bank retains the lease and reports explicitly
+[PASS] All proposed profile objects stay isolated from confirmed state
+[PASS] Pre-hire connected time is not credited at the new worker rate
+[PASS] A second hire does not re-rate the first interval
+[PASS] A lost response resolves to APPLIED on an identical retry
+[PASS] A stale cached rejection never shadows a durable APPLIED outcome
+[PASS] Repeated identical retries stay idempotent
+[PASS] Run IDs stay unique across 40 claims and window eviction
+[PASS] A fresh profile still generates run-1
+[PASS] Accept then claim succeeds after window eviction
+[PASS] A forged matching intent cannot turn a conflict into a replay
+[PASS] A legitimate identical retry still replays with the canonical intent
+[PASS] A busy lane makes Snapshot return promptly without waiting
+[PASS] A busy lane bounds Stop instead of spinning forever
+[PASS] The lane serializes concurrent mutations
+[PASS] A failed bank followed by recovery credits exactly once
+[PASS] A failed bank preserves the fractional residual exactly
+[PASS] A failed bank restores the interval even if the worker count changes
+[PASS] An ambiguous bank response resolves without double credit
+[PASS] A reconnect preserves confirmed worker income and drops no pending accrual
+[PASS] A rejected command preserves pending worker income exactly
+[PASS] An ambiguous save credits worker income exactly once
+[PASS] A rejected mission command preserves the fractional residual
+[PASS] A rejected hire preserves pending accrual for a later valid hire
+[PASS] An ambiguous settlement does not double-credit worker income
+[PASS] An ambiguous standalone bank does not double-credit
+[PASS] A repeated in-flight retry never pays twice
+[PASS] New connected time after an ambiguous response is preserved separately
+[PASS] Advance reports BUSY when the lane is held and loses no accrual
+[PASS] RenewLease reports BUSY when the lane is held
+[PASS] Mutate reports BUSY and keeps the reservation when the lane is held
+[PASS] A held lane never executes two writes concurrently
+[PASS] A sub-integer accrual survives a rejected mutation
+[PASS] A failed renewal preserves pending worker accrual
+[PASS] A sub-integer interval survives a failed commit
+[PASS] A zero-credit partial interval is never discarded
+[PASS] An ambiguous renewal success never restores a committed interval
+[PASS] A failed renewal keeps a stable operation identity for reconciliation
+SessionService spec: 73/73 passed, 0 failed
+[PASS] Every required prefab exists under WorldPrefabs
+[PASS] The bedroom prefab carries every required anchor
+[PASS] No exported prefab contains a script or remote
+[PASS] Spawn clones the room and places exactly one CRT
+[PASS] Spawn presents exactly one equipped productive phone
+[PASS] Spawn is idempotent and never duplicates the room
+[PASS] Spawn fails cleanly when the Bedroom prefab is missing
+[PASS] Cheap-to-fast phone synchronization swaps the model
+[PASS] Repeated SyncDevice is idempotent
+[PASS] A saved device restores correctly on rejoin
+[PASS] An invalid device is refused without touching the slot
+[PASS] SyncDevice fails cleanly when a phone prefab is missing
+[PASS] A valid player-owned prompt is accepted
+[PASS] A non-anchor prompt is rejected
+[PASS] A prompt belonging to another player is rejected
+[PASS] A dead character is rejected
+[PASS] A distant character is rejected
+[PASS] A character-less player is rejected
+[PASS] Prompt identity is unchanged during device sync
+[PASS] Remove cleans up player-owned instances
+[PASS] The room contains no scripts after spawn
+[PASS] WorldService never mutates the economy or the profile
+[PASS] The terminal is never a productive device
+[PASS] The initial room contains no free productive PC
+[PASS] CRT world position near TerminalSlot with desk and floor clearances
+[PASS] Cheap and fast phone positions near PhoneSlot replacing model cleanly
+[PASS] One terminal prompt across repeated Spawn and SyncDevice with stable identity
+[PASS] Prompt accessibility, action text and living player validation
+[PASS] Correct scale, orientation facing player (+Z), and physical clearance between CRT and phone
+[PASS] Prompt cannot be spoofed from another player's room via ProximityPrompt instance
+WorldService spec: 30/30 passed, 0 failed
+[SUITE PASS] Bootstrap.spec: Bootstrap: 17/17 passed
+[SUITE PASS] EconomyService.spec: EconomyService: 39/39 passed
+[SUITE PASS] FeedService.spec: FeedService: 18/18 passed
+[SUITE PASS] MissionService.spec: MissionService: 85/85 passed
+[SUITE PASS] NetRouter.spec: NetRouter: 89/89 passed
+[SUITE PASS] ProfileStore.spec: ProfileStore: 59/59 passed
+[SUITE PASS] Rules.spec: Rules: 16/16 passed
+[SUITE PASS] SessionIntegration.spec: SessionIntegration: 45/45 passed
+[SUITE PASS] SessionService.spec: SessionService: 73/73 passed
+[SUITE PASS] WorldService.spec: WorldService: 30/30 passed
+BS-01 suites: 10/10 passed, 0 failed
+BS01_TESTS_PASSED

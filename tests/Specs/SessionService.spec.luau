@@ -815,7 +815,6 @@ test("A failed worker bank leaves the confirmed balance unchanged", function()
 	local session = startSession(store, clock)
 	store.failUpdate = true
 	local bank = session:Advance(30)
-	expectEqual(bank.ok, true, "advance itself does not throw")
 	expectEqual(bank.banked, 0, "nothing banked on failure")
 	expectEqual(session:GetConfirmedProfile().balance, 100, "confirmed wallet unchanged")
 	expectEqual(session:GetPendingWorkerCuan(), 45, "accrual retained as unspendable pending")
