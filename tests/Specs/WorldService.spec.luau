@@ -472,6 +472,202 @@ test("The initial room contains no free productive PC", function()
 	WorldService.Remove(player)
 end)
 
+-- ===== BS-05 Visual Correctness & World Placement Regressions =====
+
+test("CRT world position near TerminalSlot with desk and floor clearances", function()
+	local player = makePlayer(1022, "CRTPlacementTester")
+	local ok, err = WorldService.Spawn(player, profileWith("phone_cheap"))
+	expectEqual(ok, true, "Spawn succeeds")
+	expectEqual(err, nil, "no spawn error")
+
+	local terminalSlot = WorldService.GetAnchor(player, "TerminalSlot") :: any
+	expectTrue(terminalSlot ~= nil, "TerminalSlot exists")
+
+	local crt = terminalSlot:FindFirstChild("OldCRT") :: any
+	expectTrue(crt ~= nil, "OldCRT is parented to TerminalSlot")
+	expectEqual(crt.ClassName, "Model", "OldCRT is a Model")
+	expectTrue(crt.PrimaryPart ~= nil, "OldCRT has a PrimaryPart")
+
+	local crtPivot = crt:GetPivot()
+	local slotPos = terminalSlot.Position
+	expectTrue(math.abs(crtPivot.Position.X - slotPos.X) < 0.1, "CRT X matches TerminalSlot")
+	expectTrue(math.abs(crtPivot.Position.Z - slotPos.Z) < 0.1, "CRT Z matches TerminalSlot")
+	expectTrue(math.abs(crtPivot.Position.Y - (slotPos.Y + 1.4)) < 0.1, "CRT Y is offset by half-height 1.4")
+
+	local bbCFrame, bbSize = crt:GetBoundingBox()
+	expectTrue(bbSize.Y >= 2.5 and bbSize.Y <= 3.0, "CRT height matches expected ~2.8 studs")
+	local bottomY = bbCFrame.Position.Y - bbSize.Y / 2
+	-- Desk top surface is at Y = 3.35 (desk center 3.2 + thickness 0.3/2)
+	expectTrue(bottomY >= 3.30, "CRT rests on top of desk without penetrating")
+	expectTrue(bottomY > 2.0, "CRT has clear clearance from bedroom floor (Y=0.5)")
+
+	WorldService.Remove(player)
+end)
+
+test("Cheap and fast phone positions near PhoneSlot replacing model cleanly", function()
+	local player = makePlayer(1023, "PhonePlacementTester")
+	local ok, err = WorldService.Spawn(player, profileWith("phone_cheap"))
+	expectEqual(ok, true, "Spawn succeeds")
+	expectEqual(err, nil, "no spawn error")
+
+	local phoneSlot = WorldService.GetAnchor(player, "PhoneSlot") :: any
+	expectTrue(phoneSlot ~= nil, "PhoneSlot exists")
+
+	-- Initial phone_cheap placement
+	local cheapModel = phoneSlot:FindFirstChild("PhoneCheap") :: any
+	expectTrue(cheapModel ~= nil, "PhoneCheap is placed")
+	expectEqual(cheapModel.ClassName, "Model", "PhoneCheap is a Model")
+	local cheapPivot = cheapModel:GetPivot()
+	local slotPos = phoneSlot.Position
+	expectTrue(math.abs(cheapPivot.Position.X - slotPos.X) < 0.1, "PhoneCheap X matches PhoneSlot")
+	expectTrue(math.abs(cheapPivot.Position.Z - slotPos.Z) < 0.1, "PhoneCheap Z matches PhoneSlot")
+	expectTrue(math.abs(cheapPivot.Position.Y - (slotPos.Y + 1.0)) < 0.1, "PhoneCheap Y is offset by half-height 1.0")
+	local cheapBB, cheapSize = cheapModel:GetBoundingBox()
+	expectTrue(cheapBB.Position.Y - cheapSize.Y / 2 >= 3.30, "PhoneCheap rests on desk")
+
+	-- Sync to phone_fast
+	local okSync, errSync = WorldService.SyncDevice(player, "phone_fast")
+	expectEqual(okSync, true, "SyncDevice succeeds")
+	expectEqual(errSync, nil, "no sync error")
+
+	expectEqual(#phoneSlot:GetChildren(), 1, "PhoneSlot has exactly one child after sync")
+	expectEqual(phoneSlot:FindFirstChild("PhoneCheap"), nil, "PhoneCheap was destroyed")
+	local fastModel = phoneSlot:FindFirstChild("PhoneFast") :: any
+	expectTrue(fastModel ~= nil, "PhoneFast is placed")
+	expectEqual(fastModel.ClassName, "Model", "PhoneFast is a Model")
+
+	local fastPivot = fastModel:GetPivot()
+	expectTrue(math.abs(fastPivot.Position.X - slotPos.X) < 0.1, "PhoneFast X matches PhoneSlot")
+	expectTrue(math.abs(fastPivot.Position.Z - slotPos.Z) < 0.1, "PhoneFast Z matches PhoneSlot")
+	expectTrue(math.abs(fastPivot.Position.Y - (slotPos.Y + 1.1)) < 0.1, "PhoneFast Y is offset by half-height 1.1")
+	local fastBB, fastSize = fastModel:GetBoundingBox()
+	expectTrue(fastBB.Position.Y - fastSize.Y / 2 >= 3.30, "PhoneFast rests on desk")
+
+	WorldService.Remove(player)
+end)
+
+test("One terminal prompt across repeated Spawn and SyncDevice with stable identity", function()
+	local player = makePlayer(1024, "PromptStabilityTester")
+	WorldService.Spawn(player, profileWith("phone_cheap"))
+
+	local prompt1 = WorldService.GetPrompt(player)
+	expectTrue(prompt1 ~= nil, "prompt exists initially")
+	expectEqual((prompt1 :: any).ClassName, "ProximityPrompt", "prompt is a ProximityPrompt")
+
+	local anchor = WorldService.GetAnchor(player, "DashboardPromptAnchor") :: any
+	expectTrue(anchor ~= nil, "DashboardPromptAnchor exists")
+	expectEqual(#anchor:GetChildren(), 1, "anchor has exactly one child initially")
+
+	-- Repeated Spawn (idempotent)
+	local okSpawn2, _ = WorldService.Spawn(player, profileWith("phone_cheap"))
+	expectEqual(okSpawn2, true, "second Spawn succeeds")
+	local prompt2 = WorldService.GetPrompt(player)
+	expectEqual(prompt1, prompt2, "prompt identity is stable across repeated Spawn")
+	expectEqual(#anchor:GetChildren(), 1, "anchor still has exactly one child after repeated Spawn")
+
+	-- SyncDevice
+	local okSync, _ = WorldService.SyncDevice(player, "phone_fast")
+	expectEqual(okSync, true, "SyncDevice succeeds")
+	local prompt3 = WorldService.GetPrompt(player)
+	expectEqual(prompt1, prompt3, "prompt identity is stable across SyncDevice")
+	expectEqual(#anchor:GetChildren(), 1, "anchor still has exactly one child after SyncDevice")
+
+	WorldService.Remove(player)
+end)
+
+test("Prompt accessibility, action text and living player validation", function()
+	local player = makePlayer(1025, "PromptAccessTester")
+	WorldService.Spawn(player, profileWith("phone_cheap"))
+
+	local prompt = WorldService.GetPrompt(player) :: any
+	expectTrue(prompt ~= nil, "prompt exists")
+	expectEqual(prompt.Name, "DashboardPrompt", "prompt Name is DashboardPrompt")
+	expectEqual(prompt.ActionText, "Open BuzzerOS", "ActionText is Open BuzzerOS")
+	expectTrue(tonumber(prompt.MaxActivationDistance) :: number >= 10, "MaxActivationDistance >= 10")
+
+	local anchor = WorldService.GetAnchor(player, "DashboardPromptAnchor") :: any
+
+	-- Character setup
+	local character = Instance.new("Model", "Character")
+	local humanoid = Instance.new("Humanoid")
+	rawset(humanoid, "Health", 100)
+	humanoid.Parent = character
+	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	rootPart.Parent = character
+	rawset(rootPart, "Position", anchor.Position + Vector3.new(0, 0, 4)) -- 4 studs away
+	rawset(player, "Character", character)
+
+	local ok, err = WorldService.ValidateDashboardPrompt(player, prompt)
+	expectEqual(ok, true, "ValidateDashboardPrompt succeeds with ProximityPrompt instance")
+	expectEqual(err, nil, "no error")
+
+	-- Distance measured from anchor Part
+	rawset(rootPart, "Position", anchor.Position + Vector3.new(0, 0, 15)) -- 15 studs away > 12
+	local okDist, errDist = WorldService.ValidateDashboardPrompt(player, prompt)
+	expectEqual(okDist, false, "rejected beyond 12 studs")
+	expectTrue(errDist ~= nil and errDist:find("15 studs away") ~= nil, "reports measured distance from anchor")
+
+	WorldService.Remove(player)
+end)
+
+test("Correct scale, orientation facing player (+Z), and physical clearance between CRT and phone", function()
+	local player = makePlayer(1026, "OrientationClearanceTester")
+	WorldService.Spawn(player, profileWith("phone_cheap"))
+
+	local terminalSlot = WorldService.GetAnchor(player, "TerminalSlot") :: any
+	local phoneSlot = WorldService.GetAnchor(player, "PhoneSlot") :: any
+	local crt = terminalSlot:FindFirstChild("OldCRT") :: any
+	local phone = phoneSlot:FindFirstChild("PhoneCheap") :: any
+
+	-- Orientation: LookVector.Z > 0.9 (facing south towards approaching player at +Z)
+	local crtPivot = crt:GetPivot()
+	local phonePivot = phone:GetPivot()
+	expectTrue(crtPivot.LookVector.Z > 0.9, "CRT screen faces player (+Z)")
+	expectTrue(phonePivot.LookVector.Z > 0.9, "Phone screen faces player (+Z)")
+
+	-- Upright: UpVector.Y > 0.9
+	expectTrue(crtPivot.UpVector.Y > 0.9, "CRT is upright")
+	expectTrue(phonePivot.UpVector.Y > 0.9, "Phone is upright")
+
+	-- Physical separation/clearance on desk
+	local crtBB, crtSize = crt:GetBoundingBox()
+	local phoneBB, phoneSize = phone:GetBoundingBox()
+	local crtMinX = crtBB.Position.X - crtSize.X / 2
+	local phoneMaxX = phoneBB.Position.X + phoneSize.X / 2
+	expectTrue(crtMinX > phoneMaxX, "CRT and phone have distinct horizontal clearance on desk")
+	local clearance = crtMinX - phoneMaxX
+	expectTrue(clearance > 0.5, "At least 0.5 studs clearance between CRT and phone")
+
+	WorldService.Remove(player)
+end)
+
+test("Prompt cannot be spoofed from another player's room via ProximityPrompt instance", function()
+	local owner = makePlayer(1027, "PromptOwner")
+	local intruder = makePlayer(1028, "PromptIntruder")
+	WorldService.Spawn(owner, profileWith("phone_cheap"))
+	WorldService.Spawn(intruder, profileWith("phone_cheap"))
+
+	local ownerPrompt = WorldService.GetPrompt(owner) :: any
+	expectTrue(ownerPrompt ~= nil, "owner's prompt exists")
+
+	local character = Instance.new("Model", "Character")
+	local humanoid = Instance.new("Humanoid")
+	rawset(humanoid, "Health", 100)
+	humanoid.Parent = character
+	local rootPart = Instance.new("Part", "HumanoidRootPart")
+	rootPart.Parent = character
+	local ownerAnchor = WorldService.GetAnchor(owner, "DashboardPromptAnchor") :: any
+	rawset(rootPart, "Position", ownerAnchor.Position)
+	rawset(intruder, "Character", character)
+
+	local ok, err = WorldService.ValidateDashboardPrompt(intruder, ownerPrompt)
+	expectEqual(ok, false, "another player's ProximityPrompt is rejected")
+	expectTrue(err ~= nil and err:find("does not belong") ~= nil, "error explains room ownership")
+
+	WorldService.Remove(owner)
+	WorldService.Remove(intruder)
+end)
+
 -- ===== run =====
 local passed, failed = 0, 0
 for _, t in ipairs(tests) do

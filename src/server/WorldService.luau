@@ -59,6 +59,33 @@ local function worldFolderName(userId: number): string
 	return `BuzzerRoom_{userId}`
 end
 
+-- Visual placement transforms for world models relative to their slot anchors.
+-- Each model is placed upright resting on the desk surface (Y = 3.35) and
+-- rotated 180 degrees around Y so the screen faces the player (+Z in room space).
+local PLACEMENT_CONFIG = {
+	OldCRT = {
+		yOffset = 1.4, -- half-height of OldCRT (2.8 studs tall)
+		rotation = CFrame.Angles(0, math.pi, 0),
+	},
+	PhoneCheap = {
+		yOffset = 1.0, -- half-height of PhoneCheap (2.0 studs tall)
+		rotation = CFrame.Angles(0, math.pi, 0),
+	},
+	PhoneFast = {
+		yOffset = 1.1, -- half-height of PhoneFast (2.2 studs tall)
+		rotation = CFrame.Angles(0, math.pi, 0),
+	},
+}
+
+-- Pivot a Model to a target CFrame relative to an anchor BasePart.
+local function placeModel(model: Instance, anchor: BasePart, config: { yOffset: number, rotation: any })
+	local basePosition: any = anchor.Position
+	local targetPosition = Vector3.new(basePosition.X, basePosition.Y + config.yOffset, basePosition.Z)
+	local targetCFrame = CFrame.new(targetPosition) * config.rotation
+	local m: any = model
+	m:PivotTo(targetCFrame)
+end
+
 -- Resolve the WorldPrefabs folder. Resolved lazily so the module loads under
 -- both the production and test Rojo layouts.
 local function prefabsFolder(): Folder?
@@ -155,7 +182,7 @@ function WorldService.Spawn(player: Player, profile: any): (boolean, string?)
 		end
 	end
 
-	-- Place exactly one OldCRT at TerminalSlot.
+	-- Place exactly one OldCRT at TerminalSlot with explicit world placement.
 	local terminalSlot = findNamedDescendant(room, "TerminalSlot")
 	local crt = findPrefab(PREFAB_CRT)
 	if terminalSlot == nil or crt == nil then
@@ -165,7 +192,20 @@ function WorldService.Spawn(player: Player, profile: any): (boolean, string?)
 	local crtInstance = crt:Clone()
 	crtInstance.Name = "OldCRT"
 	crtInstance.Parent = terminalSlot
+	placeModel(crtInstance, terminalSlot :: BasePart, PLACEMENT_CONFIG.OldCRT)
 
+	-- Ensure the stable DashboardPromptAnchor carries exactly one ProximityPrompt.
+	local promptAnchor = findNamedDescendant(room, "DashboardPromptAnchor")
+	if promptAnchor ~= nil and promptAnchor:FindFirstChildOfClass("ProximityPrompt") == nil then
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "DashboardPrompt"
+		prompt.ActionText = "Open BuzzerOS"
+		prompt.ObjectText = "BuzzerOS Terminal"
+		prompt.MaxActivationDistance = 10
+		prompt.HoldDuration = 0
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = promptAnchor
+	end
 	-- Present the equipped phone from the confirmed profile.
 	local deviceId = if typeof(profile) == "table" then profile.deviceId else nil
 	if isNonEmptyString(deviceId) then
@@ -215,28 +255,50 @@ function WorldService.SyncDevice(player: Player, deviceId: string): (boolean, st
 	local phone = prefab:Clone()
 	phone.Name = prefabName
 	phone.Parent = phoneSlot
+	local config = PLACEMENT_CONFIG[prefabName]
+	if config ~= nil then
+		placeModel(phone, phoneSlot :: BasePart, config)
+	end
 	return true, nil
 end
-
 -- ===== ValidateDashboardPrompt =====
 -- Validate the exact player-owned prompt, a living character, and a maximum
--- 12-stud distance. BS-06 additionally enforces authoritative loaded-profile,
--- writable-session and lease checks; this function deliberately does not.
+-- 12-stud distance. Accepts either the ProximityPrompt instance or its anchor
+-- BasePart. Distance is always measured authoritatively from the anchor Part.
+-- BS-06 additionally enforces authoritative loaded-profile, writable-session
+-- and lease checks; this function deliberately does not.
 function WorldService.ValidateDashboardPrompt(player: Player, prompt: Instance): (boolean, string?)
-	if prompt == nil or not prompt:IsA("BasePart") then
-		return false, "prompt must be a BasePart"
+	if prompt == nil then
+		return false, "prompt is required"
 	end
-	-- The prompt must belong to THIS player's room.
 	local folder = Workspace:FindFirstChild(worldFolderName(player.UserId))
 	if folder == nil then
 		return false, "player has no spawned room"
 	end
+	-- The prompt must belong to THIS player's room.
 	if not prompt:IsDescendantOf(folder) then
 		return false, "prompt does not belong to this player's room"
 	end
-	-- The prompt must be the stable room-owned DashboardPromptAnchor.
-	if prompt.Name ~= "DashboardPromptAnchor" then
-		return false, "prompt is not the stable DashboardPromptAnchor"
+
+	-- Resolve the anchor Part and the server-owned ProximityPrompt.
+	local anchorCandidate = findNamedDescendant(folder, "DashboardPromptAnchor")
+	if anchorCandidate == nil or not anchorCandidate:IsA("BasePart") then
+		return false, "DashboardPromptAnchor is missing from the room"
+	end
+	local anchorPart = anchorCandidate :: BasePart
+	local serverPrompt = anchorPart:FindFirstChildOfClass("ProximityPrompt")
+
+	-- Validate prompt identity against server-owned instances.
+	if prompt:IsA("ProximityPrompt") then
+		if serverPrompt == nil or prompt ~= serverPrompt then
+			return false, "prompt is not the server-owned DashboardPrompt"
+		end
+	elseif prompt:IsA("BasePart") then
+		if prompt ~= anchorPart then
+			return false, "prompt is not the stable DashboardPromptAnchor"
+		end
+	else
+		return false, "prompt must be a ProximityPrompt or BasePart"
 	end
 	-- The player must have a living character.
 	local character = player.Character
@@ -255,14 +317,14 @@ function WorldService.ValidateDashboardPrompt(player: Player, prompt: Instance):
 	if rootPart == nil or not rootPart:IsA("BasePart") then
 		return false, "player character has no root part"
 	end
-	-- Within 12 studs.
-	local distance = ((rootPart :: any).Position - (prompt :: any).Position).Magnitude
+
+	-- Within 12 studs measured from the anchor Part to HumanoidRootPart.
+	local distance = ((rootPart :: any).Position - anchorPart.Position).Magnitude
 	if distance > MAX_PROMPT_DISTANCE then
 		return false, `player is {math.floor(distance)} studs away; the limit is {MAX_PROMPT_DISTANCE}`
 	end
 	return true, nil
 end
-
 -- ===== Remove =====
 -- Clean up the player's owned world instances. Idempotent.
 function WorldService.Remove(player: Player): (boolean, string?)
@@ -285,6 +347,20 @@ function WorldService.GetAnchor(player: Player, anchorName: string): Instance?
 		return nil
 	end
 	return findNamedDescendant(folder, anchorName)
+end
+
+-- ===== GetPrompt =====
+-- Retrieve the server-owned ProximityPrompt instance from the player's room.
+function WorldService.GetPrompt(player: Player): ProximityPrompt?
+	local folder = Workspace:FindFirstChild(worldFolderName(player.UserId))
+	if folder == nil then
+		return nil
+	end
+	local anchor = findNamedDescendant(folder, "DashboardPromptAnchor")
+	if anchor == nil then
+		return nil
+	end
+	return (anchor:FindFirstChildOfClass("ProximityPrompt") :: any)
 end
 
 -- Count instances of a class inside the player's room.

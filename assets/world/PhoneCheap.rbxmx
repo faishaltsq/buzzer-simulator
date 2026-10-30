@@ -1,10 +1,11 @@
 <?xml version="1.0" ?>
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
-  <Item class="Model" referent="RBX70">
+  <Item class="Model" referent="RBX71">
     <Properties>
       <string name="Name">PhoneCheap</string>
+      <Ref name="PrimaryPart">RBX54</Ref>
     </Properties>
-    <Item class="Part" referent="RBX53">
+    <Item class="Part" referent="RBX54">
       <Properties>
         <string name="Name">Body</string>
         <Vector3 name="size">
@@ -34,7 +35,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX54">
+    <Item class="Part" referent="RBX55">
       <Properties>
         <string name="Name">BackPlate</string>
         <Vector3 name="size">
@@ -64,7 +65,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX55">
+    <Item class="Part" referent="RBX56">
       <Properties>
         <string name="Name">Screen</string>
         <Vector3 name="size">
@@ -94,7 +95,7 @@
         <float name="Transparency">0.35</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX56">
+    <Item class="Part" referent="RBX57">
       <Properties>
         <string name="Name">Crack</string>
         <Vector3 name="size">
@@ -124,36 +125,6 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX57">
-      <Properties>
-        <string name="Name">Key</string>
-        <Vector3 name="size">
-          <X>0.16</X>
-          <Y>0.1</Y>
-          <Z>0.05</Z>
-        </Vector3>
-        <CoordinateFrame name="CFrame">
-          <X>-0.3</X>
-          <Y>0.35</Y>
-          <Z>-0.15</Z>
-          <R00>1</R00>
-          <R01>0</R01>
-          <R02>0</R02>
-          <R10>0</R10>
-          <R11>1</R11>
-          <R12>0</R12>
-          <R20>0</R20>
-          <R21>0</R21>
-          <R22>1</R22>
-        </CoordinateFrame>
-        <int name="BrickColor">1011</int>
-        <token name="Material">256</token>
-        <token name="shape">1</token>
-        <bool name="Anchored">true</bool>
-        <bool name="CanCollide">false</bool>
-        <float name="Transparency">0</float>
-      </Properties>
-    </Item>
     <Item class="Part" referent="RBX58">
       <Properties>
         <string name="Name">Key</string>
@@ -163,7 +134,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>-0.09999999999999998</X>
+          <X>-0.3</X>
           <Y>0.35</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -193,7 +164,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>0.10000000000000003</X>
+          <X>-0.09999999999999998</X>
           <Y>0.35</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -223,7 +194,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>0.3000000000000001</X>
+          <X>0.10000000000000003</X>
           <Y>0.35</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -253,8 +224,8 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>-0.3</X>
-          <Y>0.53</Y>
+          <X>0.3000000000000001</X>
+          <Y>0.35</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
           <R01>0</R01>
@@ -283,7 +254,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>-0.09999999999999998</X>
+          <X>-0.3</X>
           <Y>0.53</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -313,7 +284,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>0.10000000000000003</X>
+          <X>-0.09999999999999998</X>
           <Y>0.53</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -343,7 +314,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>0.3000000000000001</X>
+          <X>0.10000000000000003</X>
           <Y>0.53</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -373,8 +344,8 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>-0.3</X>
-          <Y>0.71</Y>
+          <X>0.3000000000000001</X>
+          <Y>0.53</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
           <R01>0</R01>
@@ -403,7 +374,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>-0.09999999999999998</X>
+          <X>-0.3</X>
           <Y>0.71</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -433,7 +404,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>0.10000000000000003</X>
+          <X>-0.09999999999999998</X>
           <Y>0.71</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -463,7 +434,7 @@
           <Z>0.05</Z>
         </Vector3>
         <CoordinateFrame name="CFrame">
-          <X>0.3000000000000001</X>
+          <X>0.10000000000000003</X>
           <Y>0.71</Y>
           <Z>-0.15</Z>
           <R00>1</R00>
@@ -485,6 +456,36 @@
       </Properties>
     </Item>
     <Item class="Part" referent="RBX69">
+      <Properties>
+        <string name="Name">Key</string>
+        <Vector3 name="size">
+          <X>0.16</X>
+          <Y>0.1</Y>
+          <Z>0.05</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0.3000000000000001</X>
+          <Y>0.71</Y>
+          <Z>-0.15</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <int name="BrickColor">1011</int>
+        <token name="Material">256</token>
+        <token name="shape">1</token>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <float name="Transparency">0</float>
+      </Properties>
+    </Item>
+    <Item class="Part" referent="RBX70">
       <Properties>
         <string name="Name">Bumper</string>
         <Vector3 name="size">

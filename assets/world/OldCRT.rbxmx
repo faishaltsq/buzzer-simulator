@@ -1,10 +1,11 @@
 <?xml version="1.0" ?>
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
-  <Item class="Model" referent="RBX52">
+  <Item class="Model" referent="RBX53">
     <Properties>
       <string name="Name">OldCRT</string>
+      <Ref name="PrimaryPart">RBX43</Ref>
     </Properties>
-    <Item class="Part" referent="RBX42">
+    <Item class="Part" referent="RBX43">
       <Properties>
         <string name="Name">MonitorBody</string>
         <Vector3 name="size">
@@ -34,7 +35,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX43">
+    <Item class="Part" referent="RBX44">
       <Properties>
         <string name="Name">Bezel</string>
         <Vector3 name="size">
@@ -64,7 +65,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX44">
+    <Item class="Part" referent="RBX45">
       <Properties>
         <string name="Name">Screen</string>
         <Vector3 name="size">
@@ -94,7 +95,7 @@
         <float name="Transparency">0.25</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX45">
+    <Item class="Part" referent="RBX46">
       <Properties>
         <string name="Name">TubeHump</string>
         <Vector3 name="size">
@@ -124,7 +125,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX46">
+    <Item class="Part" referent="RBX47">
       <Properties>
         <string name="Name">StandNeck</string>
         <Vector3 name="size">
@@ -154,7 +155,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX47">
+    <Item class="Part" referent="RBX48">
       <Properties>
         <string name="Name">StandBase</string>
         <Vector3 name="size">
@@ -184,7 +185,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX48">
+    <Item class="Part" referent="RBX49">
       <Properties>
         <string name="Name">Scuff</string>
         <Vector3 name="size">
@@ -214,7 +215,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX49">
+    <Item class="Part" referent="RBX50">
       <Properties>
         <string name="Name">Sticker</string>
         <Vector3 name="size">
@@ -244,7 +245,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="BillboardGui" referent="RBX50">
+    <Item class="BillboardGui" referent="RBX51">
       <Properties>
         <string name="Name">DashboardLabel</string>
         <UDim2 name="Size">
@@ -260,7 +261,7 @@
         </Vector3>
         <bool name="AlwaysOnTop">true</bool>
       </Properties>
-      <Item class="TextLabel" referent="RBX51">
+      <Item class="TextLabel" referent="RBX52">
         <Properties>
           <string name="Name">Label</string>
           <UDim2 name="Size">

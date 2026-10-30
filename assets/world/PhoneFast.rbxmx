@@ -1,10 +1,11 @@
 <?xml version="1.0" ?>
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
-  <Item class="Model" referent="RBX78">
+  <Item class="Model" referent="RBX79">
     <Properties>
       <string name="Name">PhoneFast</string>
+      <Ref name="PrimaryPart">RBX72</Ref>
     </Properties>
-    <Item class="Part" referent="RBX71">
+    <Item class="Part" referent="RBX72">
       <Properties>
         <string name="Name">Body</string>
         <Vector3 name="size">
@@ -34,7 +35,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX72">
+    <Item class="Part" referent="RBX73">
       <Properties>
         <string name="Name">BackPlate</string>
         <Vector3 name="size">
@@ -64,7 +65,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX73">
+    <Item class="Part" referent="RBX74">
       <Properties>
         <string name="Name">Screen</string>
         <Vector3 name="size">
@@ -94,7 +95,7 @@
         <float name="Transparency">0.1</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX74">
+    <Item class="Part" referent="RBX75">
       <Properties>
         <string name="Name">Notch</string>
         <Vector3 name="size">
@@ -124,7 +125,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX75">
+    <Item class="Part" referent="RBX76">
       <Properties>
         <string name="Name">CameraBump</string>
         <Vector3 name="size">
@@ -154,7 +155,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX76">
+    <Item class="Part" referent="RBX77">
       <Properties>
         <string name="Name">CameraLens</string>
         <Vector3 name="size">
@@ -184,7 +185,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX77">
+    <Item class="Part" referent="RBX78">
       <Properties>
         <string name="Name">EdgeAccent</string>
         <Vector3 name="size">

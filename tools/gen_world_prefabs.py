@@ -115,8 +115,20 @@ def anchor(name, position, size=(1, 1, 1), color="Bright green",
 def folder(name, children):
     return item("Folder", name, children=children)
 
-def model(name, children):
-    return item("Model", name, children=children)
+def model(name, children, primary_part_name=None):
+    it = item("Model", name, children=children)
+    if primary_part_name is not None:
+        props_el = it.find("Properties")
+        for c in children:
+            if c.tag == "Item":
+                c_props = c.find("Properties")
+                if c_props is not None:
+                    name_el = c_props.find("string[@name='Name']")
+                    if name_el is not None and name_el.text == primary_part_name:
+                        ref_el = ET.SubElement(props_el, "Ref", {"name": "PrimaryPart"})
+                        ref_el.text = c.attrib.get("referent", "null")
+                        break
+    return it
 
 def write_model(path, root):
     roblox = ET.Element("roblox", {
@@ -263,14 +275,27 @@ def build_bedroom():
     ))
 
     # ---- anchors (stable, server-owned references)
+    prompt_anchor = part(
+        "DashboardPromptAnchor", (1.5, 1.5, 0.4),
+        "7.4, 3.6, -2.4, 1, 0, 0, 0, 1, 0, 0, 0, 1",
+        "Bright violet", material="Neon", transparency=0.5, can_collide=False,
+    )
+    prompt = item("ProximityPrompt", "DashboardPrompt", {
+        "ActionText": ("string", "Open BuzzerOS"),
+        "ObjectText": ("string", "BuzzerOS Terminal"),
+        "MaxActivationDistance": ("float", "10"),
+        "HoldDuration": ("float", "0"),
+        "RequiresLineOfSight": ("bool", "false"),
+    })
+    prompt_anchor.append(prompt)
+
     anchors = [
         anchor("Spawn", (0, 0.6, 6), size=(4, 1, 4), color="Bright green"),
-        anchor("PlayerDesk", (7, 3.4, desk_z), size=(7, 0.4, 3), color="Bright green"),
-        anchor("DashboardPromptAnchor", (7, 3.6, desk_z + 1.6),
-               size=(2, 2, 2), color="Bright violet"),
-        anchor("TerminalSlot", (7, 3.4, desk_z + 1.4), size=(3, 3, 3),
+        anchor("PlayerDesk", (7, 3.35, desk_z), size=(7, 0.3, 3), color="Bright green"),
+        prompt_anchor,
+        anchor("TerminalSlot", (7.4, 3.35, -4.0), size=(3.0, 0.2, 2.6),
                color="Bright orange"),
-        anchor("PhoneSlot", (4.6, 3.5, desk_z + 0.4), size=(1.6, 1.6, 1.6),
+        anchor("PhoneSlot", (4.6, 3.35, -3.8), size=(1.4, 0.2, 1.4),
                color="Bright yellow"),
         anchor("WorkerDeskSlot1", (-8, 3.2, -8), size=(4, 0.4, 2.4),
                color="Medium stone grey"),
@@ -386,7 +411,7 @@ def build_old_crt():
     label.append(txt)
     children.append(label)
 
-    return model("OldCRT", children)
+    return model("OldCRT", children, primary_part_name="MonitorBody")
 
 
 # ---------------------------------------------------------------- PhoneCheap
@@ -434,7 +459,7 @@ def build_phone_cheap():
         "0, 0.12, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
         "Really black", material="SmoothPlastic",
     ))
-    return model("PhoneCheap", children)
+    return model("PhoneCheap", children, primary_part_name="Body")
 
 
 # ---------------------------------------------------------------- PhoneFast
@@ -484,7 +509,7 @@ def build_phone_fast():
         "0, 0.06, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1",
         "Institutional white", material="Metal", can_collide=False,
     ))
-    return model("PhoneFast", children)
+    return model("PhoneFast", children, primary_part_name="Body")
 
 
 # ---------------------------------------------------------------- main
