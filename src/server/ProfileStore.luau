@@ -627,6 +627,7 @@ function ProfileStore.new(userId: number, opts: ProfileStoreOptions?): ProfileSt
 	-- silently replaying the first payload (docs/03: "An identical request ID
 	-- with different action/payload is INVALID_INPUT, not a replay").
 	self._opPayloads = {} :: { [string]: string }
+	self._opPayloadOrder = {} :: { string }
 	self._durableIntents = {} :: { [string]: string? }
 	return self
 end
@@ -644,6 +645,7 @@ export type ProfileStoreInstance = {
 	_envelope: any?,
 	_lastConfirmedRevision: number,
 	_opPayloads: { [string]: string },
+	_opPayloadOrder: { string },
 	_durableIntents: { [string]: string? },
 }
 export type ProfileStoreOptions = {
@@ -909,6 +911,15 @@ function ProfileStore:Save(profile: any, operationId: string, intent: string?): 
 			code = "INVALID_PROFILE",
 			detail = `operationId {operationId} was already used for a different profile payload`,
 		}
+	end
+	-- Only recent server-owned transactions need live fingerprints. SessionService
+	-- retains the one unresolved proposal; client replay authority is the durable ring.
+	if knownFingerprint == nil then
+		table.insert(self._opPayloadOrder, operationId)
+		if #self._opPayloadOrder > 64 then
+			local oldest = table.remove(self._opPayloadOrder, 1)
+			self._opPayloads[oldest] = nil
+		end
 	end
 	self._opPayloads[operationId] = fingerprint
 	-- CLIENT-REQUEST identity: if the durable ring already recorded this
