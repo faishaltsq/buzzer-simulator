@@ -50,7 +50,7 @@ local preCameraState = {
 	fieldOfView = 70,
 	activeTween = nil :: Tween?,
 }
-
+local openingGeneration = 0
 -- Forward declarations
 local hud: any = nil
 local desktop: any = nil
@@ -107,14 +107,23 @@ end
 
 -- Critical camera & control restoration (idempotent, single execution per open cycle)
 local function restoreCameraAndControls()
-	if not preCameraState.captured then
-		return
-	end
+	openingGeneration += 1 -- Invalidate any pending camera tween completion callbacks
 
 	-- Cancel in-flight camera tween if active
 	if preCameraState.activeTween ~= nil then
-		preCameraState.activeTween:Cancel()
+		local tweenToCancel = preCameraState.activeTween
 		preCameraState.activeTween = nil
+		tweenToCancel:Cancel()
+	end
+
+	if not preCameraState.captured then
+		-- Ensure camera is never left stuck at Scriptable
+		if camera.CameraType == Enum.CameraType.Scriptable then
+			camera.CameraType = preCameraState.cameraType or Enum.CameraType.Custom
+			camera.FieldOfView = preCameraState.fieldOfView or 70
+		end
+		enableControls()
+		return
 	end
 
 	-- Restore camera properties
@@ -145,6 +154,9 @@ end
 
 -- Transition camera to computer view
 local function transitionCameraToComputer(onComplete: () -> ())
+	openingGeneration += 1
+	local thisGeneration = openingGeneration
+
 	-- 1. Capture original camera state
 	if not preCameraState.captured then
 		preCameraState.captured = true
@@ -159,28 +171,58 @@ local function transitionCameraToComputer(onComplete: () -> ())
 
 	-- 3. Resolve room anchors
 	local cameraFocus, terminalSlot = findRoomAnchors()
-	local targetCFrame: CFrame
-
-	if cameraFocus ~= nil and terminalSlot ~= nil then
-		local screenCenter = terminalSlot.Position + Vector3.new(0, 1.4, 0)
-		targetCFrame = CFrame.lookAt(cameraFocus.Position, screenCenter)
-	else
-		-- Fallback: smooth slight nudge forward if anchors unavailable
-		targetCFrame = camera.CFrame * CFrame.new(0, 0, -2)
+	if cameraFocus == nil or terminalSlot == nil then
+		-- Fail safely: anchors unavailable, do not point camera into empty sky.
+		-- Abort transition, restore camera and controls, and close locally.
+		restoreCameraAndControls()
+		state:CloseLocally()
+		desktop:SetVisible(false, isReducedMotion())
+		hud:SetDashboardOpen(false, isReducedMotion())
+		return
 	end
+
+	local screenCenter = terminalSlot.Position + Vector3.new(0, 1.4, 0)
+	local targetCFrame = CFrame.lookAt(cameraFocus.Position, screenCenter)
 
 	-- 4. Set Scriptable and tween
 	camera.CameraType = Enum.CameraType.Scriptable
 
 	if isReducedMotion() then
 		camera.CFrame = targetCFrame
-		onComplete()
+		if thisGeneration == openingGeneration and state:GetStatus() == "Opening" then
+			onComplete()
+		end
 	else
+		if preCameraState.activeTween ~= nil then
+			local oldTween = preCameraState.activeTween
+			preCameraState.activeTween = nil
+			oldTween:Cancel()
+		end
+
 		local tweenInfo = TweenInfo.new(0.32, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
 		local tween = TweenService:Create(camera, tweenInfo, { CFrame = targetCFrame })
 		preCameraState.activeTween = tween
-		tween.Completed:Connect(function()
-			preCameraState.activeTween = nil
+
+		local conn: RBXScriptConnection? = nil
+		conn = tween.Completed:Connect(function(playbackState)
+			if conn ~= nil then
+				conn:Disconnect()
+				conn = nil
+			end
+			if preCameraState.activeTween == tween then
+				preCameraState.activeTween = nil
+			end
+
+			if playbackState ~= Enum.PlaybackState.Completed then
+				return
+			end
+			if thisGeneration ~= openingGeneration then
+				return
+			end
+			if state:GetStatus() ~= "Opening" then
+				return
+			end
+
 			onComplete()
 		end)
 		tween:Play()
@@ -226,6 +268,11 @@ desktop = Desktop.new({
 		state:SetTab(tabId :: any)
 	end,
 })
+-- Expose references for verification and testing
+_G.BuzzerState = state
+_G.BuzzerDesktop = desktop
+_G.BuzzerHud = hud
+
 
 -- Subscribe to state mutations
 state:Subscribe(function(stateData)

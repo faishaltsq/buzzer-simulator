@@ -36,6 +36,7 @@ function Desktop.new(options: DesktopOptions): any
 	self._tabButtons = {} :: { [string]: GuiButton }
 	self._tabIndicator = nil :: Frame?
 	self._contentContainers = {} :: { [string]: GuiObject }
+	self._metricBoxes = {}
 
 	-- ScreenGui
 	local screenGui = Instance.new("ScreenGui")
@@ -72,7 +73,7 @@ function Desktop.new(options: DesktopOptions): any
 
 	-- Size Constraint for responsive scaling
 	local sizeConstraint = Instance.new("UISizeConstraint")
-	sizeConstraint.MinSize = Vector2.new(320, 340)
+	sizeConstraint.MinSize = Vector2.new(280, 240)
 	sizeConstraint.MaxSize = Vector2.new(1100, 720)
 	sizeConstraint.Parent = window
 	self._sizeConstraint = sizeConstraint
@@ -81,7 +82,7 @@ function Desktop.new(options: DesktopOptions): any
 	local header = Instance.new("Frame")
 	header.Name = "WindowHeader"
 	header.BackgroundColor3 = Theme.Colors.CharcoalDark
-	header.Size = UDim2.new(1, 0, 0, 44)
+	header.Size = UDim2.new(1, 0, 0, 48)
 	header.Parent = window
 	Theme.applyPadding(header, 0, 12, 0, 16)
 
@@ -117,7 +118,7 @@ function Desktop.new(options: DesktopOptions): any
 	closeBtn.BackgroundColor3 = Theme.Colors.CharcoalLight
 	closeBtn.AnchorPoint = Vector2.new(1, 0.5)
 	closeBtn.Position = UDim2.new(1, 0, 0.5, 0)
-	closeBtn.Size = UDim2.new(0, 70, 0, 32)
+	closeBtn.Size = UDim2.new(0, 72, 0, 44)
 	closeBtn.Font = Theme.Fonts.Bold
 	closeBtn.Text = "Close"
 	closeBtn.TextColor3 = Theme.Colors.Cream
@@ -134,7 +135,9 @@ function Desktop.new(options: DesktopOptions): any
 		closeBtn.BackgroundColor3 = Theme.Colors.CharcoalLight
 	end)
 	closeBtn.MouseButton1Click:Connect(function()
-		self._onClose()
+		if self._onClose ~= nil then
+			self._onClose()
+		end
 	end)
 	self._closeBtn = closeBtn
 
@@ -142,8 +145,8 @@ function Desktop.new(options: DesktopOptions): any
 	local body = Instance.new("Frame")
 	body.Name = "WindowBody"
 	body.BackgroundTransparency = 1
-	body.Size = UDim2.new(1, 0, 1, -44)
-	body.Position = UDim2.new(0, 0, 0, 44)
+	body.Size = UDim2.new(1, 0, 1, -48)
+	body.Position = UDim2.new(0, 0, 0, 48)
 	body.Parent = window
 	self._body = body
 
@@ -328,16 +331,51 @@ function Desktop:_applyResponsiveMode(isNarrow: boolean)
 	if isNarrow then
 		-- Mobile view
 		self._navRail.Visible = false
-		self._contentArea.Size = UDim2.new(1, 0, 1, -100)
-		self._contentArea.Position = UDim2.new(0, 0, 0, 44)
+		self._contentArea.Size = UDim2.new(1, 0, 1, -104)
+		self._contentArea.Position = UDim2.new(0, 0, 0, 48)
 		self._mobileNav.Visible = true
 	else
 		-- Desktop view
 		self._navRail.Visible = true
-		self._contentArea.Size = UDim2.new(1, -180, 1, -44)
+		self._contentArea.Size = UDim2.new(1, -180, 1, -48)
 		self._contentArea.Position = UDim2.new(0, 180, 0, 0)
 		self._mobileNav.Visible = false
 		self:CloseMoreMenu()
+	end
+
+	-- Update Home finance row responsive layout
+	if self._financeLayout ~= nil and self._financeRow ~= nil and self._metricBoxes ~= nil then
+		if isNarrow then
+			self._financeLayout.FillDirection = Enum.FillDirection.Vertical
+			self._financeRow.Size = UDim2.new(1, 0, 0, 172)
+			for _, mBox in ipairs(self._metricBoxes) do
+				mBox.box.Size = UDim2.new(1, 0, 0, 50)
+				mBox.tag.Size = UDim2.new(0.55, 0, 1, 0)
+				mBox.tag.Position = UDim2.new(0, 0, 0, 0)
+				mBox.tag.TextSize = Theme.TextSizes.Small
+				mBox.tag.TextYAlignment = Enum.TextYAlignment.Center
+				mBox.val.Size = UDim2.new(0.45, 0, 1, 0)
+				mBox.val.Position = UDim2.new(0.55, 0, 0, 0)
+				mBox.val.TextSize = Theme.TextSizes.Body
+				mBox.val.TextXAlignment = Enum.TextXAlignment.Right
+				mBox.val.TextYAlignment = Enum.TextYAlignment.Center
+			end
+		else
+			self._financeLayout.FillDirection = Enum.FillDirection.Horizontal
+			self._financeRow.Size = UDim2.new(1, 0, 0, 84)
+			for _, mBox in ipairs(self._metricBoxes) do
+				mBox.box.Size = UDim2.new(0.32, -8, 1, 0)
+				mBox.tag.Size = UDim2.new(1, 0, 0, 16)
+				mBox.tag.Position = UDim2.new(0, 0, 0, 0)
+				mBox.tag.TextSize = Theme.TextSizes.Tiny
+				mBox.tag.TextYAlignment = Enum.TextYAlignment.Top
+				mBox.val.Size = UDim2.new(1, 0, 1, -18)
+				mBox.val.Position = UDim2.new(0, 0, 0, 18)
+				mBox.val.TextSize = Theme.TextSizes.Title
+				mBox.val.TextXAlignment = Enum.TextXAlignment.Left
+				mBox.val.TextYAlignment = Enum.TextYAlignment.Center
+			end
+		end
 	end
 end
 
@@ -370,8 +408,9 @@ end
 
 function Desktop:SelectTab(tabId: string)
 	self._currentTab = tabId
-	self._onTabSelected(tabId)
-
+	if self._onTabSelected ~= nil then
+		self._onTabSelected(tabId)
+	end
 	-- Update nav button styles
 	for id, btn in pairs(self._tabButtons) do
 		if id == tabId then
@@ -490,15 +529,16 @@ function Desktop:_createHomePage(): GuiObject
 	local financeRow = Instance.new("Frame")
 	financeRow.Name = "FinanceRow"
 	financeRow.BackgroundTransparency = 1
-	financeRow.Size = UDim2.new(1, 0, 0, 96)
+	financeRow.Size = UDim2.new(1, 0, 0, 84)
 	financeRow.LayoutOrder = 2
 	financeRow.Parent = scroll
+	self._financeRow = financeRow
 
 	local fLayout = Instance.new("UIListLayout")
 	fLayout.FillDirection = Enum.FillDirection.Horizontal
-	fLayout.Padding = UDim.new(0, 12)
+	fLayout.Padding = UDim.new(0, 10)
 	fLayout.Parent = financeRow
-
+	self._financeLayout = fLayout
 	-- Box 1: Spendable Cuan
 	local b1 = self:_createMetricBox(financeRow, "CONFIRMED SPENDABLE", "0 Cuan", Theme.Colors.Amber, 0.32)
 	self._homeCuanVal = b1
@@ -673,25 +713,44 @@ function Desktop:_createMetricBox(parent: Instance, tag: string, value: string, 
 	local tLabel = Instance.new("TextLabel")
 	tLabel.Name = "Tag"
 	tLabel.BackgroundTransparency = 1
-	tLabel.Size = UDim2.new(1, 0, 0, 14)
+	tLabel.Size = UDim2.new(1, 0, 0, 16)
 	tLabel.Font = Theme.Fonts.Bold
 	tLabel.Text = tag
 	tLabel.TextColor3 = Theme.Colors.CreamMuted
 	tLabel.TextSize = Theme.TextSizes.Tiny
 	tLabel.TextXAlignment = Enum.TextXAlignment.Left
+	tLabel.TextWrapped = true
 	tLabel.Parent = box
+
+	local tagSizeConstraint = Instance.new("UITextSizeConstraint")
+	tagSizeConstraint.MinTextSize = 9
+	tagSizeConstraint.MaxTextSize = 13
+	tagSizeConstraint.Parent = tLabel
 
 	local vLabel = Instance.new("TextLabel")
 	vLabel.Name = "Val"
 	vLabel.BackgroundTransparency = 1
-	vLabel.Size = UDim2.new(1, 0, 1, -16)
-	vLabel.Position = UDim2.new(0, 0, 0, 16)
+	vLabel.Size = UDim2.new(1, 0, 1, -18)
+	vLabel.Position = UDim2.new(0, 0, 0, 18)
 	vLabel.Font = Theme.Fonts.Black
 	vLabel.Text = value
 	vLabel.TextColor3 = valColor
 	vLabel.TextSize = Theme.TextSizes.Title
 	vLabel.TextXAlignment = Enum.TextXAlignment.Left
 	vLabel.Parent = box
+
+	local textSizeConstraint = Instance.new("UITextSizeConstraint")
+	textSizeConstraint.MinTextSize = 12
+	textSizeConstraint.MaxTextSize = 22
+	textSizeConstraint.Parent = vLabel
+
+	if self._metricBoxes ~= nil then
+		table.insert(self._metricBoxes, {
+			box = box,
+			tag = tLabel,
+			val = vLabel,
+		})
+	end
 
 	return vLabel
 end

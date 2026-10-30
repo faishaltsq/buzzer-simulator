@@ -557,6 +557,109 @@ test("UI cleanup does not leave duplicate listeners", function()
 	expectEqual(callCount, 2, "no further calls after unsubscribe")
 end)
 
+-- 26. Cancel tween during opening prevents late callback from reopening or capturing camera
+test("Cancelled opening transition prevents late OnCameraOpened from reopening or capturing camera", function()
+	local state = ClientState.new(sampleSnapshot(1, 100))
+	state:ApplyOpenComputer({
+		kind = "OpenComputer",
+		dashboardSessionId = "sess_cancel_test",
+		expiresAt = 1600,
+		serverTime = 1000,
+		state = sampleSnapshot(1, 100),
+	}, 1000)
+	expectEqual(state:Get().status, "Opening", "state is Opening")
+	expectFalse(state:Get().cameraCaptured, "camera not captured yet")
+
+	-- User cancels/closes while opening tween is in-flight:
+	local closeCmd = state:CloseLocally()
+	expectTrue(closeCmd ~= nil, "close command returned")
+	expectEqual(state:Get().status, "Closing", "state is Closing")
+
+	-- Late camera tween Completed callback fires now:
+	local opened = state:OnCameraOpened()
+	expectFalse(opened, "OnCameraOpened rejected because status is not Opening")
+	expectEqual(state:Get().status, "Closing", "status remained Closing")
+	expectFalse(state:Get().cameraCaptured, "camera was not marked captured")
+
+	-- Camera restoration finishes:
+	state:OnCameraRestored()
+	expectEqual(state:Get().status, "Closed", "state is Closed")
+	expectFalse(state:Get().cameraCaptured, "camera not captured")
+end)
+
+-- 27. Delayed SESSION_EXPIRED reply for an older session cannot close a newly opened session
+test("Delayed SESSION_EXPIRED reply for older session does not close active newer session", function()
+	local state = ClientState.new(sampleSnapshot(1, 100))
+
+	-- 1. Open session A
+	state:ApplyOpenComputer({
+		kind = "OpenComputer",
+		dashboardSessionId = "sess_A",
+		expiresAt = 1600,
+		serverTime = 1000,
+		state = sampleSnapshot(1, 100),
+	}, 1000)
+	state:OnCameraOpened()
+	expectEqual(state:Get().status, "Open", "Session A is Open")
+	expectEqual(state:Get().dashboardSessionId, "sess_A", "Session ID is sess_A")
+
+	-- Track request sent under session A
+	state:TrackRequest("req_A_mut", "BuyDevice", true, 1005, nil, "sess_A")
+
+	-- 2. Close session A
+	local closeCmd = state:CloseLocally()
+	expectTrue(closeCmd ~= nil, "CloseComputer generated")
+	state:OnCameraRestored()
+	expectEqual(state:Get().status, "Closed", "Session A closed")
+
+	-- 3. Open session B
+	state:ApplyOpenComputer({
+		kind = "OpenComputer",
+		dashboardSessionId = "sess_B",
+		expiresAt = 2200,
+		serverTime = 1020,
+		state = sampleSnapshot(2, 100),
+	}, 1020)
+	state:OnCameraOpened()
+	expectEqual(state:Get().status, "Open", "Session B is Open")
+	expectEqual(state:Get().dashboardSessionId, "sess_B", "Session ID is sess_B")
+
+	-- 4. Delayed SESSION_EXPIRED arrives for req_A_mut (which belonged to sess_A)
+	local expiredReply = {
+		requestId = "req_A_mut",
+		code = "SESSION_EXPIRED",
+		ok = false,
+	}
+	local applied = state:ApplyReply(expiredReply, 1025)
+	expectFalse(applied, "stale reply rejected from closing active session")
+	expectEqual(state:Get().status, "Open", "Session B remains Open")
+	expectEqual(state:Get().dashboardSessionId, "sess_B", "Session B ID preserved")
+	expectTrue(state:Get().cameraCaptured, "Camera remains captured for Session B")
+end)
+
+-- 28. Uncorrelated old SESSION_EXPIRED reply cannot close current session
+test("Uncorrelated old SESSION_EXPIRED reply cannot close current session", function()
+	local state = ClientState.new(sampleSnapshot(1, 100))
+	state:ApplyOpenComputer({
+		kind = "OpenComputer",
+		dashboardSessionId = "sess_active_01",
+		expiresAt = 2000,
+		serverTime = 1000,
+		state = sampleSnapshot(1, 100),
+	}, 1000)
+	state:OnCameraOpened()
+
+	local reply = {
+		requestId = "unknown_ancient_req",
+		code = "SESSION_EXPIRED",
+		ok = false,
+	}
+	local applied = state:ApplyReply(reply, 1010)
+	expectFalse(applied, "uncorrelated reply ignored")
+	expectEqual(state:Get().status, "Open", "Active session remains Open")
+	expectEqual(state:Get().dashboardSessionId, "sess_active_01", "Active session ID preserved")
+end)
+
 -- Runner loop
 local passed = 0
 local failures: { string } = {}

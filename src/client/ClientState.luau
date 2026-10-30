@@ -27,6 +27,7 @@ export type InFlightRequest = {
 	timestamp: number,
 	isMutation: boolean,
 	lookupRequestId: string?,
+	dashboardSessionId: string?,
 }
 
 export type UncertainMutation = {
@@ -236,9 +237,11 @@ function ClientState:CloseLocally(): { action: string, requestId: string, dashbo
 	self:_notify()
 
 	if wasActive and currentSid ~= nil then
+		local closeReqId = ClientState.GenerateRequestId("close")
+		self:TrackRequest(closeReqId, "CloseComputer", false, os.clock(), nil, currentSid)
 		return {
 			action = "CloseComputer",
-			requestId = ClientState.GenerateRequestId("close"),
+			requestId = closeReqId,
 			dashboardSessionId = currentSid,
 			payload = {},
 		}
@@ -247,12 +250,14 @@ function ClientState:CloseLocally(): { action: string, requestId: string, dashbo
 end
 
 -- 7. Camera opened hook
-function ClientState:OnCameraOpened()
-	if self._data.status == "Opening" then
-		self._data.status = "Open"
+function ClientState:OnCameraOpened(): boolean
+	if self._data.status ~= "Opening" then
+		return false
 	end
+	self._data.status = "Open"
 	self._data.cameraCaptured = true
 	self:_notify()
+	return true
 end
 
 -- 8. Camera restored hook
@@ -279,7 +284,6 @@ function ClientState:OnCharacterLost(): boolean
 	return wasActive
 end
 
--- 10. Apply Reply from server
 function ClientState:ApplyReply(reply: any, localNow: number): boolean
 	if reply == nil or typeof(reply.requestId) ~= "string" then
 		return false
@@ -287,22 +291,37 @@ function ClientState:ApplyReply(reply: any, localNow: number): boolean
 
 	-- Correlate in-flight request
 	local inFlight = self._data.inFlightRequests[reply.requestId]
+	local requestSessionId = if inFlight ~= nil then inFlight.dashboardSessionId else nil
 	if inFlight ~= nil then
 		self._data.inFlightRequests[reply.requestId] = nil
 	end
 
 	-- Handle SESSION_EXPIRED reply
 	if reply.code == "SESSION_EXPIRED" then
-		local sid = self._data.dashboardSessionId
-		if sid ~= nil then
-			self._data.closedGenerations[sid] = true
-			self._data.dashboardSessionId = nil
+		-- Expire only if this request was bound to the active dashboard session,
+		-- or if the reply explicitly targets the current session.
+		local currentSid = self._data.dashboardSessionId
+		local targetSessionId = requestSessionId
+		if targetSessionId == nil and reply.dashboardSession ~= nil and typeof(reply.dashboardSession.dashboardSessionId) == "string" then
+			targetSessionId = reply.dashboardSession.dashboardSessionId
 		end
-		self._data.status = "Expired"
-		self._data.expiresAt = nil
-		self._data.localWatchdogTime = nil
-		self:_notify()
-		return true
+
+		if currentSid ~= nil and targetSessionId == currentSid then
+			self._data.closedGenerations[currentSid] = true
+			self._data.dashboardSessionId = nil
+			self._data.status = "Expired"
+			self._data.expiresAt = nil
+			self._data.localWatchdogTime = nil
+			self:_notify()
+			return true
+		else
+			-- Uncorrelated old reply or reply for an already-closed generation:
+			-- Never close or expire a newer/active session.
+			if targetSessionId ~= nil then
+				self._data.closedGenerations[targetSessionId] = true
+			end
+			return false
+		end
 	end
 
 	-- Revision check: never regress confirmed state
@@ -355,13 +374,21 @@ function ClientState:ApplyReply(reply: any, localNow: number): boolean
 end
 
 -- 11. Register in-flight request
-function ClientState:TrackRequest(requestId: string, action: string, isMutation: boolean, localNow: number, lookupRequestId: string?)
+function ClientState:TrackRequest(
+	requestId: string,
+	action: string,
+	isMutation: boolean,
+	localNow: number,
+	lookupRequestId: string?,
+	dashboardSessionId: string?
+)
 	self._data.inFlightRequests[requestId] = {
 		requestId = requestId,
 		action = action,
 		timestamp = localNow,
 		isMutation = isMutation,
 		lookupRequestId = lookupRequestId,
+		dashboardSessionId = dashboardSessionId or self._data.dashboardSessionId,
 	}
 end
 

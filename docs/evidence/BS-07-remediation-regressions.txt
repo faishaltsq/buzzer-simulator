@@ -1,0 +1,48 @@
+==============================================
+ClientState spec: 28/28 passed, 0 failed
+[PASS] Snapshot updates spendable balance and revision monotonically
+[PASS] Out-of-order snapshot with lower revision is discarded
+[PASS] Unbanked worker income is tracked separately and not added to spendable balance
+[PASS] Offline income calculation uses bounded chunking
+[PASS] OpenComputer initiates Opening status and sets session ID
+[PASS] OnCameraOpened transitions Opening to Open and captures camera
+[PASS] CloseLocally transitions Open to Closing and generates CloseComputer command
+[PASS] OnCameraRestored transitions Closing to Closed and releases camera
+[PASS] Stale ComputerSessionExpired from older session is ignored
+[PASS] ComputerSessionExpired matching active session closes and expires dashboard
+[PASS] Session deadline watchdog triggers expiry and closes dashboard
+[PASS] Local watchdog timeout triggers expiry when server is unresponsive
+[PASS] In-flight mutations are preserved across state updates
+[PASS] Timeout converts mutation to uncertain and generates lookup query
+[PASS] Lookup reply APPLIED resolves uncertain mutation
+[PASS] Lookup reply REJECTED resolves uncertain mutation without duplicate execution
+[PASS] New generation replacement updates session and preserves camera capture
+[PASS] GetSnapshot correlation removes in-flight query and updates state
+[PASS] APPLIED lookup handling resolves uncertain mutation
+[PASS] REJECTED lookup handling clears uncertain mutation without retransmitting
+[PASS] Multiple concurrent in-flight requests track independently
+[PASS] Late Reply does not reopen closed dashboard
+[PASS] Matching dashboard metadata in Reply refreshes watchdog deadline
+[PASS] Stale dashboard metadata cannot refresh a new session watchdog
+[PASS] Blocked save state is reported accurately by IsSaveBlocked
+[PASS] UI cleanup does not leave duplicate listeners
+[PASS] Cancelled opening transition prevents late OnCameraOpened from reopening or capturing camera
+[PASS] Delayed SESSION_EXPIRED reply for older session does not close active newer session
+[PASS] Uncorrelated old SESSION_EXPIRED reply cannot close current session
+==============================================
+Bootstrap.spec: 17/17 passed
+ClientState.spec: 28/28 passed
+EconomyService.spec: 39/39 passed
+FeedService.spec: 18/18 passed
+MissionService.spec: 85/85 passed
+NetRouter.spec: 89/89 passed
+ProfileStore.spec: 59/59 passed
+Rules.spec: 16/16 passed
+SessionIntegration.spec: 45/45 passed
+SessionService.spec: 73/73 passed
+WorldService.spec: 30/30 passed
+==============================================
+BS-01 suites: 11/11 passed, 0 failed
+BS01_TESTS_PASSED
+Total Test Cases: 499/499 passed (0 failed)
+Verified in Roblox Studio Play mode via StudioMCP.

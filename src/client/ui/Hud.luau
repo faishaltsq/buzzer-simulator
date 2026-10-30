@@ -78,9 +78,10 @@ function Hud.new(options: HudOptions): any
 	balanceCard.Name = "BalanceCard"
 	balanceCard.BackgroundColor3 = Theme.Colors.CharcoalDark
 	balanceCard.BackgroundTransparency = 0.1
-	balanceCard.Size = UDim2.new(0, 260, 0, 88)
+	balanceCard.Size = UDim2.new(0, 250, 0, 84)
 	balanceCard.Position = UDim2.new(0, 0, 0, 0)
 	balanceCard.Parent = root
+	self._balanceCard = balanceCard
 	Theme.applyCorner(balanceCard, Theme.Radii.Medium)
 	Theme.applyStroke(balanceCard, Theme.Colors.Border, 1)
 
@@ -175,9 +176,11 @@ function Hud.new(options: HudOptions): any
 	objectivePill.Name = "ObjectivePill"
 	objectivePill.BackgroundColor3 = Theme.Colors.CharcoalDark
 	objectivePill.BackgroundTransparency = 0.15
-	objectivePill.Size = UDim2.new(0, 320, 0, 48)
-	objectivePill.Position = UDim2.new(0.5, -160, 0, 0)
+	objectivePill.Size = UDim2.new(0, 300, 0, 46)
+	objectivePill.Position = UDim2.new(0.5, 0, 0, 0)
+	objectivePill.AnchorPoint = Vector2.new(0.5, 0)
 	objectivePill.Parent = root
+	self._objectivePill = objectivePill
 	Theme.applyCorner(objectivePill, Theme.Radii.Large)
 	Theme.applyStroke(objectivePill, Theme.Colors.Border, 1)
 	Theme.applyPadding(objectivePill, 6, 12, 6, 12)
@@ -214,8 +217,10 @@ function Hud.new(options: HudOptions): any
 	hintBanner.BackgroundColor3 = Theme.Colors.CharcoalDark
 	hintBanner.BackgroundTransparency = 0.2
 	hintBanner.Size = UDim2.new(0, 380, 0, 36)
-	hintBanner.Position = UDim2.new(0.5, -190, 1, -40)
+	hintBanner.Position = UDim2.new(0.5, 0, 1, -12)
+	hintBanner.AnchorPoint = Vector2.new(0.5, 1)
 	hintBanner.Parent = root
+	self._hintBanner = hintBanner
 	Theme.applyCorner(hintBanner, Theme.Radii.Pill)
 	Theme.applyStroke(hintBanner, Theme.Colors.Border, 1)
 	Theme.applyPadding(hintBanner, 6, 16, 6, 16)
@@ -237,10 +242,12 @@ function Hud.new(options: HudOptions): any
 	statusBanner.Name = "StatusBanner"
 	statusBanner.BackgroundColor3 = Theme.Colors.Coral
 	statusBanner.BackgroundTransparency = 0.1
-	statusBanner.Size = UDim2.new(0, 240, 0, 36)
-	statusBanner.Position = UDim2.new(1, -240, 0, 0)
+	statusBanner.Size = UDim2.new(0, 230, 0, 36)
+	statusBanner.AnchorPoint = Vector2.new(1, 0)
+	statusBanner.Position = UDim2.new(1, 0, 0, 0)
 	statusBanner.Visible = false
 	statusBanner.Parent = root
+	self._statusBanner = statusBanner
 	Theme.applyCorner(statusBanner, Theme.Radii.Medium)
 	Theme.applyStroke(statusBanner, Theme.Colors.Border, 1)
 	Theme.applyPadding(statusBanner, 6, 10, 6, 10)
@@ -256,9 +263,58 @@ function Hud.new(options: HudOptions): any
 	statusText.TextXAlignment = Enum.TextXAlignment.Center
 	statusText.Parent = statusBanner
 	self._statusBanner = statusBanner
+
+	table.insert(self._connections, root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		self:_updateLayout()
+	end))
+	self:_updateLayout()
 	self._statusText = statusText
 
 	return self
+end
+
+function Hud:_updateLayout()
+	local width = self._root.AbsoluteSize.X
+	local isNarrow = width < 640
+	local isBannerVisible = self._statusBanner.Visible
+
+	if isNarrow then
+		if isBannerVisible then
+			self._statusBanner.AnchorPoint = Vector2.new(0, 0)
+			self._statusBanner.Position = UDim2.new(0, 0, 0, 0)
+			self._statusBanner.Size = UDim2.new(1, 0, 0, 26)
+		end
+
+		local topOffset = if isBannerVisible then 30 else 0
+
+		self._balanceCard.AnchorPoint = Vector2.new(0, 0)
+		self._balanceCard.Position = UDim2.new(0, 0, 0, topOffset)
+		self._balanceCard.Size = UDim2.new(1, 0, 0, 68)
+
+		self._objectivePill.AnchorPoint = Vector2.new(0, 0)
+		self._objectivePill.Position = UDim2.new(0, 0, 0, topOffset + 74)
+		self._objectivePill.Size = UDim2.new(1, 0, 0, 36)
+
+		self._hintBanner.AnchorPoint = Vector2.new(0.5, 1)
+		self._hintBanner.Position = UDim2.new(0.5, 0, 1, -6)
+		self._hintBanner.Size = UDim2.new(1, 0, 0, 28)
+	else
+		self._balanceCard.AnchorPoint = Vector2.new(0, 0)
+		self._balanceCard.Position = UDim2.new(0, 0, 0, 0)
+		self._balanceCard.Size = UDim2.new(0, 250, 0, 84)
+
+		self._objectivePill.AnchorPoint = Vector2.new(0.5, 0)
+		self._objectivePill.Position = UDim2.new(0.5, 0, 0, 0)
+		self._objectivePill.Size = UDim2.new(0, 300, 0, 46)
+
+		self._statusBanner.AnchorPoint = Vector2.new(1, 0)
+		self._statusBanner.Position = UDim2.new(1, 0, 0, 0)
+		self._statusBanner.Size = UDim2.new(0, 230, 0, 36)
+
+		self._hintBanner.AnchorPoint = Vector2.new(0.5, 1)
+		self._hintBanner.Position = UDim2.new(0.5, 0, 1, -12)
+		self._hintBanner.Size = UDim2.new(0, 380, 0, 36)
+	end
 end
 
 -- Updates HUD from authoritative client state and player attributes
@@ -326,6 +382,8 @@ function Hud:Update(stateData: any, player: Player?)
 	else
 		self._statusBanner.Visible = false
 	end
+
+	self:_updateLayout()
 end
 
 -- Sets whether BuzzerOS desktop is currently open (subtly dimming the HUD)
