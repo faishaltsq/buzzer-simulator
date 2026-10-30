@@ -105,9 +105,12 @@ local function enableControls()
 	end
 end
 
+local isTransitioningCamera = false
+
 -- Critical camera & control restoration (idempotent, single execution per open cycle)
 local function restoreCameraAndControls()
 	openingGeneration += 1 -- Invalidate any pending camera tween completion callbacks
+	isTransitioningCamera = false
 
 	-- Cancel in-flight camera tween if active
 	if preCameraState.activeTween ~= nil then
@@ -116,36 +119,39 @@ local function restoreCameraAndControls()
 		tweenToCancel:Cancel()
 	end
 
+	local char = player.Character
+	local hum = if char ~= nil then char:FindFirstChildOfClass("Humanoid") else nil
+
 	if not preCameraState.captured then
-		-- Ensure camera is never left stuck at Scriptable
+		if hum ~= nil then
+			camera.CameraSubject = hum
+		end
 		if camera.CameraType == Enum.CameraType.Scriptable then
-			camera.CameraType = preCameraState.cameraType or Enum.CameraType.Custom
+			camera.CameraType = Enum.CameraType.Custom
 			camera.FieldOfView = preCameraState.fieldOfView or 70
 		end
 		enableControls()
 		return
 	end
 
-	-- Restore camera properties
-	camera.CameraType = preCameraState.cameraType or Enum.CameraType.Custom
-
-	-- Safely restore subject (prevent destroyed instances on respawn)
-	local char = player.Character
-	local hum = if char ~= nil then char:FindFirstChildOfClass("Humanoid") else nil
+	-- Safely restore subject FIRST before CameraType so Roblox camera controller binds correctly
 	if preCameraState.cameraSubject ~= nil and preCameraState.cameraSubject.Parent ~= nil then
 		camera.CameraSubject = preCameraState.cameraSubject
 	elseif hum ~= nil then
 		camera.CameraSubject = hum
 	end
 
+	-- Restore camera properties to Custom (never left Scriptable)
+	camera.CameraType = Enum.CameraType.Custom
 	camera.FieldOfView = preCameraState.fieldOfView or 70
 
 	-- Restore controls
 	enableControls()
 
 	preCameraState.captured = false
+	preCameraState.cameraType = Enum.CameraType.Custom
+	preCameraState.cameraSubject = nil
 	state:OnCameraRestored()
-
 	-- Unbind close action
 	pcall(function()
 		ContextActionService:UnbindAction("BuzzerOS_Close")
@@ -154,6 +160,11 @@ end
 
 -- Transition camera to computer view
 local function transitionCameraToComputer(onComplete: () -> ())
+	-- Guard against reentrant subscribers restarting the transition
+	if isTransitioningCamera then
+		return
+	end
+	isTransitioningCamera = true
 	openingGeneration += 1
 	local thisGeneration = openingGeneration
 
@@ -173,11 +184,16 @@ local function transitionCameraToComputer(onComplete: () -> ())
 	local cameraFocus, terminalSlot = findRoomAnchors()
 	if cameraFocus == nil or terminalSlot == nil then
 		-- Fail safely: anchors unavailable, do not point camera into empty sky.
-		-- Abort transition, restore camera and controls, and close locally.
+		-- Terminate Opening state before restoration can trigger a state notification.
+		local closeCmd = state:AbortOpening("Terminal camera anchor missing")
+		if closeCmd ~= nil then
+			sendCommand(closeCmd)
+		end
+		-- Restore original camera and controls exactly once
 		restoreCameraAndControls()
-		state:CloseLocally()
 		desktop:SetVisible(false, isReducedMotion())
 		hud:SetDashboardOpen(false, isReducedMotion())
+		isTransitioningCamera = false
 		return
 	end
 
@@ -189,6 +205,7 @@ local function transitionCameraToComputer(onComplete: () -> ())
 
 	if isReducedMotion() then
 		camera.CFrame = targetCFrame
+		isTransitioningCamera = false
 		if thisGeneration == openingGeneration and state:GetStatus() == "Opening" then
 			onComplete()
 		end
@@ -212,6 +229,7 @@ local function transitionCameraToComputer(onComplete: () -> ())
 			if preCameraState.activeTween == tween then
 				preCameraState.activeTween = nil
 			end
+			isTransitioningCamera = false
 
 			if playbackState ~= Enum.PlaybackState.Completed then
 				return
@@ -268,7 +286,7 @@ desktop = Desktop.new({
 		state:SetTab(tabId :: any)
 	end,
 })
--- Development-gated references for Studio verification and automated tests
+-- Development-gated references and bridge for Studio verification and automated tests
 if RunService:IsStudio() then
 	_G.BuzzerState = state
 	_G.BuzzerDesktop = desktop
@@ -276,6 +294,41 @@ if RunService:IsStudio() then
 	shared.BuzzerState = state
 	shared.BuzzerDesktop = desktop
 	shared.BuzzerHud = hud
+
+	local devBridge = Instance.new("BindableFunction")
+	devBridge.Name = "StudioClientBridge"
+	devBridge.OnInvoke = function(action: string, payload: any)
+		if action == "GetStatus" then
+			return state:GetStatus()
+		elseif action == "GetState" then
+			return state:Get()
+		elseif action == "Close" then
+			handleUserClose()
+			return true
+		elseif action == "SelectTab" then
+			desktop:SelectTab(payload)
+			return true
+		elseif action == "ToggleMore" then
+			desktop:ToggleMoreMenu()
+			return true
+		elseif action == "ExpireSession" then
+			local activeSid = state:Get().dashboardSessionId or "sess_dev_expire"
+			return state:ApplySessionExpired(activeSid, "SESSION_EXPIRED")
+		elseif action == "SimulateOpen" then
+			local snap = payload or {
+				kind = "OpenComputer",
+				dashboardSessionId = "sess_sim_" .. tostring(os.clock()),
+				expiresAt = os.clock() + 300,
+				serverTime = os.time(),
+				state = state:Get().snapshot,
+			}
+			return state:ApplyOpenComputer(snap, os.clock())
+		elseif action == "IsDesktopVisible" then
+			return desktop:IsVisible()
+		end
+		return nil
+	end
+	devBridge.Parent = playerGui:WaitForChild("BuzzerOSDesktop")
 end
 
 -- Subscribe to state mutations

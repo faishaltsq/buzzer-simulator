@@ -221,12 +221,16 @@ function Desktop.new(options: DesktopOptions): any
 	-- Setup responsive layout monitoring
 	local function updateLayout()
 		local vp = window.AbsoluteSize
-		local isNarrow = vp.X < 640
+		-- Responsive layout classification:
+		-- Mobile compact layout for narrow portrait viewports (< 640px)
+		-- AND short touch landscape viewports (< 500px height).
+		-- Wide desktop viewports (e.g. 1280x720) retain the left navigation rail.
+		local isCompact = (vp.X < 640) or (vp.Y < 500)
 
-		if isNarrow ~= self._isMobile then
-			self._isMobile = isNarrow
-			self:_applyResponsiveMode(isNarrow)
+		if isCompact ~= self._isMobile then
+			self._isMobile = isCompact
 		end
+		self:_applyResponsiveMode(isCompact)
 	end
 
 	table.insert(self._connections, window:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateLayout))
@@ -327,8 +331,8 @@ function Desktop:_buildNavigation()
 	end
 end
 
-function Desktop:_applyResponsiveMode(isNarrow: boolean)
-	if isNarrow then
+function Desktop:_applyResponsiveMode(isCompact: boolean)
+	if isCompact then
 		-- Mobile view
 		self._navRail.Visible = false
 		self._contentArea.Size = UDim2.new(1, 0, 1, -104)
@@ -343,9 +347,13 @@ function Desktop:_applyResponsiveMode(isNarrow: boolean)
 		self:CloseMoreMenu()
 	end
 
-	-- Update Home finance row responsive layout
+	-- Update Home finance row responsive layout:
+	-- Narrow viewports (< 540px, portrait) stack metrics vertically.
+	-- Wide viewports (>= 540px, desktop or mobile landscape) use 3-column horizontal row.
+	local windowWidth = self._window.AbsoluteSize.X
+	local isNarrowMetrics = windowWidth > 0 and windowWidth < 540
 	if self._financeLayout ~= nil and self._financeRow ~= nil and self._metricBoxes ~= nil then
-		if isNarrow then
+		if isNarrowMetrics then
 			self._financeLayout.FillDirection = Enum.FillDirection.Vertical
 			self._financeRow.Size = UDim2.new(1, 0, 0, 172)
 			for _, mBox in ipairs(self._metricBoxes) do

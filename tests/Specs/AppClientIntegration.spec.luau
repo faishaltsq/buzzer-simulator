@@ -54,7 +54,11 @@ local function sampleSnapshot(rev: number?, balance: number?): any
 end
 
 -- Helper to construct an App client pipeline simulation
-local function createAppPipeline(reducedMotion: boolean?)
+local function createAppPipeline(
+	reducedMotion: boolean?,
+	findAnchorsFn: (() -> (any, any))?,
+	onSendCommand: ((any) -> ())?
+)
 	local isReduced = reducedMotion or false
 	local testGuiContainer = Instance.new("Folder")
 
@@ -81,12 +85,17 @@ local function createAppPipeline(reducedMotion: boolean?)
 	}
 
 	local openingGeneration = 0
+	local isTransitioningCamera = false
 	local activeTweenCompletedCallback: ((any) -> ())? = nil
 
 	local function restoreCameraAndControls()
 		openingGeneration += 1
+		isTransitioningCamera = false
 		activeTweenCompletedCallback = nil
 		if not preCameraState.captured then
+			if fakeCamera.CameraType == Enum.CameraType.Scriptable then
+				fakeCamera.CameraType = preCameraState.cameraType or Enum.CameraType.Custom
+			end
 			return
 		end
 		fakeCamera.CameraType = preCameraState.cameraType or Enum.CameraType.Custom
@@ -97,6 +106,10 @@ local function createAppPipeline(reducedMotion: boolean?)
 	end
 
 	local function transitionCameraToComputer(onComplete: () -> ())
+		if isTransitioningCamera then
+			return
+		end
+		isTransitioningCamera = true
 		openingGeneration += 1
 		local thisGeneration = openingGeneration
 
@@ -107,11 +120,30 @@ local function createAppPipeline(reducedMotion: boolean?)
 			preCameraState.fieldOfView = fakeCamera.FieldOfView
 		end
 
+		-- Resolve anchors
+		local cameraFocus, terminalSlot = true, true
+		if findAnchorsFn ~= nil then
+			cameraFocus, terminalSlot = findAnchorsFn()
+		end
+
+		if cameraFocus == nil or terminalSlot == nil then
+			local closeCmd = state:AbortOpening("Terminal camera anchor missing")
+			if onSendCommand ~= nil and closeCmd ~= nil then
+				onSendCommand(closeCmd)
+			end
+			restoreCameraAndControls()
+			desktop:SetVisible(false, isReduced)
+			hud:SetDashboardOpen(false, isReduced)
+			isTransitioningCamera = false
+			return
+		end
+
 		fakeCamera.CameraType = Enum.CameraType.Scriptable
 		local targetCFrame = CFrame.new(7.4, 4.5, -3)
 
 		if isReduced then
 			fakeCamera.CFrame = targetCFrame
+			isTransitioningCamera = false
 			-- Verify state:GetStatus() method call in reduced motion path:
 			if thisGeneration == openingGeneration and state:GetStatus() == "Opening" then
 				onComplete()
@@ -120,6 +152,7 @@ local function createAppPipeline(reducedMotion: boolean?)
 			-- Simulate tween
 			fakeCamera.CFrame = targetCFrame
 			activeTweenCompletedCallback = function(playbackState: any)
+				isTransitioningCamera = false
 				if playbackState ~= Enum.PlaybackState.Completed then
 					return
 				end
@@ -349,6 +382,32 @@ test("Repeated OpenComputer on active session updates session without duplicate 
 	expectEqual(app.state:Get().dashboardSessionId, "sess_dup_02", "session ID updated")
 	expectFalse(app.hasActiveTween(), "did not create a second tween")
 end)
+-- 9. Missing anchor during opening aborts opening, closes server session, and never loops
+test("Missing anchor during opening aborts opening, closes server session, and never loops", function()
+	local sentCommands = {}
+	local app = createAppPipeline(false, function()
+		return nil, nil -- Simulates missing CameraFocus or TerminalSlot
+	end, function(cmd)
+		table.insert(sentCommands, cmd)
+	end)
+
+	app.state:ApplyOpenComputer({
+		kind = "OpenComputer",
+		dashboardSessionId = "sess_missing_anchor",
+		expiresAt = 1600,
+		serverTime = 1000,
+		state = sampleSnapshot(1, 100),
+	}, 1000)
+
+	expectEqual(app.state:GetStatus(), "Closed", "status immediately Closed on missing anchor")
+	expectEqual(app.fakeCamera.CameraType, Enum.CameraType.Custom, "camera restored to Custom, never Scriptable")
+	expectFalse(app.desktop:IsVisible(), "desktop never opens")
+	expectEqual(app.state:Get().activeError, "Terminal camera anchor missing", "activeError set")
+	expectEqual(#sentCommands, 1, "exactly one CloseComputer command sent to server")
+	expectEqual(sentCommands[1].action, "CloseComputer", "action is CloseComputer")
+	expectEqual(sentCommands[1].dashboardSessionId, "sess_missing_anchor", "correct session closed on server")
+end)
+
 
 -- Runner loop
 local passed = 0

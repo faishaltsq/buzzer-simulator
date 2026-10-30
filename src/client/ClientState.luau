@@ -253,6 +253,40 @@ function ClientState:CloseLocally(): { action: string, requestId: string, dashbo
 	return nil
 end
 
+-- 7. Abort Opening transition (e.g., missing room anchors)
+-- Immediately terminates Opening state by setting status to Closed, invalidates session,
+-- marks generation as closed, records activeError, notifies subscribers,
+-- and returns CloseComputer command to close session on server.
+function ClientState:AbortOpening(errorMessage: string?): { action: string, requestId: string, dashboardSessionId: string, payload: any }?
+	local currentSid = self._data.dashboardSessionId
+	if currentSid ~= nil then
+		self._data.closedGenerations[currentSid] = true
+	end
+
+	self._data.status = "Closed"
+	self._data.dashboardSessionId = nil
+	self._data.expiresAt = nil
+	self._data.localWatchdogTime = nil
+	self._data.cameraCaptured = false
+	if errorMessage ~= nil then
+		self._data.activeError = errorMessage
+	end
+
+	self:_notify()
+
+	if currentSid ~= nil then
+		local closeReqId = ClientState.GenerateRequestId("close")
+		self:TrackRequest(closeReqId, "CloseComputer", false, os.clock(), nil, currentSid)
+		return {
+			action = "CloseComputer",
+			requestId = closeReqId,
+			dashboardSessionId = currentSid,
+			payload = {},
+		}
+	end
+	return nil
+end
+
 -- 7. Camera opened hook
 function ClientState:OnCameraOpened(): boolean
 	if self._data.status ~= "Opening" then

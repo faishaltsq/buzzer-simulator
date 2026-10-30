@@ -379,6 +379,10 @@ function Hud:Update(stateData: any, player: Player?)
 		self._statusBanner.Visible = true
 		self._statusBanner.BackgroundColor3 = Theme.Colors.Amber
 		self._statusText.Text = `TERMINAL: {stateData.activeDenial}`
+	elseif stateData.activeError ~= nil then
+		self._statusBanner.Visible = true
+		self._statusBanner.BackgroundColor3 = Theme.Colors.Coral
+		self._statusText.Text = string.upper(stateData.activeError)
 	else
 		self._statusBanner.Visible = false
 	end

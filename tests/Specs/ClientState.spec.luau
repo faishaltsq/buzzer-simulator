@@ -679,6 +679,32 @@ test("GetStatus returns current status string matching Get().status", function()
 	state:OnCameraRestored()
 	expectEqual(state:GetStatus(), "Closed", "status is Closed")
 end)
+-- 30. AbortOpening terminates Opening state before camera restore and generates CloseComputer command
+test("AbortOpening terminates Opening state, sets activeError, and generates CloseComputer command", function()
+	local state = ClientState.new(sampleSnapshot(1, 100))
+	state:ApplyOpenComputer({
+		kind = "OpenComputer",
+		dashboardSessionId = "sess_abort_test",
+		expiresAt = 1600,
+		serverTime = 1000,
+		state = sampleSnapshot(1, 100),
+	}, 1000)
+	expectEqual(state:GetStatus(), "Opening", "status is Opening")
+	expectEqual(state:Get().dashboardSessionId, "sess_abort_test", "session ID set")
+
+	local closeCmd = state:AbortOpening("Computer terminal camera anchor is missing")
+	expectEqual(state:GetStatus(), "Closed", "status immediately Closed")
+	expectEqual(state:Get().dashboardSessionId, nil, "dashboardSessionId cleared")
+	expectEqual(state:Get().activeError, "Computer terminal camera anchor is missing", "activeError set")
+	expectTrue(closeCmd ~= nil, "CloseComputer command generated")
+	expectEqual(closeCmd.action, "CloseComputer", "action is CloseComputer")
+	expectEqual(closeCmd.dashboardSessionId, "sess_abort_test", "session ID preserved on close command")
+	-- Subsequent OnCameraRestored should not change status or error
+	state:OnCameraRestored()
+	expectEqual(state:GetStatus(), "Closed", "status remains Closed")
+	expectEqual(state:Get().activeError, "Computer terminal camera anchor is missing", "activeError preserved")
+end)
+
 
 -- Runner loop
 local passed = 0

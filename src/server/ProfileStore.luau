@@ -111,6 +111,12 @@ end
 -- Resolved lazily (not at require time) so specs can inject a fake adapter
 -- and the module stays requireable outside Roblox.
 local function defaultStore(): StoreAdapter
+	local RunService = game:GetService("RunService")
+	local isStudio = false
+	pcall(function()
+		isStudio = RunService:IsStudio()
+	end)
+
 	local dataStoreService = game:GetService("DataStoreService")
 	local ok, store = pcall(function()
 		return dataStoreService:GetDataStore(STORE_NAME)
@@ -118,11 +124,17 @@ local function defaultStore(): StoreAdapter
 	if ok and store ~= nil then
 		return store :: any
 	end
-	local RunService = game:GetService("RunService")
-	if RunService:IsStudio() then
-		warn(`[ProfileStore] DataStore '{STORE_NAME}' unavailable in Studio ({tostring(store)}); using ephemeral in-memory fallback store for Studio play.`)
+
+	-- STRICT BOUNDARY: Production servers must NEVER use in-memory fallback.
+	-- Fallback is strictly development-only, restricted to local unpublished Studio places
+	-- where DataStoreService:GetDataStore handle creation fails before any data operations.
+	-- Real DataStore persistence errors during GetAsync/UpdateAsync never fallback to blank state.
+	-- Project Gate Real DataStore G2 remains OPEN until live cloud universe deployment.
+	if isStudio then
+		warn(`[ProfileStore:DEV_FALLBACK] DataStore handle '{STORE_NAME}' unavailable in offline Studio ({tostring(store)}). Using ephemeral in-memory store for local Studio session only. Real DataStore G2 remains OPEN.`)
 		return getInMemoryFallback()
 	end
+
 	error(`Failed to access DataStore '{STORE_NAME}': {tostring(store)}`, 0)
 end
 local function defaultHttpService(): any
