@@ -112,6 +112,8 @@ is not configured, record that gate BLOCKED/PENDING and complete supported tests
 | `tests/Specs/Bootstrap.spec.luau` | New, 13 cases. |
 | `default.project.json`, `test.project.json` | Map the new modules; production omits the test Runner. |
 | `docs/14-BS-06-NETWORK-BOOTSTRAP.md` | This plan and handoff. |
+| `docs/evidence/BS-06-regressions.txt` | Retained native output for all 461 case passes and ten suite summaries. |
+| `docs/evidence/BS-06-native-runtime.json` | Actual two-client Studio runtime result: 31/31 integration checks. |
 
 No UI, world asset, catalog, economy formula, tier, schema or content change.
 
@@ -129,10 +131,12 @@ private `FireClient` transports. `beforeMutation` only samples connected time;
 
 ### Bootstrap lifecycle
 
-Join → session factory → `Start()`; only `NOT_READY` from a confirmed empty lease
-may call `InitializeStarter()`. Success registers the router, spawns/synchronizes
-the room from the confirmed `deviceId`, then marks ready. Character add/remove
-bind and dispose per-character connections; death and removal notify the router.
+Join → session factory → register the not-yet-started session → `Start()`.
+Early requests receive `NOT_READY`; only a confirmed empty-profile lease may
+proceed through `InitializeStarter()`. Success synchronizes the room from the
+confirmed `deviceId` and marks the profile ready. Presentation failures remain
+recoverable and explicit through `BuzzerWorldError`. Character add/remove bind
+and dispose per-character connections; death and removal notify the router.
 Leave removes the room, unregisters, disconnects every listener and finalizes the
 session. One `Heartbeat`-throttled scheduler samples connected time, runs exactly
 one background pump per player (`Reconcile` → `Advance(0)` → lease renewal when
@@ -182,17 +186,60 @@ nonblocking.
 | Bootstrap (new) | 13/13 |
 | **Total** | **461/461, 10/10 suites, `BS01_TESTS_PASSED`, zero failures** |
 
-Legacy total is exactly 320; new coverage is 141. Full native log:
-`build/bs06-final-regressions.txt`.
+Legacy total is exactly 320; new coverage is 141. Complete case and suite output
+was recovered from Studio's durable log and retained in
+[`evidence/BS-06-regressions.txt`](evidence/BS-06-regressions.txt). This is filtered
+assertion/summary output, not the entire engine/system log. The earlier console
+tool response truncated its first case lines; no results were invented or
+reconstructed from source.
+
+### Actual Studio runtime verification
+
+`StudioTestService:ExecuteMultiplayerTestAsync(2)` completed with **31/31 checks,
+zero failures**, using two real Studio clients, actual Players, private
+RemoteEvents, Heartbeat, rooms and all existing server domain modules. Persistence
+used an isolated in-memory adapter; this does **not** close real DataStore G2.
+The complete result is retained in
+[`evidence/BS-06-native-runtime.json`](evidence/BS-06-native-runtime.json).
+
+Observed behavior:
+
+- Both first joins initialized confirmed starter profiles and distinct bedrooms;
+  each room retained one CRT and one productive phone.
+- Actual client/server requests and replies remained private. A second client
+  could neither spoof the first user's identity nor borrow its dashboard ID;
+  rejected requests changed neither profile.
+- Owned-prompt authorization delivered private `OpenComputer`; the foreign-room
+  prompt delivered denial without opening. The automated probe called the server
+  prompt handler with the real owned prompt and a living real character.
+  Separately, a single-client keyboard **E** interaction exercised actual
+  `ProximityPromptService.PromptTriggered` and received the expected opening.
+- A real organic publish remained at confirmed balance zero until settlement;
+  the aggregate scheduler credited 15 once. Immediate and late same-ID retries
+  performed no additional transaction. Lookup query and original mutation IDs
+  remained distinct.
+- A mission post settled, its claim succeeded, and a confirmed fast-phone purchase
+  synchronized the visible phone without replacing the dashboard prompt.
+- Removing/re-adding the same actual Player through the server runtime released
+  the lease, restored the purchased phone and balance, and replayed the durable
+  purchase outcome as `APPLIED`; the second client's profile remained unchanged.
+  This checks server-session recreation, **not a transport disconnect/rejoin**.
+- Aggregate shutdown completed successfully.
+
+Only the ignored probe build used temporary client transport observers and an
+isolated persistence adapter. They are not part of either committed Rojo project;
+no production BuzzerOS UI or extra production remote was introduced.
 
 ### Builds and static analysis
 
 `rojo build -o build/BuzzerSimulator.rbxlx` and
 `rojo build test.project.json -o build/BuzzerTests.rbxlx` both succeed.
-`lute lint` reports only `unused_variable` warnings (no errors) on the new
-modules. `lute check` is not usable here: it has no Roblox environment, so every
-`game`/`Instance`/`require` reference is reported as unknown global. No language
-server is configured for this project.
+`lute lint` returned nonzero with unused-variable warnings (including variables
+used only for Instance property writes/import paths). `lute check` also returned
+nonzero: Roblox globals/types and Instance-based requires are unresolved, and it
+reported additional strict inference diagnostics. These runs are **not** a clean
+static analysis gate. No project language server is configured. Native Studio
+execution and the passing suites are the exercised runtime evidence.
 
 ### Security invariants
 
@@ -208,14 +255,17 @@ and bounded-chunked.
 
 ### Unresolved issues
 
-1. **Two-client Studio authorization probe not executed.** The isolated harness
-   exists (`build/BS06Smoke.rbxlx`, in-memory store, real runtime/services/world/
-   remotes) with `ExecuteMultiplayerTestAsync` available; the multi-client run
-   remains to be performed. In-process isolation is proven by router suites.
-2. **Real DataStore G2: BLOCKED/PENDING.** No isolated published development
+1. **Real DataStore G2: BLOCKED/PENDING.** No isolated published development
    universe is configured; production keys were deliberately never touched.
-3. `lute check` type-checking and any `selene`/`luau-lsp` gate are unavailable in
-   this environment, so no static type gate is claimed.
-4. Studio emitted its pre-existing `rbxassetid://203785492` content-type warning,
-   unrelated to BS-06 code.
+   Actual backend acquisition, conditional writes, transport rejoin and
+   competing-server lease conflicts still need that development configuration.
+2. **Static analysis is not a green gate.** `lute check` returned unresolved
+   Roblox environment/type diagnostics and additional inference errors. A
+   Roblox-aware type-check configuration and review remain necessary.
+3. Studio emitted its pre-existing `rbxassetid://203785492` content-type warning
+   and local-test account/asset HTTP warnings; the native checks still completed.
+
+The implementation and exercised native-runtime evidence are ready for independent
+review. This is not production DataStore release approval. BS-07 was not started;
+the implementation branch must not be merged as part of this task.
 
