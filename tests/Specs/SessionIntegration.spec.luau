@@ -79,7 +79,8 @@ function FakeStore:UpdateAsync(key: string, transform: (any) -> any): any
 		self.commits += 1
 		table.insert(self.operations, nextValue.lastSaveOpId)
 	end
-	if self.loseResponses then
+	if self.loseResponses or (self.loseNextResponse and nextValue ~= nil) then
+		self.loseNextResponse = false
 		error("injected committed response loss", 0)
 	end
 	return copy(nextValue)
@@ -104,7 +105,7 @@ local function worker(): any
 	p.workers = { { hireId = "trainee-slot-1", roleId = "trainee", slotIndex = 1 } }
 	return p
 end
-local function fixture(profile: any?, connectedClock: boolean?): (any, any, any)
+local function fixture(profile: any?, connectedClock: boolean?, httpService: any?): (any, any, any)
 	local store = FakeStore.new()
 	local clock = { wall = 1000, connected = 0, waits = 0 }
 	if profile ~= nil then
@@ -114,7 +115,7 @@ local function fixture(profile: any?, connectedClock: boolean?): (any, any, any)
 		}
 	end
 	local session = SessionService.new({
-		userId = 1234, store = store, httpService = http, jobId = "integration",
+		userId = 1234, store = store, httpService = httpService or http, jobId = "integration",
 		now = function() return clock.wall end,
 		connectedNow = if connectedClock then function() return clock.connected end else nil,
 		noCacheOptions = function() return { UseCache = false } end,
@@ -680,6 +681,188 @@ test("Server transaction fingerprints remain bounded while recent payload confli
 	conflicting.lifetimeEarned += 1
 	equal(persistence:Save(conflicting, "bounded-server-100").ok, false, "recent identity cannot change payload")
 	equal(store.updates, writes, "conflicting payload never reaches transport")
+end)
+
+test("Remediation: applied recovery never acquires a successor's lease", function()
+	local first, store, clock = loaded()
+	store.loseResponses = true
+	store.failReads = true
+	equal(publish(first, "takeover-publish").ok, false, "response remains unresolved")
+	local original = first._pendingWrite
+	local revision = store.data.Player_1234.revision
+	store.loseResponses = false
+	store.failReads = false
+	clock.wall = 1241
+	local second = SessionService.new({
+		userId = 1234, store = store, httpService = http, jobId = "successor",
+		now = function() return clock.wall end,
+		noCacheOptions = function() return { UseCache = false } end, wait = function() end,
+	})
+	check(second:Start().ok, "successor acquires expired lease")
+	local successorToken = second._store:GetLeaseToken()
+	check(first:Reconcile().ok, "original applied operation is acknowledged")
+	equal(first:ReadSnapshot("takeover-publish").lookup.status, "APPLIED", "durable outcome preserved")
+	equal(store.data.Player_1234.lastSaveOpId, original.opId, "original operation identity retained")
+	equal(store.data.Player_1234.revision, revision, "reconciliation does not mutate")
+	local writable, denied = first:IsWritable()
+	equal(writable, false, "late session stays locked")
+	equal(denied, "LOCKED", "loss of lease is explicit")
+	equal(first._store:GetLeaseToken(), nil, "foreign authority is never adopted")
+	check(second:IsWritable(), "successor remains authoritative")
+	local writes = store.updates
+	equal(first._store:Save(first:GetConfirmedProfile(), "late-save").code, "LOCKED", "direct save denied")
+	equal(first:Advance(0).code, "LOCKED", "new settlement denied")
+	equal(first:RenewLease().code, "LOCKED", "renewal denied")
+	equal(first:Mutate({ requestId = "late-accept", action = "AcceptMission",
+		payload = { missionId = "food_stall_launch" } }).code, "LOCKED", "new economic command denied")
+	equal(first._store:Release("late-release").code, "LOCKED", "release denied")
+	equal(first:Stop().code, "LOCKED", "shutdown cannot release foreign lease")
+	equal(store.updates, writes, "lost owner performs no further UpdateAsync")
+	equal(store.data.Player_1234.lease.token, successorToken, "successor token unchanged")
+	equal(store.data.Player_1234.lease.jobId, "successor", "successor job unchanged")
+	check(second:IsWritable(), "successor still writable after stale shutdown")
+	check(second:Stop().ok, "successor alone releases its lease")
+end)
+
+local function reinsert(value: any, reverse: boolean): any
+	if typeof(value) ~= "table" then return value end
+	local keys = {}
+	for key in pairs(value) do table.insert(keys, key) end
+	table.sort(keys, function(a: any, b: any)
+		if typeof(a) ~= typeof(b) then return typeof(a) < typeof(b) end
+		return if reverse then a > b else a < b
+	end)
+	local result = {}
+	for _, key in ipairs(keys) do result[key] = reinsert(value[key], reverse) end
+	return result
+end
+
+test("Remediation: real HttpService recovers an applied publish after lost response and read failures", function()
+	local realHttp = game:GetService("HttpService")
+	for _, reverse in ipairs({ false, true }) do
+		local session, store, clock = fixture(fresh(), true, realHttp)
+		check(session:Start().ok, "real serializer session starts")
+		store.loseNextResponse = true
+		store.failReads = true
+		local reads = store.gets
+		equal(publish(session, "native-lost-publish").ok, false, "committed response is unresolved")
+		check(store.gets > reads, "fresh reconciliation reads were attempted and failed")
+		local operation = session._pendingWrite.opId
+		local revision = store.data.Player_1234.revision
+		local commits = store.commits
+		store.data.Player_1234.profile = realHttp:JSONDecode(realHttp:JSONEncode(
+			reinsert(store.data.Player_1234.profile, reverse)
+		))
+		store.failReads = false
+		check(session:Reconcile().ok, "same logical proposal reconciles")
+		local read = session:ReadSnapshot("native-lost-publish")
+		equal(read.lookup.status, "APPLIED", "original mutation recognized")
+		equal(read.snapshot.balance, 0, "unsettled credit is never spendable")
+		equal(read.snapshot.pendingPost.postId, store.data.Player_1234.profile.pendingPost.postId, "same post")
+		equal(store.data.Player_1234.revision, revision, "no second mutation revision")
+		equal(store.data.Player_1234.lastSaveOpId, operation, "original operation identity")
+		equal(store.commits, commits, "recovery never commits another proposal")
+		check(publish(session, "native-lost-publish").ok, "original request replays")
+		equal(store.commits, commits, "replay performs no mutation")
+		clock.wall = session:GetConfirmedProfile().pendingPost.settleAt
+		check(session:Advance(0).ok, "original post settles")
+		equal(session:GetConfirmedProfile().balance, 15, "exactly one payout")
+		commits = store.commits
+		check(session:Advance(0).ok, "later tick is safe")
+		equal(store.commits, commits, "no second settlement")
+		equal(session:GetConfirmedProfile().balance, 15, "payout stays confirmed once")
+	end
+end)
+
+test("Remediation: profile identity preserves nested numeric arrays across insertion orders", function()
+	local session, store = fixture(worker(), false, game:GetService("HttpService"))
+	check(session:Start().ok, "nested profile loads")
+	local profile = session:GetConfirmedProfile()
+	profile.claimedRunIdsWindow = { "claim-a", "claim-b" }
+	local persistence = session._store
+	check(persistence:Save(profile, "nested-identity").ok, "original proposal saved")
+	local revision = store.data.Player_1234.revision
+	check(persistence:Save(reinsert(profile, true), "nested-identity").ok, "insertion order is irrelevant")
+	equal(store.data.Player_1234.revision, revision, "same values do not write again")
+	local writes = store.updates
+	local changed = copy(profile)
+	changed.workers[1].hireId = "different-worker"
+	equal(persistence:Save(changed, "nested-identity").code, "INVALID_PROFILE", "nested array values cannot disappear")
+	changed = copy(profile)
+	changed.claimedRunIdsWindow = { "claim-b", "claim-a" }
+	equal(persistence:Save(changed, "nested-identity").code, "INVALID_PROFILE", "array order is significant")
+	changed = copy(profile)
+	changed.balance += 1
+	equal(persistence:Save(changed, "nested-identity").code, "INVALID_PROFILE", "changed number is not a replay")
+	equal(store.updates, writes, "all conflicts rejected before transport")
+end)
+
+test("Remediation: unrepresentable profile identities fail closed before any write", function()
+	local session, store = loaded()
+	local builders = {
+		function(p) p.malformed = p end,
+		function(p)
+			local child = {}
+			p.malformed = child
+			for _ = 1, 20 do local nextChild = {}; child.next = nextChild; child = nextChild end
+		end,
+		function(p) p.malformed = table.create(17000, 1) end,
+		function(p) p.malformed = string.rep("x", 1048577) end,
+		function(p) p.malformed = setmetatable({}, {}) end,
+		function(p) p.malformed = math.huge end,
+		function(p) p.malformed = 0 / 0 end,
+		function(p) p.malformed = function() end end,
+		function(p) p.malformed = { [true] = "unsupported key" } end,
+	}
+	local writes = store.updates
+	for index, build in ipairs(builders) do
+		local malformed = fresh()
+		build(malformed)
+		equal(session._store:Save(malformed, `malformed-identity-{index}`).code, "INVALID_PROFILE", "bounded identity rejection")
+	end
+	equal(store.updates, writes, "malformed identity never reaches persistence")
+	equal(store.data.Player_1234.profile.balance, 0, "confirmed profile remains intact")
+end)
+
+test("Remediation: Advance reports failed settlement and recovers the same payout once", function()
+	local session, store, clock = loaded()
+	check(publish(session).ok, "post committed")
+	clock.wall = session:GetConfirmedProfile().pendingPost.settleAt
+	store.failWrites = true
+	local result = session:Advance(0)
+	equal(result.ok, false, "failed settlement is not success")
+	equal(result.code, "SAVE_UNAVAILABLE", "settlement failure propagated")
+	equal(session:GetConfirmedProfile().balance, 0, "confirmed balance retained")
+	local operation = session._pendingWrite.opId
+	store.failWrites = false
+	check(session:Reconcile().ok, "settlement reconciles")
+	equal(store.data.Player_1234.lastSaveOpId, operation, "same settlement identity")
+	equal(session:GetConfirmedProfile().balance, 15, "one payout confirmed")
+	local writes = store.updates
+	check(session:Advance(0).ok, "later tick is healthy")
+	equal(store.updates, writes, "no second settlement")
+end)
+
+test("Remediation: Advance reports failed worker bank without losing its accrued interval", function()
+	local session, store, clock = loaded(worker(), true)
+	clock.wall = 1030
+	clock.connected = 30
+	store.failWrites = true
+	local result = session:Advance(0)
+	equal(result.ok, false, "failed bank is not success")
+	equal(result.code, "SAVE_UNAVAILABLE", "bank failure propagated")
+	equal(result.banked, 0, "no speculative bank")
+	equal(session:GetConfirmedProfile().balance, 10000, "confirmed wallet unchanged")
+	equal(session:GetPendingWorkerCuan(), 45, "admitted income retained")
+	local operation = session._pendingWrite.opId
+	store.failWrites = false
+	check(session:Reconcile().ok, "bank reconciles")
+	equal(store.data.Player_1234.lastSaveOpId, operation, "same bank identity")
+	equal(session:GetConfirmedProfile().balance, 10045, "bank confirmed once")
+	equal(session:GetPendingWorkerCuan(), 0, "no duplicated restored accrual")
+	local writes = store.updates
+	check(session:Advance(0).ok, "later tick is healthy")
+	equal(store.updates, writes, "no second bank")
 end)
 
 local passed, failed = 0, 0

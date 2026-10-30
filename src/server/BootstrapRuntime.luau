@@ -282,16 +282,34 @@ function Runtime:Step()
 					local ok, failure = xpcall(function()
 						if not self:_current(record) then return end
 						local session = record.session
+						local failureKey: string? = nil
+						local function observe(phase: string, result: any)
+							if not result.ok and result.code ~= "BUSY" and failureKey == nil then
+								failureKey = phase .. ":" .. tostring(result.code)
+							end
+						end
 						-- Reconcile only the exact retained proposal, never rerun UNKNOWN commands.
-						session:Reconcile()
-						local writable = session:IsWritable()
-						if writable then session:Advance(0) end
-						if not self:_current(record) then return end
-						writable = session:IsWritable()
-						if writable and self._options.now() >= session:GetLeaseExpiresAt() - 240 + 90 then
-							session:RenewLease()
+						observe("Reconcile", session:Reconcile())
+						local writable, denied = session:IsWritable()
+						if writable then
+							observe("Advance", session:Advance(0))
+						else
+							observe("Lease", { ok = false, code = denied or "NOT_READY" })
 						end
 						if not self:_current(record) then return end
+						writable, denied = session:IsWritable()
+						if writable and self._options.now() >= session:GetLeaseExpiresAt() - 240 + 90 then
+							observe("RenewLease", session:RenewLease())
+						end
+						if not self:_current(record) then return end
+						if failureKey ~= nil then
+							if record.schedulerFailure ~= failureKey then
+								record.schedulerFailure = failureKey
+								self._report(`BS-06 scheduler {failureKey} for {record.player.UserId}`)
+							end
+						elseif session:IsWritable() then
+							record.schedulerFailure = nil
+						end
 						if self._options.monotonic() - record.lastWorldAttempt >= 2 then
 							self:_syncWorld(record)
 						end

@@ -832,42 +832,64 @@ function ProfileStore:_acquireFreshLease(): LoadResult
 	return { ok = true, code = "OK", envelope = deepCopy(result) }
 end
 
--- Deterministic fingerprint of a profile payload. Used to detect an
--- operationId being reused with DIFFERENT content, which must be
--- INVALID_INPUT rather than a silent replay. JSONEncode normalizes key order;
--- the type tag distinguishes 1 from "1" and true.
--- Structural digest used only if JSONEncode is unavailable. It must be
--- value-based (never table identity) so an identical payload re-sent in a new
--- table still produces the same digest and a legitimate retry stays idempotent.
-local function structuralDigest(value: any, depth: number): string
-	if depth > 8 then
-		return "..."
-	end
-	local t = typeof(value)
-	if t == "table" then
-		local keys = {}
-		for k in pairs(value) do
-			table.insert(keys, tostring(k))
+-- A bounded, typed value encoding, not JSON text or a lossy hash. Length-prefixed
+-- strings and preserved key types make punctuation and numeric arrays unambiguous.
+local function fingerprintProfile(profile: any): (string?, string?)
+	local ok, result = pcall(function(): string
+		local parts: { string } = {}
+		local active: { [any]: boolean } = {}
+		local nodes, bytes = 0, 0
+		local function append(part: string)
+			bytes += #part
+			if bytes > 1048576 then error("profile identity exceeds 1 MiB", 0) end
+			table.insert(parts, part)
 		end
-		table.sort(keys)
-		local parts = {}
-		for _, k in ipairs(keys) do
-			table.insert(parts, k .. "=" .. structuralDigest((value :: any)[k], depth + 1))
+		local function visit(value: any, depth: number)
+			nodes += 1
+			if nodes > 16384 or depth > 16 then error("profile identity traversal limit exceeded", 0) end
+			local kind = typeof(value)
+			if kind == "nil" then
+				append("z;")
+			elseif kind == "boolean" then
+				append(if value then "b1;" else "b0;")
+			elseif kind == "number" then
+				if not isFiniteNumber(value) then error("profile identity requires finite numbers", 0) end
+				append("n" .. string.format("%.17g", if value == 0 then 0 else value) .. ";")
+			elseif kind == "string" then
+				append("s" .. tostring(#value) .. ":")
+				append(value)
+			elseif kind == "table" then
+				if getmetatable(value) ~= nil or active[value] then error("profile identity requires acyclic plain tables", 0) end
+				active[value] = true
+				local keys: { any } = {}
+				for key in next, value do
+					local keyType = typeof(key)
+					if keyType ~= "string" and (keyType ~= "number" or not isFiniteNumber(key)) then
+						error("profile identity requires string or finite numeric keys", 0)
+					end
+					if #keys >= 16384 - nodes then error("profile identity traversal limit exceeded", 0) end
+					table.insert(keys, key)
+				end
+				table.sort(keys, function(a: any, b: any): boolean
+					if typeof(a) ~= typeof(b) then return typeof(a) < typeof(b) end
+					return a < b
+				end)
+				append("t" .. tostring(#keys) .. ":{")
+				for _, key in ipairs(keys) do
+					visit(key, depth + 1)
+					visit(value[key], depth + 1)
+				end
+				append("}")
+				active[value] = nil
+			else
+				error(`unsupported profile identity value: {kind}`, 0)
+			end
 		end
-		return "{" .. table.concat(parts, ",") .. "}"
-	end
-	return t .. ":" .. tostring(value)
-end
-
-
-local function fingerprintProfile(httpService: any, profile: any): string
-	local ok, encoded = pcall(function()
-		return httpService:JSONEncode(profile)
+		visit(profile, 0)
+		return table.concat(parts)
 	end)
-	if ok then
-		return encoded :: string
-	end
-	return "digest:" .. structuralDigest(profile, 0)
+	if ok then return result, nil end
+	return nil, tostring(result)
 end
 
 -- ===== Save =====
@@ -903,7 +925,10 @@ function ProfileStore:Save(profile: any, operationId: string, intent: string?): 
 	-- in the outcome ring is a DIFFERENT encoding (action+payload, not the
 	-- whole profile) -- comparing the two would be a category error that
 	-- rejects legitimate retries. See the identifier-responsibility note above.
-	local fingerprint = fingerprintProfile(self._httpService, profile)
+	local fingerprint, identityError = fingerprintProfile(profile)
+	if fingerprint == nil then
+		return { ok = false, code = "INVALID_PROFILE", detail = identityError }
+	end
 	local knownFingerprint = self._opPayloads[operationId]
 	if knownFingerprint ~= nil and knownFingerprint ~= fingerprint then
 		return {
@@ -1008,7 +1033,7 @@ function ProfileStore:Save(profile: any, operationId: string, intent: string?): 
 				-- The comparison is against the durable profile, which is the
 				-- authoritative record of what this operationId actually wrote.
 				local durableProfile = current.profile
-				if durableProfile ~= nil and fingerprintProfile(self._httpService, durableProfile) ~= fingerprint then
+				if durableProfile ~= nil and fingerprintProfile(durableProfile) ~= fingerprint then
 					return {
 						ok = false,
 						code = "INVALID_PROFILE",
@@ -1017,7 +1042,10 @@ function ProfileStore:Save(profile: any, operationId: string, intent: string?): 
 				end
 				self._envelope = deepCopy(current)
 				self._lastConfirmedRevision = current.revision
-				self._leaseToken = current.lease and current.lease.token or self._leaseToken
+				-- Recognizing our durable outcome never reacquires lease authority.
+				if typeof(current.lease) ~= "table" or current.lease.token ~= token then
+					self._leaseToken = nil
+				end
 				return { ok = true, code = "OK", revision = current.revision }
 			end
 			if typeof(current) == "table" and typeof(current.lease) == "table" and current.lease.token ~= token then

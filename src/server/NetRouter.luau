@@ -360,7 +360,7 @@ function NetRouter:HandleCommand(player: any, envelope: any): boolean
 	end
 	-- No yielding operation may occur between admission and reservation. Runtime's
 	-- hook captures connected time without writing; domain owns its only write lane.
-	local ok, result = pcall(function()
+	local ok, result = pcall(function(): { ok: boolean, code: string, revision: number?, data: any?, lookup: string? }
 		if self._beforeMutation ~= nil then self._beforeMutation(player) end
 		if self._records[player] ~= record then return { ok = false, code = "LOCKED" } end
 		return record.session:Mutate({ requestId = id, action = action, payload = command.payload })
@@ -384,8 +384,9 @@ function NetRouter:HandlePrompt(prompt: any, player: any): boolean
 	local record = self._records[player]
 	if record == nil then return false end
 	self:_current(player, record)
+	local send = self._send :: typeof(NetRouter._send)
 	local function deny(code: string): boolean
-		self:_send(player, record, self._sendSnapshot, { kind = "OpenComputerDenied", code = code })
+		send(self, player, record, self._sendSnapshot, { kind = "OpenComputerDenied", code = code })
 		return false
 	end
 	local read = record.session:ReadSnapshot()
@@ -410,7 +411,7 @@ function NetRouter:HandlePrompt(prompt: any, player: any): boolean
 	assert(ascii(id, 1, 64), "NetRouter: invalid generated dashboard ID")
 	local expiresAt = self._now() + IDLE_SECONDS
 	record.dashboard = { id = id, expiresAt = expiresAt, deadline = self._monotonic() + IDLE_SECONDS, character = player.Character }
-	return self:_send(player, record, self._sendSnapshot, {
+	return send(self, player, record, self._sendSnapshot, {
 		kind = "OpenComputer", dashboardSessionId = id, expiresAt = expiresAt, serverTime = self._now(), state = read.snapshot,
 	})
 end

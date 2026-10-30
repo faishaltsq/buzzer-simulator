@@ -1529,18 +1529,20 @@ function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: 
 	end
 	local session: any = self
 	-- A due settlement is handled by the lane through its stable identity.
-	local banked = 0
+	local result: { ok: boolean, code: string, banked: number } = { ok = true, code = "OK", banked = 0 }
 	local entered = self:_tryRunLane(function()
-		local settle = self:_settleDue()
+		local settle = session:_settleDue()
 		if not settle.ok then
+			result.ok = false
+			result.code = settle.code
 			return
 		end
 		-- A partial reconciliation cannot postpone an already-overdue bank.
-		if self._unbankedSeconds > 0 and (self._workerBankDueAt ~= nil or self._unbankedSeconds >= WORKER_BANK_INTERVAL) then
-			local bank = self:_bankWorker()
-			if bank.ok then
-				banked = bank.credited
-			end
+		if session._unbankedSeconds > 0 and (session._workerBankDueAt ~= nil or session._unbankedSeconds >= WORKER_BANK_INTERVAL) then
+			local bank = session:_bankWorker()
+			result.ok = bank.ok
+			result.code = bank.code
+			result.banked = bank.credited
 		end
 	end)
 	if not entered then
@@ -1548,7 +1550,7 @@ function SessionService:Advance(connectedSeconds: number): { ok: boolean, code: 
 		-- _pendingAccrual, so nothing is lost; it is banked on the next turn.
 		return { ok = false, code = "BUSY", banked = 0 }
 	end
-	return { ok = true, code = "OK", banked = banked }
+	return result
 end
 
 -- Renew the lease when it is close to expiry, piggybacking any accrued worker

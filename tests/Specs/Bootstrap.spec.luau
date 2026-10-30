@@ -358,6 +358,88 @@ test("Expired lease prevents scheduler from inventing long-stall worker income",
 	end)
 end)
 
+local function schedulerReports(f)
+	local reports={}
+	for _,message in ipairs(f.reports) do
+		if string.find(message,"BS-06 scheduler",1,true) then table.insert(reports,message) end
+	end
+	return reports
+end
+
+for _, scenario in ipairs({
+	{name="settlement", profile=starter, seconds=18, recoveredBalance=15, phase="Advance"},
+	{name="banking", profile=worker, seconds=30, recoveredBalance=45, phase="Advance"},
+	{name="renewal", profile=starter, seconds=90, recoveredBalance=0, phase="RenewLease"},
+}) do
+	test(`Remediation: scheduler surfaces {scenario.name} and reconciliation failures without log spam`,function()
+		withFixture(scenario.profile(),function(f)
+			f.runtime:Start()
+			local session=f.sessions[f.player]
+			if scenario.name=="settlement" then
+				local reply=f:command("report-publish","PublishOrganic",{templateId="snack_meme"},f:open())
+				assert(reply.ok,"publish accepted")
+			end
+			local balance=session:GetConfirmedProfile().balance
+			f.store.failWrite=true
+			f:step(scenario.seconds)
+			equal(session:GetConfirmedProfile().balance,balance,"failed write never changes confirmed Cuan")
+			local reports=schedulerReports(f)
+			assert(#reports==1 and string.find(reports[1],scenario.phase,1,true),"failed phase reported")
+			assert(string.find(reports[1],"SAVE_UNAVAILABLE",1,true),"actionable code reported")
+			local operation=session._pendingWrite.opId
+			f:step(1)
+			reports=schedulerReports(f)
+			equal(#reports,2,"reconciliation failure becomes observable")
+			assert(string.find(reports[2],"Reconcile",1,true),"reconciliation phase identified")
+			for _=1,4 do f:step(1) end
+			equal(#schedulerReports(f),2,"unchanged background failure is not logged every tick")
+			f.store.failWrite=false
+			f:step(1)
+			equal(session:GetConfirmedProfile().balance,scenario.recoveredBalance,"recovery confirms original credit once")
+			equal(f.data[`Player_{f.player.UserId}`].lastSaveOpId,operation,"original proposal retained")
+			local writes=f.store.updates
+			f:step(1)
+			equal(f.store.updates,writes,"healthy tick never repeats recovered write")
+			equal(session:GetPendingWorkerCuan(),if scenario.name=="banking" then 1 else 0,"only fresh healthy time accrues")
+			equal(#schedulerReports(f),2,"success adds no error report")
+		end)
+	end)
+end
+
+test("Remediation: held durable lane reports BUSY without overlapping writes or error spam",function()
+	withFixture(worker(),function(f)
+		f.runtime:Start()
+		local original=f.store.UpdateAsync
+		local active,maximum=0,0
+		function f.store:UpdateAsync(key,transform)
+			active+=1;maximum=math.max(maximum,active)
+			local ok,result=pcall(original,self,key,transform)
+			active-=1
+			if not ok then error(result,0) end
+			return result
+		end
+		f.store.onUpdate=function()
+			f.store.onUpdate=nil
+			coroutine.yield("held bank")
+		end
+		f:step(30)
+		local held=f.jobs[#f.jobs]
+		local session=f.sessions[f.player]
+		local attempts=f.store.updates
+		equal(session:Reconcile().code,"BUSY","held reconciliation backpressure")
+		equal(session:Advance(0).code,"BUSY","held advancement backpressure")
+		equal(session:RenewLease().code,"BUSY","held renewal backpressure")
+		for _=1,5 do f:step(1) end
+		equal(f.store.updates,attempts,"no overlapping or competing UpdateAsync")
+		equal(#schedulerReports(f),0,"expected BUSY does not spam errors")
+		local ok,err=coroutine.resume(held);assert(ok,err)
+		f:step(25)
+		equal(maximum,1,"one durable lane throughout")
+		equal(session:GetConfirmedProfile().balance,90,"all sixty connected seconds credited once")
+		equal(#schedulerReports(f),0,"healthy completion remains quiet")
+	end)
+end)
+
 local passed=0
 for _, case in ipairs(tests) do
 	local ok,err=pcall(case.fn)

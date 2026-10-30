@@ -1,0 +1,149 @@
+{
+  "reviewedBaseline": "6d1884e95ef964c41bbfae1ba809acce59d3974f",
+  "environment": "Actual Windows Roblox Studio ExecuteMultiplayerTestAsync(2), rerun after targeted persistence remediation.",
+  "sourceSha256": {
+    "src/server/ProfileStore.luau": "02e51ba8ce72ee43cf7ce3d1ac37d1446eb5484c58e3095a7d4c3915ed61c0a7",
+    "src/server/SessionService.luau": "d2b0feca2c8e698471151aee086518dc5a9c1973e83b5a1891709dbc8e935055",
+    "src/server/BootstrapRuntime.luau": "ec9a39e4206890250e894dc7462880fe64194a97fdcb29bffb3e9693d407b09c",
+    "src/server/NetRouter.luau": "99b58feb545bea362b4796047943d401a5d20352b0c6b4617239e43b2edeaef9",
+    "src/server/Bootstrap.server.luau": "6d711b76711235098b94944a4425142fb5bb198f2ea9bc800ce6032eb15f7a57"
+  },
+  "persistence": "Actual ProfileStore/SessionService over isolated in-memory adapter; not real DataStore G2.",
+  "promptScope": "Automated server HandlePrompt entry point with the real owned ProximityPrompt and a living real character; not a new claim of a keyboard-triggered prompt in this rerun.",
+  "rejoinScope": "Runtime RemovePlayer/AddPlayer for same actual Player, not a transport disconnect/rejoin.",
+  "result": {
+    "players": 2,
+    "realDataStore": false,
+    "sessionRecreation": "same real Player server lifecycle; not transport reconnect",
+    "failed": 0,
+    "passed": 31,
+    "results": [
+      {
+        "ok": true,
+        "name": "two real clients connected",
+        "detail": 2
+      },
+      {
+        "ok": true,
+        "name": "both clients loaded confirmed starters",
+        "detail": "ready plus actual client listeners"
+      },
+      {
+        "ok": true,
+        "name": "exactly three production remotes"
+      },
+      {
+        "ok": true,
+        "name": "distinct server-owned rooms"
+      },
+      {
+        "ok": true,
+        "name": "one terminal and one phone per room"
+      },
+      {
+        "ok": true,
+        "name": "private actual remote snapshots"
+      },
+      {
+        "ok": true,
+        "name": "sanitized confirmed projection"
+      },
+      {
+        "ok": true,
+        "name": "validated prompt private OpenComputer"
+      },
+      {
+        "ok": true,
+        "name": "foreign-room prompt denied"
+      },
+      {
+        "ok": true,
+        "name": "denial delivered without opening"
+      },
+      {
+        "ok": true,
+        "name": "second client cannot forge first user identity"
+      },
+      {
+        "ok": true,
+        "name": "second client cannot borrow first dashboard ID"
+      },
+      {
+        "ok": true,
+        "name": "forgery changes neither profile"
+      },
+      {
+        "ok": true,
+        "name": "real remote publish succeeds"
+      },
+      {
+        "ok": true,
+        "name": "same-ID retry creates no new transaction"
+      },
+      {
+        "ok": true,
+        "name": "query and mutation correlations independent"
+      },
+      {
+        "ok": true,
+        "name": "no speculative Cuan before settlement"
+      },
+      {
+        "ok": true,
+        "name": "second client state isolated after first publish"
+      },
+      {
+        "ok": true,
+        "name": "aggregate scheduler settles due post"
+      },
+      {
+        "ok": true,
+        "name": "confirmed settled credit only once"
+      },
+      {
+        "ok": true,
+        "name": "late replay cannot publish or pay again"
+      },
+      {
+        "ok": true,
+        "name": "real mission accepted"
+      },
+      {
+        "ok": true,
+        "name": "real mission publish accepted"
+      },
+      {
+        "ok": true,
+        "name": "mission settlement through scheduler"
+      },
+      {
+        "ok": true,
+        "name": "real claim confirmed"
+      },
+      {
+        "ok": true,
+        "name": "confirmed purchase and world sync"
+      },
+      {
+        "ok": true,
+        "name": "leave clears lease and room"
+      },
+      {
+        "ok": true,
+        "name": "same actor session recreation restores confirmed progress"
+      },
+      {
+        "ok": true,
+        "name": "reconnect-safe durable APPLIED lookup"
+      },
+      {
+        "ok": true,
+        "name": "other actual client remains unchanged"
+      },
+      {
+        "ok": true,
+        "name": "clean aggregate shutdown"
+      }
+    ]
+  }
+}

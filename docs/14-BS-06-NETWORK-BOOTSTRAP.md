@@ -102,18 +102,22 @@ is not configured, record that gate BLOCKED/PENDING and complete supported tests
 
 | File | Role |
 |---|---|
-| `src/server/NetRouter.luau` | New. Exact validation, three private remotes, rate/publish admission, dashboard generations, durable lookup routing. |
-| `src/server/BootstrapRuntime.luau` | New. Testable orchestration: join/leave, world sync, one aggregate scheduler, disposable listeners. |
+| `src/server/NetRouter.luau` | New. Exact validation, private remotes, admission, dashboard generations and lookup routing; narrow sender/result annotations added during remediation. |
+| `src/server/BootstrapRuntime.luau` | New. Lifecycle and aggregate scheduler; remediation observes structured failures and deduplicates phase/code reports. |
 | `src/server/Bootstrap.server.luau` | New. Production wiring only; excluded from the test project. |
-| `src/server/SessionService.luau` | Amended: `InitializeStarter`, `IsWritable`, `GetLeaseExpiresAt`, `ReadSnapshot`, `Reconcile`, `CaptureConnectedTime`, lease-scoped server operation IDs, bounded live/accrual caches. |
-| `src/server/ProfileStore.luau` | Amended: bounded 64-entry transaction-fingerprint cache (no schema/lease/formula change). |
-| `tests/Specs/NetRouter.spec.luau` | New, 89 cases. |
-| `tests/Specs/SessionIntegration.spec.luau` | New, 39 cases. |
-| `tests/Specs/Bootstrap.spec.luau` | New, 13 cases. |
+| `src/server/SessionService.luau` | Amended: guarded initialization, writable/read/reconciliation/clock surfaces, lease-scoped operation IDs, bounded caches; remediation propagates failed settlement/bank results from `Advance`. |
+| `src/server/ProfileStore.luau` | Amended: bounded fingerprint cache, deterministic typed value identity, and applied-save reconciliation that cannot acquire a foreign lease. No persisted schema or formula change. |
+| `tests/Specs/NetRouter.spec.luau` | 89 cases, unchanged by remediation. |
+| `tests/Specs/SessionIntegration.spec.luau` | 45 cases: original 39 plus six remediation cases. |
+| `tests/Specs/Bootstrap.spec.luau` | 17 cases: original 13 plus four remediation cases. |
+| `tests/Specs/SessionService.spec.luau` | All 73 cases retained. Only the obsolete assertion that failed banking returns `ok=true` was removed; banked/balance/pending-accrual safety assertions remain. |
 | `default.project.json`, `test.project.json` | Map the new modules; production omits the test Runner. |
 | `docs/14-BS-06-NETWORK-BOOTSTRAP.md` | This plan and handoff. |
-| `docs/evidence/BS-06-regressions.txt` | Retained native output for all 461 case passes and ten suite summaries. |
-| `docs/evidence/BS-06-native-runtime.json` | Actual two-client Studio runtime result: 31/31 integration checks. |
+| `docs/evidence/BS-06-regressions.txt`, `BS-06-native-runtime.json` | Historical pre-remediation evidence: 461 cases and 31 two-client checks. |
+| `docs/evidence/BS-06-remediation-regressions.txt` | Complete current native Play case/suite output: 471/471. |
+| `docs/evidence/BS-06-remediation-faults.json` | Observed failing-before, passing-after and P1 mutation-verification results. |
+| `docs/evidence/BS-06-remediation-static.txt` | Actual available-checker output and environment limitations. |
+| `docs/evidence/BS-06-remediation-runtime.json` | Post-remediation rerun of the existing two-client scenario: 31/31, with source-file identities and explicit evidence scope. |
 
 No UI, world asset, catalog, economy formula, tier, schema or content change.
 
@@ -182,25 +186,32 @@ nonblocking.
 | WorldService | 30/30 |
 | FeedService | 18/18 |
 | NetRouter (new) | 89/89 |
-| SessionIntegration (new) | 39/39 |
-| Bootstrap (new) | 13/13 |
-| **Total** | **461/461, 10/10 suites, `BS01_TESTS_PASSED`, zero failures** |
+| SessionIntegration | 45/45 |
+| Bootstrap | 17/17 |
+| **Total** | **471/471, 10/10 suites, `BS01_TESTS_PASSED`, zero failures** |
 
-Legacy total is exactly 320; new coverage is 141. Complete case and suite output
-was recovered from Studio's durable log and retained in
-[`evidence/BS-06-regressions.txt`](evidence/BS-06-regressions.txt). This is filtered
-assertion/summary output, not the entire engine/system log. The earlier console
-tool response truncated its first case lines; no results were invented or
-reconstructed from source.
+All 461 pre-remediation case names remain; ten focused regressions were added.
+The initial full rerun caught a contradictory legacy assertion:
+`expectEqual(bank.ok, true, "advance itself does not throw")`. A returned failure
+is not a thrown exception. That obsolete assertion was removed, not re-pinned;
+the case and every banked/balance/pending-accrual safety check remain. New
+regressions assert `false` / `SAVE_UNAVAILABLE` explicitly.
+
+Complete current case/suite output is retained in
+[`evidence/BS-06-remediation-regressions.txt`](evidence/BS-06-remediation-regressions.txt).
+This is filtered native assertion/summary output, not the entire engine log.
+The older 461-case transcript is retained as historical evidence.
 
 ### Actual Studio runtime verification
 
-`StudioTestService:ExecuteMultiplayerTestAsync(2)` completed with **31/31 checks,
-zero failures**, using two real Studio clients, actual Players, private
-RemoteEvents, Heartbeat, rooms and all existing server domain modules. Persistence
-used an isolated in-memory adapter; this does **not** close real DataStore G2.
-The complete result is retained in
-[`evidence/BS-06-native-runtime.json`](evidence/BS-06-native-runtime.json).
+The original and post-remediation
+`StudioTestService:ExecuteMultiplayerTestAsync(2)` runs each completed with
+**31/31 checks, zero failures**, using two real Studio clients, actual Players,
+private RemoteEvents, Heartbeat, rooms and existing server domain modules.
+Persistence used an isolated in-memory adapter; this does **not** close G2.
+The latest complete result is retained in
+[`evidence/BS-06-remediation-runtime.json`](evidence/BS-06-remediation-runtime.json);
+the earlier result remains in `evidence/BS-06-native-runtime.json`.
 
 Observed behavior:
 
@@ -212,8 +223,9 @@ Observed behavior:
 - Owned-prompt authorization delivered private `OpenComputer`; the foreign-room
   prompt delivered denial without opening. The automated probe called the server
   prompt handler with the real owned prompt and a living real character.
-  Separately, a single-client keyboard **E** interaction exercised actual
-  `ProximityPromptService.PromptTriggered` and received the expected opening.
+  Separately, the original pre-remediation single-client keyboard **E**
+  interaction exercised actual `ProximityPromptService.PromptTriggered`.
+  The remediation rerun does not claim a new keyboard-triggered prompt check.
 - A real organic publish remained at confirmed balance zero until settlement;
   the aggregate scheduler credited 15 once. Immediate and late same-ID retries
   performed no additional transaction. Lookup query and original mutation IDs
@@ -234,12 +246,16 @@ no production BuzzerOS UI or extra production remote was introduced.
 
 `rojo build -o build/BuzzerSimulator.rbxlx` and
 `rojo build test.project.json -o build/BuzzerTests.rbxlx` both succeed.
-`lute lint` returned nonzero with unused-variable warnings (including variables
-used only for Instance property writes/import paths). `lute check` also returned
-nonzero: Roblox globals/types and Instance-based requires are unresolved, and it
-reported additional strict inference diagnostics. These runs are **not** a clean
-static analysis gate. No project language server is configured. Native Studio
-execution and the passing suites are the exercised runtime evidence.
+`lute lint` returns nonzero for two unused-import warnings (`Shared` and
+`ReplicatedStorage`, used in Instance-path requires). `lute check` also returns
+nonzero. No configured LSP or installed `luau-lsp`, `luau-analyze`, or `selene`
+was found. Engine globals/types and Instance-based require resolution are
+environment issues; remaining receiver/record/clock inference diagnostics are
+not all dismissed as environment noise. Narrow sender-callable and mutation-result
+annotations removed the demonstrated denial/open message-shape and optional
+`data`/`lookup` diagnostics. No global checks were disabled. This is **not** a
+green Roblox-aware static gate; raw results are retained in
+[`evidence/BS-06-remediation-static.txt`](evidence/BS-06-remediation-static.txt).
 
 ### Security invariants
 
@@ -257,8 +273,12 @@ and bounded-chunked.
 
 1. **Real DataStore G2: BLOCKED/PENDING.** No isolated published development
    universe is configured; production keys were deliberately never touched.
-   Actual backend acquisition, conditional writes, transport rejoin and
-   competing-server lease conflicts still need that development configuration.
+   Actual backend acquisition, conditional writes, renewal/release/expiry,
+   genuine transport disconnect/rejoin with confirmed purchases/claims/pending
+   posts, and competing-server same-key lease conflicts still require that
+   isolated development configuration. Late applied-write acknowledgement must
+   be observed without restoring the old server's authority. Production keys
+   must remain untouched.
 2. **Static analysis is not a green gate.** `lute check` returned unresolved
    Roblox environment/type diagnostics and additional inference errors. A
    Roblox-aware type-check configuration and review remain necessary.
@@ -268,4 +288,59 @@ and bounded-chunked.
 The implementation and exercised native-runtime evidence are ready for independent
 review. This is not production DataStore release approval. BS-07 was not started;
 the implementation branch must not be merged as part of this task.
+
+### Critical persistence remediation
+
+The final review of `6d1884e95ef964c41bbfae1ba809acce59d3974f` requested three
+targeted corrections. No schema, economy, remotes, dashboard protocol, world art
+or production UI changed.
+
+1. **Applied does not mean owned.** An already-applied save may update the local
+   confirmed envelope/revision and acknowledge its outcome. Its backend lease
+   token is never assigned to this server. A foreign or absent backend token
+   clears the old acquisition token. Consequently `IsWritable` returns
+   `false, "LOCKED"`; direct Save, Advance, renewal, new mutation, release and
+   Stop cannot issue another `UpdateAsync` or alter the successor's token/job.
+   Reconcile/lookup still recognize the original mutation as applied.
+2. **Identity compares values, not JSON order.** The canonical encoder orders
+   dictionary keys by type/value and indexes numeric keys as numbers. Typed
+   scalars, length-prefixed strings and counted tables preserve nested array
+   values/order without table-address dependence or ambiguous delimiters.
+   Cycles, metatables, unsupported/nonfinite values and inputs exceeding depth16,
+   16,384 visited nodes or 1 MiB of identity are rejected explicitly, never
+   represented by truncation. These are traversal safety limits, not new
+   persisted fields. The unresolved-operation fingerprint reservation remains
+   before the write, preserving conflicting-payload protection.
+3. **Failed background work is not success.** `Advance` returns settlement or
+   bank failure codes while retaining confirmed state and the exact proposal/
+   accrual. The scheduler observes Reconcile/Advance/RenewLease outcomes and lease
+   denial through the existing report hook. One phase/code key per player
+   deduplicates identical failures; writable recovery resets it. Expected `BUSY`
+   stays quiet. No extra write, retry loop or economic command reissuance was added.
+
+Native focused regressions first failed on the reviewed implementations, then
+passed with the corrections. Both P1 regressions also failed when their reviewed
+implementations were restored in isolated in-memory ModuleScript variants, and
+passed again after restoration. Repository source was not reverted for mutation
+testing. The real-HttpService case commits a publish, loses its response, fails
+fresh reads, reorders/JSON-round-trips the backend profile, then reconciles with
+the original lease. Revision and operation identity remain stable; the original
+post pays 15 once. Nested-array value/order and changed-number conflicts remain
+rejected; cyclic, oversized and otherwise unrepresentable identities never write.
+
+See [`evidence/BS-06-remediation-faults.json`](evidence/BS-06-remediation-faults.json)
+for the exact observed assertions and phase results. The multi-session takeover
+uses deterministic clocks and an isolated fault store, not real DataStore G2.
+
+Both bounded pre-commit diff reviews (persistence and runtime) returned
+`passed=true`, with no additional confirmed findings. The temporary multiplayer
+launcher was moved out of Studio's plugin directory after the scenario ended;
+test observers and in-memory variants are absent from the committed Rojo maps.
+
+**Readiness: CONDITIONAL.** Targeted remediation, 471 native cases, the 31-check
+two-client rerun, both builds and P1 mutation verification pass. Real DataStore
+G2 and a clean Roblox-aware static-analysis gate remain open. This is ready for
+independent remediation review, not production release or automatic merge.
+
+
 
