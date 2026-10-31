@@ -107,23 +107,25 @@ Total Test Cases: 606/606 passed (0 failed)
 
 All journeys were executed natively in Roblox Studio Play mode (`BuzzerSimulator.rbxlx`, Studio instance `0a8f603b-846a-4571-b5fa-b04f231696a0`):
 
+> Re-verification (2026-10-31, evidence cleanup): the full A→E sequence was re-run end-to-end in a fresh Studio Play session (instance `f5c4b9b0-cb68-4483-8d07-f3ead60c3ebf`, `build/BuzzerSimulator.rbxlx` rebuilt at `c22598c`), reproducing balances 15 → 30 → 110 → 119 → 128 → 208 Cuan with `completedMissions = 2` and camera restored to `Custom`. `buzzline-feed-desktop.jpg` and `world-hud-confirmed-income.jpg` were re-captured from this run; the other 12 screenshots and their digests are unchanged from the original capture run.
+
 ### Journey A: Organic Post Publication & Settlement
 - Player interacted with the bedroom CRT terminal via `ProximityPrompt`; camera smoothly tweened to `OldCRT` at `TerminalSlot`; BuzzerOS Desktop opened with status `Open`.
 - Navigated to the **Create** tab; selected Template 1 (`snack_meme`); preview updated; clicked **Publish organic post**.
 - Network command dispatched; single global pending slot activated (`postId = "post-1"`, `mode = "organic"`, `finalImpact = 120`, `organicCuan = 15`, `settleAt = publishedAt + 18s`).
 - In-flight progress bar tracked server reveal countdown across 18 seconds.
 - Server confirmed settlement: spendable balance updated from 0 to 15 Cuan; confirmed result banner rendered "+15 Cuan, 120 Impact, 4 Likes, 1 Replies".
-- Navigated to **Buzzline Feed** tab: confirmed post displayed at the top of the feed alongside authored community cards.
+- Navigated to the **Buzzline** tab and jumped to the **Your posts** section: the confirmed organic post card displayed under "Your confirmed posts / 1" with the player initials avatar ("You / confirmed post") and its confirmation line "Organic post: 120 impact / +15 Cuan confirmed".
 
 ### Journey B: Mission Acceptance & Separate Bonus Claim
-- Navigated to **Missions** tab; viewed available sponsorship briefing (*Food Stall Launch* by Sambal Juara, target 100 impact, 80 bonus Cuan).
+- Navigated to **Missions** tab; viewed available sponsorship briefing (*Warung Mie Orbit*, the public title of mission `food_stall_launch`; target 100 impact, 80 bonus Cuan).
 - Clicked **Accept campaign**; mission status transitioned to `accepted` (`runId = "run-2"`).
 - Selected campaign template 1 (`meal_meme`); published campaign post (`postId = "post-2"`); waited 18s for server reveal.
 - Organic payout credited immediately (+15 Cuan, balance = 30 Cuan); accumulated impact reached 120/100; mission transitioned to `readyToClaim`.
 - Clicked **Claim bonus (+80 Cuan)**; authoritative server snapshot updated balance from 30 to 110 Cuan; `completedMissions` incremented to 1; active mission cleared.
 
 ### Journey C: Multi-Post Campaign Run with Weak Guidance
-- Accepted campaign `run-3` (*Food Stall Launch*).
+- Accepted campaign `run-3` (*Warung Mie Orbit*).
 - Selected weak template (`queue_thread`, 75 impact, 9 Cuan); published and waited 18s.
 - Organic payout (+9 Cuan) credited (balance = 119 Cuan); accumulated impact reached 75/100; status remained `accepted`; UI displayed informative progress: "Goal in progress: 75 / 100 Impact. Publish another post to complete."
 - Selected weak template (`queue_thread`) a second time; published and waited 18s.
@@ -150,8 +152,8 @@ All 14 review screenshots were authentically captured in native Roblox Studio Pl
 | `three-selectable-templates.jpg` | 1280×720 | 158,687 | `c81e66d0999fbc40f84011f826feebbc0c9336d864448a9752eed88e4dfb1300` | Desktop wide layout. Template 1 selected with active Amber stroke, selected indicator text, and full draft preview. |
 | `post-resolving-countdown.jpg` | 1280×720 | 162,590 | `ba4e611455cb35e67cd96dc81f04526e26ae970c4a3f815816542a0d255461e7` | Desktop wide layout. Organic post in-flight resolving with server-timed progress track and countdown timer. |
 | `confirmed-organic-payout.jpg` | 1280×720 | 170,750 | `039e0b4c8754e03522795e5b5899cfa662416fef7a369aac6096a1628759d75a` | Desktop wide layout. Post confirmed with +15 Cuan payout, 120 impact, likes, replies, and updated balance banner. |
-| `buzzline-feed-desktop.jpg` | 1280×720 | 154,317 | `37256461ce38e0c3f8e1dceecbf6773af09cd7102110caf6076ef7d73482dbec` | Desktop wide layout. Buzzline feed rendering confirmed player post at top with initials avatar alongside authored community cards. |
-| `missions-available.jpg` | 1280×720 | 142,141 | `51f4ef55dc7cdc6b8b36f3eccab4da9564b26ec9d18e541980552f4438d43650` | Desktop wide layout. Missions tab displaying available campaign briefing (*Food Stall Launch* by Sambal Juara) with 80 bonus Cuan. |
+| `buzzline-feed-desktop.jpg` | 1280×720 | 158,999 | `27e0c7e7632bfbcaed90c985e21b721690a49e53e6dfb2b39509d2ef1ea3218b` | Desktop wide layout. Buzzline **Your posts** section displaying the confirmed organic post card (initials avatar, "You / confirmed post", "Organic post: 120 impact / +15 Cuan confirmed") under "Your confirmed posts / 1". |
+| `missions-available.jpg` | 1280×720 | 142,141 | `51f4ef55dc7cdc6b8b36f3eccab4da9564b26ec9d18e541980552f4438d43650` | Desktop wide layout. Missions tab displaying available campaign briefing (*Warung Mie Orbit*, mission `food_stall_launch`) with 80 bonus Cuan. |
 | `accepted-campaign.jpg` | 1280×720 | 189,095 | `a59b852085afc59429d543e29b7989d2d36ec761eaf19bb7f5af83b53137759f` | Desktop wide layout. Accepted campaign displaying briefing header and embedded campaign post composer with campaign templates. |
 | `mission-resolving-post.jpg` | 1280×720 | 170,641 | `c09cec1253ed7c53414d3f8db87406d9b147188dce14a13bab6ae7ba474de668` | Desktop wide layout. Campaign post in-flight resolving with live countdown bar and disabled publish actions. |
 | `weak-mission-progress.jpg` | 1280×720 | 194,159 | `e3564597367d2086005ee7276b51197a92d237113de2c057e6e0cd9670d63704` | Desktop wide layout. Campaign progress after 1 weak post (75/100 impact), displaying partial progress bar and guidance to publish 2nd post. |
@@ -159,7 +161,7 @@ All 14 review screenshots were authentically captured in native Roblox Studio Pl
 | `claimed-bonus.jpg` | 1280×720 | 142,240 | `124684ed5179b3b9868fce85ffbd6a8de0672a61667c1280863c4adc96c932ac` | Desktop wide layout. Mission bonus claimed; balance updated to 110 Cuan; completed missions count incremented; ready for next campaign. |
 | `mobile-portrait-composer.jpg` | 390×844 | 109,425 | `62dd18c27a837170188230aadbcf071cb480f7180c69c051668937e6adc3d654` | Compact mobile portrait viewport (390×844 iPhone 14 preset). Bottom navigation rail active; post composer choice cards stacked vertically. |
 | `mobile-landscape-composer.jpg` | 844×390 | 68,621 | `903882625c1ff88c51a63676190c9e577173cbee809b7072f2e7e8c5c7801056` | Compact mobile landscape viewport (844×390 iPhone 14 preset). Post composer adjusted for horizontal touch display with accessible controls. |
-| `world-hud-confirmed-income.jpg` | 1280×720 | 184,470 | `a79d7bd453af857532c3cdd50b868694aa2d158317e364e038742f5ef4f8ea4d` | Bedroom world view after closing computer. Camera restored to character view; HUD top bar displaying confirmed balance of 208 Cuan. |
+| `world-hud-confirmed-income.jpg` | 1280×720 | 257,955 | `e10c18be2bd2b0fd9e8782fa765487faf7efc162be4ae9de9ef65f69fee7f405` | Bedroom world view after closing computer. Camera restored to character view; HUD top bar displaying confirmed balance of 208 Cuan. |
 
 *Viewport Emulation Disclosure:* Mobile viewports were authentically captured using `StudioDeviceSimulatorService` in edit mode (`iphone_14` preset, `ActualResolution` scaling, portrait $390\times 844$ and landscape $844\times 390$) followed by live Studio Play execution.
 
