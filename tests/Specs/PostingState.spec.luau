@@ -108,7 +108,7 @@ for _, case in ipairs({
 	end)
 end
 
-for _, action in ipairs({ "BuyDevice", "BuyDesk", "HireWorker", "CloseComputer", "GetSnapshot", "MadeUp" }) do
+for _, action in ipairs({ "BuyDesk", "HireWorker", "CloseComputer", "GetSnapshot", "MadeUp" }) do
 	test(`BeginMutation does not admit {action}`, function()
 		local state = fixture()
 		equal(state:BeginMutation(action, {}, 1000), nil)

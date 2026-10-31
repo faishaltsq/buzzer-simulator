@@ -17,6 +17,7 @@ local uiFolder = script.Parent:WaitForChild("ui")
 local Theme = require(uiFolder:WaitForChild("Theme") :: any)
 local Hud = require(uiFolder:WaitForChild("Hud") :: any)
 local Desktop = require(uiFolder:WaitForChild("Desktop") :: any)
+local PhoneEquipController = require(script.Parent:WaitForChild("PhoneEquipController") :: any)
 
 local player = Players.LocalPlayer
 local playerScripts = player:WaitForChild("PlayerScripts")
@@ -54,6 +55,7 @@ local openingGeneration = 0
 -- Forward declarations
 local hud: any = nil
 local desktop: any = nil
+local phoneEquip: any = nil
 local remotesFolder: Folder? = nil
 local commandRemote: RemoteEvent? = nil
 
@@ -282,6 +284,10 @@ hud = Hud.new({
 	parent = playerGui,
 })
 
+phoneEquip = PhoneEquipController.new({
+	parent = playerGui,
+})
+
 desktop = Desktop.new({
 	parent = playerGui,
 	playerName = player.DisplayName or player.Name,
@@ -294,7 +300,14 @@ desktop = Desktop.new({
 		local envelope = if action == "GetSnapshot"
 			then state:RefreshProgress(os.clock())
 			else state:BeginMutation(action, payload, os.clock())
-		if envelope then sendCommand(envelope) end
+		if envelope then
+			-- A locally admitted publish press is not a confirmed transaction:
+			-- this only plays a short presentational flourish.
+			if (action == "PublishOrganic" or action == "PublishPost") and phoneEquip ~= nil then
+				phoneEquip:PlayUse()
+			end
+			sendCommand(envelope)
+		end
 	end,
 	getBlockReason = function() return state:MutationBlockReason() end,
 })
@@ -337,6 +350,16 @@ if RunService:IsStudio() then
 			return state:ApplyOpenComputer(snap, os.clock())
 		elseif action == "IsDesktopVisible" then
 			return desktop:IsVisible()
+		elseif action == "PhoneState" then
+			return if phoneEquip ~= nil then phoneEquip:GetState() else nil
+		elseif action == "PhoneToggle" then
+			if phoneEquip ~= nil then
+				phoneEquip:Toggle()
+				return phoneEquip:GetState()
+			end
+			return nil
+		elseif action == "ShopPhase" then
+			return require(uiFolder:WaitForChild("Upgrades")).shopState(state:Get()).phase
 		end
 		return nil
 	end
@@ -347,10 +370,21 @@ end
 state:Subscribe(function(stateData)
 	hud:Update(stateData, player)
 	desktop:Update(stateData)
+	if phoneEquip ~= nil and stateData.snapshot ~= nil then
+		-- Cosmetic swap only: the confirmed device decides which silhouette is
+		-- held. No economy state is derived or written here.
+		phoneEquip:SetDevice(stateData.snapshot.deviceId)
+	end
 
 	-- Handle status transitions
 	if stateData.status == "Opening" then
 		hud:SetDashboardOpen(true, isReducedMotion())
+		-- Stow before the camera leaves the character. A cosmetic failure must
+		-- never block the dashboard transition.
+		if phoneEquip ~= nil then
+			phoneEquip:StowForDashboard()
+			phoneEquip:SetDashboardOpen(true)
+		end
 		transitionCameraToComputer(function()
 			state:OnCameraOpened()
 			desktop:SetVisible(true, isReducedMotion())
@@ -361,6 +395,12 @@ state:Subscribe(function(stateData)
 	elseif stateData.status == "Closing" or stateData.status == "Expired" or stateData.status == "Closed" then
 		desktop:SetVisible(false, isReducedMotion())
 		hud:SetDashboardOpen(false, isReducedMotion())
+		if phoneEquip ~= nil then
+			phoneEquip:SetDashboardOpen(false)
+			if stateData.status == "Closed" then
+				phoneEquip:RestoreAfterDashboard()
+			end
+		end
 		if preCameraState.captured then
 			restoreCameraAndControls()
 		end
