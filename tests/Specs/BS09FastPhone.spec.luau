@@ -380,6 +380,268 @@ test("The handheld controller is cosmetic-only and never references economy stat
 	expectTrue(Players.LocalPlayer == nil or Players.LocalPlayer ~= nil, "module loads outside a live player context")
 end)
 
+-- ===== targeted production lifecycle tests =====
+
+local Workspace = game:GetService("Workspace")
+
+local function createTestRig(): (Model, Humanoid, BasePart, Motor6D)
+	local char = Instance.new("Model")
+	char.Name = "TestPlayer"
+	local hum = Instance.new("Humanoid")
+	hum.RigType = Enum.HumanoidRigType.R15
+	hum.Health = 100
+	hum.MaxHealth = 100
+	hum.Parent = char
+
+	local root = Instance.new("Part")
+	root.Name = "HumanoidRootPart"
+	root.Parent = char
+	char.PrimaryPart = root
+
+	local upperTorso = Instance.new("Part")
+	upperTorso.Name = "UpperTorso"
+	upperTorso.Parent = char
+
+	local hand = Instance.new("Part")
+	hand.Name = "RightHand"
+	hand.Parent = char
+
+	local shoulder = Instance.new("Motor6D")
+	shoulder.Name = "RightShoulder"
+	shoulder.Part0 = upperTorso
+	shoulder.Part1 = hand
+	shoulder.C0 = CFrame.identity
+	shoulder.Parent = upperTorso
+
+	char.Parent = Workspace
+	return char, hum, hand, shoulder
+end
+
+local function createTestController(char: Model?): (any, ScreenGui)
+	local gui = Instance.new("ScreenGui")
+	gui.Parent = Workspace
+	local ctrl = PhoneEquipController.new({ parent = gui })
+	if char ~= nil then
+		ctrl:_onCharacter(char)
+	end
+	return ctrl, gui
+end
+
+test("Lifecycle 1: Equip -> CRT -> Close -> restore", function()
+	local char, hum = createTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_cheap")
+
+	ctrl:Equip()
+	expectTrue(ctrl:GetState() == "Equipping" or ctrl:GetState() == "Equipped", "phone equipped")
+	expectTrue(ctrl:GetPreferEquipped(), "preference saved as true")
+
+	-- Open dashboard: stows physical model, preserves preference
+	ctrl:StowForDashboard()
+	expectEqual(ctrl:GetState(), "Stowed", "stowed for CRT")
+	expectTrue(ctrl:GetPreferEquipped(), "preference preserved")
+	expectEqual(ctrl._model, nil, "physical model destroyed")
+
+	-- Repeated opening notifications must not overwrite preference
+	ctrl:StowForDashboard()
+	expectTrue(ctrl:GetPreferEquipped(), "repeated opening did not wipe preference")
+
+	-- Close dashboard: restores equipment
+	ctrl:RestoreAfterDashboard()
+	expectTrue(ctrl:GetState() == "Equipping" or ctrl:GetState() == "Equipped", "phone restored")
+	expectTrue(ctrl._model ~= nil, "model reattached")
+
+	ctrl:Destroy()
+	char:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 2: Stow -> CRT -> Close -> remains stowed", function()
+	local char = createTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_cheap")
+
+	expectEqual(ctrl:GetState(), "Stowed", "starts stowed")
+	expectFalse(ctrl:GetPreferEquipped(), "preference is false")
+
+	ctrl:StowForDashboard()
+	expectEqual(ctrl:GetState(), "Stowed", "still stowed")
+	expectFalse(ctrl:GetPreferEquipped(), "preference stays false")
+
+	ctrl:RestoreAfterDashboard()
+	expectEqual(ctrl:GetState(), "Stowed", "remains stowed after closing CRT")
+	expectFalse(ctrl:GetPreferEquipped(), "preference remains false")
+	expectEqual(ctrl._model, nil, "no model created")
+
+	ctrl:Destroy()
+	char:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 3: Equip -> die -> respawn -> equip", function()
+	local char1, hum1 = createTestRig()
+	local ctrl, gui = createTestController(char1)
+	ctrl:SetDevice("phone_cheap")
+
+	ctrl:Equip()
+	expectTrue(ctrl:GetPreferEquipped(), "equipped before death")
+
+	-- Character dies
+	hum1.Health = 0
+	ctrl:_onCharacterDied()
+	expectEqual(ctrl:GetState(), "Stowed", "death stows phone immediately")
+	expectFalse(ctrl:GetPreferEquipped(), "death resets restore preference")
+	expectEqual(ctrl._model, nil, "model cleaned up on death")
+
+	-- Respawn with fresh character
+	local char2 = createTestRig()
+	ctrl:_onCharacter(char2)
+	expectEqual(ctrl:GetState(), "Stowed", "fresh spawn starts stowed")
+	expectFalse(ctrl:GetPreferEquipped(), "preference remains false after death-respawn")
+
+	-- Explicit equip on new character
+	ctrl:Equip()
+	expectTrue(ctrl:GetState() == "Equipping" or ctrl:GetState() == "Equipped", "can equip on new character")
+	expectTrue(ctrl._model ~= nil and ctrl._model.Parent == char2, "model attached to new character")
+
+	ctrl:Destroy()
+	char1:Destroy()
+	char2:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 4: Rapid equip and unequip transitions remain consistent", function()
+	local char = createTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_fast")
+
+	for _ = 1, 4 do
+		ctrl:Equip()
+		ctrl:Unequip()
+	end
+	-- Final intent is unequipped
+	expectFalse(ctrl:GetPreferEquipped(), "final preference is stowed")
+	expectTrue(ctrl:GetState() == "Unequipping" or ctrl:GetState() == "Stowed", "in unequip or stowed state")
+
+	ctrl:Destroy()
+	char:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 5: Purchase while dashboard is open updates device and preserves stowed state", function()
+	local char = createTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_cheap")
+	ctrl:Equip()
+
+	-- Enter dashboard
+	ctrl:StowForDashboard()
+	expectEqual(ctrl:GetState(), "Stowed", "stowed during dashboard")
+	expectTrue(ctrl:GetPreferEquipped(), "preference saved")
+
+	-- Purchase occurs during open dashboard
+	ctrl:SetDevice("phone_fast")
+	expectEqual(ctrl._deviceId, "phone_fast", "device updated")
+	expectEqual(ctrl:GetState(), "Stowed", "remains stowed while dashboard is open")
+	expectEqual(ctrl._model, nil, "no visual rendered during dashboard")
+
+	-- Exit dashboard: restores newly acquired Fast Phone
+	ctrl:RestoreAfterDashboard()
+	expectTrue(ctrl:GetState() == "Equipping" or ctrl:GetState() == "Equipped", "restored on exit")
+	expectTrue(ctrl._model ~= nil, "model attached")
+	expectEqual(ctrl._model.Name, "HeldPhoneFast", "restored device is Fast Phone")
+
+	ctrl:Destroy()
+	char:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 6: Confirm Fast Phone is the only visible equipped device", function()
+	local char = createTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_fast")
+	ctrl:Equip()
+
+	local heldModels = 0
+	for _, child in ipairs(char:GetChildren()) do
+		if child.Name:find("HeldPhone") then
+			heldModels += 1
+		end
+	end
+	expectEqual(heldModels, 1, "exactly one held phone model exists")
+	expectTrue(char:FindFirstChild("HeldPhoneFast") ~= nil, "Fast Phone is equipped")
+	expectEqual(char:FindFirstChild("HeldPhoneCheap"), nil, "Cheap Phone is not present")
+
+	ctrl:Destroy()
+	char:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 7: World PhoneSlot replacement remains hidden while phone is held", function()
+	local char = createTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_cheap")
+
+	local room = Instance.new("Folder")
+	room.Name = "TestRoom"
+	local slot = Instance.new("Part")
+	slot.Name = "PhoneSlot"
+	slot.Parent = room
+
+	ctrl._phoneSlot = function() return slot end
+	ctrl:_watchPhoneSlot(slot)
+
+	-- Hold phone
+	ctrl._dockedHidden = true
+	local dockedModel = Instance.new("Part")
+	dockedModel.Name = "DockedPart"
+	dockedModel.Parent = slot
+	ctrl:_applyDockedHidden(true)
+	expectEqual(dockedModel.LocalTransparencyModifier, 1, "docked model hidden while held")
+
+	-- Unequip phone restores docked visibility
+	ctrl:_setDockedHidden(false)
+	expectEqual(dockedModel.LocalTransparencyModifier, 0, "docked model visible on unequip")
+
+	ctrl:Destroy()
+	room:Destroy()
+	char:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 8: Gamepad ButtonY and equip actions ignored while dashboard is open", function()
+	local char = createTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_cheap")
+
+	ctrl:SetDashboardOpen(true)
+	ctrl:Toggle()
+	expectEqual(ctrl:GetState(), "Stowed", "toggle blocked during dashboard")
+	ctrl:Equip()
+	expectEqual(ctrl:GetState(), "Stowed", "equip blocked during dashboard")
+
+	ctrl:SetDashboardOpen(false)
+	ctrl:Toggle()
+	expectTrue(ctrl:GetState() == "Equipping" or ctrl:GetState() == "Equipped", "toggle permitted after dashboard close")
+
+	ctrl:Destroy()
+	char:Destroy()
+	gui:Destroy()
+end)
+
+test("Lifecycle 9: Mobile button accessibility and attributes", function()
+	local ctrl, gui = createTestController(nil)
+	expectTrue(ctrl._button.Size.Y.Offset >= 44, "touch target height is at least 44 reference pixels")
+
+	ctrl:SetDevice("phone_fast")
+	expectEqual(ctrl._button:GetAttribute("Device"), "HP Cepat", "device attribute")
+	expectEqual(ctrl._button:GetAttribute("PhoneState"), "Stowed", "phone state attribute")
+	expectEqual(ctrl._button:GetAttribute("Equipped"), false, "equipped attribute")
+
+	ctrl:Destroy()
+	gui:Destroy()
+end)
+
 -- ===== runner =====
 local passed = 0
 local failures: { string } = {}

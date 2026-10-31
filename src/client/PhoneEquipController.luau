@@ -136,6 +136,7 @@ end
 -- ===== controller =====
 export type ControllerOptions = {
 	parent: Instance,
+	player: Player?,
 }
 
 function PhoneEquipController.new(options: ControllerOptions): any
@@ -149,14 +150,19 @@ function PhoneEquipController.new(options: ControllerOptions): any
 	self._character = nil :: Model?
 	self._dockedHidden = false
 	self._connections = {}
+	self._charConnections = {}
+	self._roomConnections = {}
+	self._slotConnections = {}
 	self._dashboardOpen = false
 	self._preferEquipped = false
 	self._poseTween = nil :: Tween?
+	self._lifecycleGen = 1
+	self._player = options.player or player
 
 	-- Small contextual control. Sits on the right edge at mid height: clear of
 	-- the Cuan card (top left), objective pill (top centre), status banner
 	-- (top right), hint banner (bottom centre), thumbstick (bottom left) and
-	-- jump button (bottom right).
+	-- jump button (bottom right). Touch target height is at least 44 reference pixels.
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "BuzzerPhoneControls"
 	gui.ResetOnSpawn = false
@@ -168,7 +174,7 @@ function PhoneEquipController.new(options: ControllerOptions): any
 	button.Name = "PhoneEquipButton"
 	button.AnchorPoint = Vector2.new(1, 0.5)
 	button.Position = UDim2.new(1, -14, 0.56, 0)
-	button.Size = UDim2.new(0, 128, 0, 40)
+	button.Size = UDim2.new(0, 136, 0, 46) -- >= 44px touch target height
 	button.BackgroundColor3 = Theme.Colors.CharcoalDark
 	button.BackgroundTransparency = 0.08
 	button.Font = Theme.Fonts.Bold
@@ -188,44 +194,123 @@ function PhoneEquipController.new(options: ControllerOptions): any
 	-- Gamepad affordance. ButtonY is unused by Roblox defaults and by this
 	-- game's terminal prompt (which is a ProximityPrompt on E), so it cannot
 	-- swallow prompt input.
-	ContextActionService:BindAction("BuzzerOS_TogglePhone", function(_name, inputState)
-		if inputState == Enum.UserInputState.Begin then
-			self:Toggle()
-		end
-		return Enum.ContextActionResult.Sink
-	end, false, Enum.KeyCode.ButtonY)
 	pcall(function()
+		ContextActionService:BindAction("BuzzerOS_TogglePhone", function(_name, inputState)
+			if inputState == Enum.UserInputState.Begin then
+				if not self._dashboardOpen then
+					self:Toggle()
+				end
+			end
+			return Enum.ContextActionResult.Sink
+		end, false, Enum.KeyCode.ButtonY)
 		ContextActionService:SetTitle("BuzzerOS_TogglePhone", "Phone")
 	end)
 
-	table.insert(self._connections, player.CharacterAdded:Connect(function(character)
-		self:_onCharacter(character)
-	end))
-	table.insert(self._connections, player.CharacterRemoving:Connect(function()
-		self:_teardownModel()
-		self._character = nil
-		self._shoulder = nil
-		self._shoulderBase = nil
-	end))
-	if player.Character ~= nil then
-		self:_onCharacter(player.Character)
+	local targetPlayer = self._player
+	if targetPlayer ~= nil then
+		table.insert(self._connections, targetPlayer.CharacterAdded:Connect(function(character)
+			self:_onCharacter(character)
+		end))
+		table.insert(self._connections, targetPlayer.CharacterRemoving:Connect(function()
+			self:_onCharacterRemoving()
+		end))
+		if targetPlayer.Character ~= nil then
+			self:_onCharacter(targetPlayer.Character)
+		end
 	end
 
-	-- World re-sync: the server may replace the docked phone at any time, so the
-	-- local hide is re-applied to whatever is currently in PhoneSlot.
-	table.insert(self._connections, Workspace.ChildAdded:Connect(function()
+	self:_observeRoom()
+	self:_render()
+	return self
+end
+
+function PhoneEquipController:_observeRoom()
+	for _, conn in ipairs(self._roomConnections) do
+		conn:Disconnect()
+	end
+	table.clear(self._roomConnections)
+
+	local targetPlayer = self._player
+	if targetPlayer == nil then
+		return
+	end
+
+	local slot = self:_phoneSlot()
+	if slot ~= nil then
+		self:_watchPhoneSlot(slot)
+	end
+
+	-- Reliable room lifecycle observation: watch for room creation or removal
+	table.insert(self._roomConnections, Workspace.ChildAdded:Connect(function(child)
+		if child.Name == `BuzzerRoom_{targetPlayer.UserId}` then
+			task.defer(function()
+				local newSlot = self:_phoneSlot()
+				if newSlot ~= nil then
+					self:_watchPhoneSlot(newSlot)
+					if self._dockedHidden then
+						self:_applyDockedHidden(true)
+					end
+				end
+			end)
+		end
+	end))
+	table.insert(self._roomConnections, Workspace.ChildRemoved:Connect(function(child)
+		if child.Name == `BuzzerRoom_{targetPlayer.UserId}` then
+			for _, conn in ipairs(self._slotConnections) do
+				conn:Disconnect()
+			end
+			table.clear(self._slotConnections)
+		end
+	end))
+end
+
+function PhoneEquipController:_watchPhoneSlot(slot: Instance)
+	for _, conn in ipairs(self._slotConnections) do
+		conn:Disconnect()
+	end
+	table.clear(self._slotConnections)
+
+	-- Reliable model replacement detection inside PhoneSlot
+	table.insert(self._slotConnections, slot.ChildAdded:Connect(function()
 		if self._dockedHidden then
 			task.defer(function()
 				self:_applyDockedHidden(true)
 			end)
 		end
 	end))
+	table.insert(self._slotConnections, slot.DescendantAdded:Connect(function(desc)
+		if self._dockedHidden and desc:IsA("BasePart") then
+			desc.LocalTransparencyModifier = 1
+		end
+	end))
+end
 
+function PhoneEquipController:_onCharacterDied()
+	-- Character death resets the restore preference and stows any visual
+	self._lifecycleGen += 1
+	self._preferEquipped = false
+	if self._poseTween ~= nil then
+		self._poseTween:Cancel()
+		self._poseTween = nil
+	end
+	if self._shoulder ~= nil and self._shoulderBase ~= nil then
+		pcall(function()
+			self._shoulder.C0 = self._shoulderBase
+		end)
+	end
+	self:_teardownModel()
+	self._state = "Stowed"
+	self:_setDockedHidden(false)
 	self:_render()
-	return self
 end
 
 function PhoneEquipController:_onCharacter(character: Model)
+	self._lifecycleGen += 1
+	for _, conn in ipairs(self._charConnections) do
+		conn:Disconnect()
+	end
+	table.clear(self._charConnections)
+
 	self:_teardownModel()
 	self._character = character
 	self._shoulder = nil
@@ -234,17 +319,48 @@ function PhoneEquipController:_onCharacter(character: Model)
 	if humanoid == nil then
 		return
 	end
-	table.insert(self._connections, humanoid.Died:Connect(function()
-		self:_teardownModel()
-		self._state = "Stowed"
-		self._preferEquipped = false
-		self:_applyDockedHidden(false)
-		self:_render()
+
+	table.insert(self._charConnections, humanoid.Died:Connect(function()
+		self:_onCharacterDied()
 	end))
-	if self._preferEquipped then
+
+	-- If the player preferred equipping and the dashboard is not open, re-equip on fresh spawn
+	if self._preferEquipped and not self._dashboardOpen and self._deviceId ~= nil then
+		local currentGen = self._lifecycleGen
 		task.defer(function()
-			self:Equip()
+			if self._lifecycleGen == currentGen and self._preferEquipped and not self._dashboardOpen then
+				self:Equip()
+			end
 		end)
+	else
+		self._state = "Stowed"
+	end
+	self:_render()
+end
+
+function PhoneEquipController:_onCharacterRemoving()
+	self._lifecycleGen += 1
+	for _, conn in ipairs(self._charConnections) do
+		conn:Disconnect()
+	end
+	table.clear(self._charConnections)
+
+	if self._poseTween ~= nil then
+		self._poseTween:Cancel()
+		self._poseTween = nil
+	end
+	if self._shoulder ~= nil and self._shoulderBase ~= nil then
+		pcall(function()
+			self._shoulder.C0 = self._shoulderBase
+		end)
+	end
+	self:_teardownModel()
+	self._character = nil
+	self._shoulder = nil
+	self._shoulderBase = nil
+	self._state = "Stowed"
+	if self._dockedHidden then
+		self:_setDockedHidden(false)
 	end
 	self:_render()
 end
@@ -348,7 +464,11 @@ end
 
 -- ===== docked presentation =====
 function PhoneEquipController:_phoneSlot(): Instance?
-	local folder = Workspace:FindFirstChild(`BuzzerRoom_{player.UserId}`)
+	local targetPlayer = self._player or player
+	if targetPlayer == nil then
+		return nil
+	end
+	local folder = Workspace:FindFirstChild(`BuzzerRoom_{targetPlayer.UserId}`)
 	if folder == nil then
 		return nil
 	end
@@ -380,6 +500,10 @@ function PhoneEquipController:GetState(): string
 	return self._state
 end
 
+function PhoneEquipController:GetPreferEquipped(): boolean
+	return self._preferEquipped
+end
+
 function PhoneEquipController:SetDevice(deviceId: string?)
 	if typeof(deviceId) ~= "string" or deviceId == self._deviceId then
 		return
@@ -392,27 +516,63 @@ function PhoneEquipController:SetDevice(deviceId: string?)
 		self:_teardownModel()
 		self._state = "Equipped"
 		self:_attachModel()
+		self:_setDockedHidden(true)
+	elseif self._dockedHidden then
+		self:_applyDockedHidden(true)
 	end
 	self:_render()
 end
 
 function PhoneEquipController:Equip()
+	-- Input guards: ignore while dashboard is open or if state is incomplete
+	if self._dashboardOpen then
+		return
+	end
+	if self._deviceId == nil then
+		return
+	end
+	if self._character == nil or self._character.Parent == nil then
+		return
+	end
+	local humanoid = self._character:FindFirstChildOfClass("Humanoid")
+	if humanoid == nil or humanoid.Health <= 0 then
+		return
+	end
+
 	if self._state == "Equipped" or self._state == "Equipping" or self._state == "Using" then
 		return
 	end
+
 	local hand, shoulder = self:_resolveRig()
 	if hand == nil then
 		return
 	end
-	self._character = self._character or player.Character
-	self._shoulder = shoulder
-	self._shoulderBase = if shoulder ~= nil then shoulder.C0 else nil
-	self._state = "Equipping"
+
+	-- User explicitly requested equipment
 	self._preferEquipped = true
+	self._shoulder = shoulder
+	if shoulder ~= nil and self._shoulderBase == nil then
+		self._shoulderBase = shoulder.C0
+	end
+
+	if self._poseTween ~= nil then
+		self._poseTween:Cancel()
+		self._poseTween = nil
+	end
+
+	self._lifecycleGen += 1
+	local currentGen = self._lifecycleGen
+	local currentChar = self._character
+
+	self._state = "Equipping"
 	self:_attachModel()
 	self:_poseTo(POSE.equip, EQUIP_SECONDS)
 	self:_render()
+
 	task.delay(EQUIP_SECONDS, function()
+		if self._lifecycleGen ~= currentGen or self._character ~= currentChar then
+			return
+		end
 		if self._state == "Equipping" then
 			self._state = "Equipped"
 			self:_setDockedHidden(true)
@@ -425,12 +585,28 @@ function PhoneEquipController:Unequip()
 	if self._state == "Stowed" or self._state == "Unequipping" then
 		return
 	end
-	self._state = "Unequipping"
+
+	-- User explicitly requested stowing
 	self._preferEquipped = false
+
+	if self._poseTween ~= nil then
+		self._poseTween:Cancel()
+		self._poseTween = nil
+	end
+
+	self._lifecycleGen += 1
+	local currentGen = self._lifecycleGen
+	local currentChar = self._character
+
+	self._state = "Unequipping"
 	self:_poseTo(nil, EQUIP_SECONDS)
 	self:_setDockedHidden(false)
 	self:_render()
+
 	task.delay(EQUIP_SECONDS, function()
+		if self._lifecycleGen ~= currentGen or self._character ~= currentChar then
+			return
+		end
 		if self._state == "Unequipping" then
 			self:_teardownModel()
 			self._state = "Stowed"
@@ -440,15 +616,30 @@ function PhoneEquipController:Unequip()
 end
 
 function PhoneEquipController:Toggle()
-	if self._state == "Stowed" then
+	if self._dashboardOpen then
+		return
+	end
+	if self._deviceId == nil then
+		return
+	end
+	if self._character == nil or self._character.Parent == nil then
+		return
+	end
+	local humanoid = self._character:FindFirstChildOfClass("Humanoid")
+	if humanoid == nil or humanoid.Health <= 0 then
+		return
+	end
+
+	if self._state == "Stowed" or self._state == "Unequipping" then
 		self:Equip()
 	else
 		self:Unequip()
 	end
 end
 
--- Presentational only: a locally admitted publish press is not a confirmed
--- server transaction, so this is a short flourish, never the 16/18s reveal.
+-- Presentational only: in-world flourish when equipped.
+-- When the CRT dashboard is open, the phone is stowed to prevent desk clipping,
+-- so this method cleanly no-ops if called while stowed.
 function PhoneEquipController:PlayUse()
 	if self._state ~= "Equipped" then
 		return
@@ -465,30 +656,52 @@ function PhoneEquipController:PlayUse()
 	end)
 end
 
--- Called before the CRT camera transition. Returns false if the visual could
--- not be cleaned up, so the caller can still proceed: closing BuzzerOS must
--- never be blocked by a cosmetic failure.
+-- Called before the CRT camera transition. Saves _preferEquipped without
+-- overwriting on repeated notifications, and stows the physical held model.
 function PhoneEquipController:StowForDashboard(): boolean
-	self._preferEquipped = self._state == "Equipped" or self._state == "Using" or self._state == "Equipping"
-	local ok = pcall(function()
-		if self._state ~= "Stowed" then
-			self:Unequip()
-		end
-	end)
-	return ok
+	if self._dashboardOpen then
+		return true
+	end
+	self._dashboardOpen = true
+	local wasEquipped = (self._state == "Equipped" or self._state == "Using" or self._state == "Equipping" or self._preferEquipped)
+	self._preferEquipped = wasEquipped
+
+	self._lifecycleGen += 1
+	if self._poseTween ~= nil then
+		self._poseTween:Cancel()
+		self._poseTween = nil
+	end
+	if self._shoulder ~= nil and self._shoulderBase ~= nil then
+		pcall(function()
+			self._shoulder.C0 = self._shoulderBase
+		end)
+	end
+	self:_teardownModel()
+	self._state = "Stowed"
+	self:_setDockedHidden(false)
+	self:_render()
+	return true
 end
 
 function PhoneEquipController:RestoreAfterDashboard()
+	self._dashboardOpen = false
 	if not self._preferEquipped then
+		self:_render()
 		return
 	end
 	if self._character == nil or self._character.Parent == nil then
 		self._preferEquipped = false
+		self:_render()
 		return
 	end
 	local humanoid = self._character:FindFirstChildOfClass("Humanoid")
 	if humanoid == nil or humanoid.Health <= 0 then
 		self._preferEquipped = false
+		self:_render()
+		return
+	end
+	if self._deviceId == nil then
+		self:_render()
 		return
 	end
 	self:Equip()
@@ -507,6 +720,7 @@ function PhoneEquipController:_render()
 	self._button:SetAttribute("Equipped", equipped)
 	self._button:SetAttribute("Device", label)
 	self._button:SetAttribute("PhoneState", self._state)
+	self._button:SetAttribute("PreferEquipped", self._preferEquipped)
 end
 
 function PhoneEquipController:Destroy()
@@ -514,10 +728,32 @@ function PhoneEquipController:Destroy()
 		connection:Disconnect()
 	end
 	table.clear(self._connections)
+	for _, connection in ipairs(self._charConnections) do
+		connection:Disconnect()
+	end
+	table.clear(self._charConnections)
+	for _, connection in ipairs(self._roomConnections) do
+		connection:Disconnect()
+	end
+	table.clear(self._roomConnections)
+	for _, connection in ipairs(self._slotConnections) do
+		connection:Disconnect()
+	end
+	table.clear(self._slotConnections)
 	pcall(function()
 		ContextActionService:UnbindAction("BuzzerOS_TogglePhone")
 	end)
+	if self._poseTween ~= nil then
+		self._poseTween:Cancel()
+		self._poseTween = nil
+	end
+	if self._shoulder ~= nil and self._shoulderBase ~= nil then
+		pcall(function()
+			self._shoulder.C0 = self._shoulderBase
+		end)
+	end
 	self:_teardownModel()
+	self:_setDockedHidden(false)
 	self._gui:Destroy()
 end
 

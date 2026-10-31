@@ -360,6 +360,15 @@ if RunService:IsStudio() then
 			return nil
 		elseif action == "ShopPhase" then
 			return require(uiFolder:WaitForChild("Upgrades")).shopState(state:Get()).phase
+		elseif action == "SetHeldDevice" then
+			if phoneEquip ~= nil then
+				phoneEquip:SetDevice(payload)
+				return true
+			end
+			return false
+		elseif action == "ApplySnapshot" then
+			state:ApplyStateSnapshot(payload)
+			return true
 		end
 		return nil
 	end

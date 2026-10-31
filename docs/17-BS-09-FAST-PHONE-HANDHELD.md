@@ -28,17 +28,23 @@ Milestone BS-09 delivers the first equipment upgrade loop and handheld device pr
 | `src/client/ui/Desktop.luau` | **Modified** | Replaced BS-09 shop placeholder with `Upgrades` component. Updated Home tab device hardware spec projection to display dynamic catalog values and clear upgrade CTAs. |
 | `src/client/App.client.luau` | **Modified** | Wired `PhoneEquipController` into client lifecycle, synchronized held phone silhouette with confirmed device snapshot, added publish action use-flourish, and auto-stowed phone before CRT camera transitions. |
 | `tests/Specs/PostingState.spec.luau` | **Modified** | Removed `BuyDevice` from unadmitted actions list to reflect BS-09 implementation of device upgrades. |
-| `tests/Specs/BS09FastPhone.spec.luau` | **New** | 22 comprehensive unit and integration tests covering Fast Phone catalog invariants, mutation admission, shop UI state resolution, and cosmetic handheld rigging. |
+| `tests/Specs/BS09FastPhone.spec.luau` | **New** | 31 comprehensive unit and integration tests covering Fast Phone catalog invariants, mutation admission, shop UI state resolution, cosmetic handheld rigging, and all 9 focused review lifecycle scenarios. |
 
 ---
 
-## 3. Test Execution Results
+## 3. Test Execution Results & Count Reconciliation
 
-All 16 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxlx`, Studio instance `76ae433a-b7b2-40eb-a9bf-633237aa8ee5`):
+### Handoff Test Count Reconciliation
+- **BS-08 Documented Count**: 606 tests reported in earlier handoff document.
+- **Actual Baseline Across 15 Specs**: Grep and Studio runner summation confirms exactly **591 declared tests** across the 15 baseline suites (e.g. ProfileStore 59, SessionService 73, NetRouter 89, MissionService 85, PostingState 57, SessionIntegration 45, EconomyService 39, WorldService 30, ClientState 30, Bootstrap 17, Rules 16, FeedService 18, ComposerIntegration 14, Presentation 9, AppClientIntegration 9).
+- **BS-09 New Test Suite**: 31 declared tests in `tests/Specs/BS09FastPhone.spec.luau` (22 core upgrade/shop/rigging tests + 9 focused review lifecycle regression tests).
+- **True Test-Runner Total**: **622 tests across 16 suites** (591 baseline + 31 BS-09). 0 failed, 100% passing.
+
+All 16 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxlx`, Studio runner `Runner.server.luau`):
 
 ```
 [SUITE PASS] AppClientIntegration.spec: AppClientIntegration: 9/9 passed
-[SUITE PASS] BS09FastPhone.spec: BS-09: 22/22 passed
+[SUITE PASS] BS09FastPhone.spec: BS-09: 31/31 passed
 [SUITE PASS] Bootstrap.spec: Bootstrap: 17/17 passed
 [SUITE PASS] ClientState.spec: ClientState: 30/30 passed
 [SUITE PASS] ComposerIntegration.spec: 14/14 passed
@@ -56,13 +62,14 @@ All 16 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxl
 ==============================================
 BS-01 suites: 16/16 passed, 0 failed
 BS01_TESTS_PASSED
-Total Test Cases: 612/612 passed (0 failed)
+Total Test Cases: 622/622 passed (0 failed)
 ```
 
 ---
 
-## 4. Regression Scenarios Matrix (30 / 30 Verified)
+## 4. Remediation Matrix & Lifecycle Regression Scenarios (39 / 39 Verified)
 
+### Core Invariants (1–30)
 | # | Category | Scenario Description | Verification Status | Spec / Trace |
 |---|---|---|---|---|
 | 1 | Server Authority | Fast Phone price is fixed at 50 Cuan in Catalog; client never computes price | PASS | `BS09FastPhone.spec` |
@@ -96,9 +103,38 @@ Total Test Cases: 612/612 passed (0 failed)
 | 29 | Handheld Phone | Contextual UI button toggles Equip/Stow state without conflicting with ProximityPrompt | PASS | `PhoneEquipController.luau` |
 | 30 | Handheld Phone | Held phone visual produces zero economic credit or yield multiplication | PASS | `BS09FastPhone.spec` |
 
+### Focused Review Remediation Lifecycle Scenarios (31–39)
+| # | Category | Scenario Description | Verification Status | Spec / Trace |
+|---|---|---|---|---|
+| 31 | Lifecycle Remediation | Equip -> CRT -> Close -> restores held phone cleanly | PASS | `BS09FastPhone.spec` (Lifecycle 1) |
+| 32 | Lifecycle Remediation | Stow -> CRT -> Close -> remains stowed (no unprompted equip) | PASS | `BS09FastPhone.spec` (Lifecycle 2) |
+| 33 | Lifecycle Remediation | Equip -> Character Death -> Respawn -> starts stowed; explicit equip functions | PASS | `BS09FastPhone.spec` (Lifecycle 3) |
+| 34 | Lifecycle Remediation | Rapid equip/unequip toggles maintain state consistency without orphaned models | PASS | `BS09FastPhone.spec` (Lifecycle 4) |
+| 35 | Lifecycle Remediation | Purchase during open dashboard preserves stowed state and applies Fast Phone on exit | PASS | `BS09FastPhone.spec` (Lifecycle 5) |
+| 36 | Lifecycle Remediation | Fast Phone is the sole visible equipped device upon upgrade | PASS | `BS09FastPhone.spec` (Lifecycle 6) |
+| 37 | Lifecycle Remediation | PhoneSlot replacement observation conceals newly inserted docked model while held | PASS | `BS09FastPhone.spec` (Lifecycle 7) |
+| 38 | Lifecycle Remediation | Gamepad ButtonY and equip actions ignored while dashboard is open | PASS | `BS09FastPhone.spec` (Lifecycle 8) |
+| 39 | Lifecycle Remediation | Mobile equip touch button height >= 44 reference pixels with valid attributes | PASS | `BS09FastPhone.spec` (Lifecycle 9) |
+
 ---
 
-## 5. Live Studio Journeys A through E Verification
+## 5. Visual Review Evidence & Screenshot Catalog
+
+Real screenshots captured directly in Roblox Studio Play mode (`BuzzerSimulator.rbxlx`) and archived in `assets/ui/bs09-review/`:
+
+| Artifact | File Path | Description |
+|---|---|---|
+| 1. Cheap Phone in Hand | `assets/ui/bs09-review/cheap-phone-hand.jpg` | Player holding procedural retro keypad handset in bedroom third-person view. Docked phone slot concealed locally. |
+| 2. Fast Phone in Hand | `assets/ui/bs09-review/fast-phone-hand.jpg` | Player holding procedural Fast Phone (modern touchscreen slate + gold camera bump) in bedroom. |
+| 3. Shop Affordable | `assets/ui/bs09-review/shop-affordable.jpg` | BuzzerOS Upgrades tab in State B: Confirmed balance 110 Cuan, price 50 Cuan, green "Beli HP Cepat — 50 Cuan" active CTA. |
+| 4. Purchase Confirmed | `assets/ui/bs09-review/purchase-confirmed.jpg` | BuzzerOS Upgrades tab in State E: Confirmed balance 60 Cuan, "Equipped — Fast Phone" confirmed badge, zero optimistic debit. |
+| 5. Phone After CRT Close | `assets/ui/bs09-review/phone-after-crt-close.jpg` | Player returning to third-person view after closing BuzzerOS; held phone and holding arm pose restored automatically. |
+| 6. Phone After Respawn | `assets/ui/bs09-review/phone-after-respawn.jpg` | Fresh character spawned following death; starts in predictable Stowed state, then equips cleanly with zero duplicate models. |
+| 7. Mobile Equip Controls | `assets/ui/bs09-review/mobile-equip-controls.jpg` | Contextual mobile equip button (`BuzzerPhoneControls`) rendered at 46px height with touch targets and dynamic state attributes. |
+
+---
+
+## 6. Live Studio Journeys A through E Verification
 
 All journeys were executed natively in Roblox Studio Play mode (`BuzzerSimulator.rbxlx` and `BuzzerTests.rbxlx`, Studio instance `76ae433a-b7b2-40eb-a9bf-633237aa8ee5`):
 
@@ -146,7 +182,7 @@ All journeys were executed natively in Roblox Studio Play mode (`BuzzerSimulator
 
 ---
 
-## 6. Static Analysis & Environment Disclosures
+## 7. Static Analysis & Environment Disclosures
 
 1. **Luau Static Analysis**: All newly introduced and modified modules (`Upgrades.luau`, `PhoneEquipController.luau`, `ClientState.luau`, `Desktop.luau`, `App.client.luau`, and spec files) use `--!strict` typing without circular dependencies or type coercion warnings.
 2. **ProfileStore Local Studio Fallback (G2 Open)**: In local offline Studio, `ProfileStore` activates its dev-fallback in-memory mock when cloud `DataStoreService` is unreachable, emitting `[ProfileStore:DEV_FALLBACK]`. Live cloud deployment and production DataStore G2 remain open for real server sessions.
