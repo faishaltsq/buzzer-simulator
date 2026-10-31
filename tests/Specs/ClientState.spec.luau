@@ -339,7 +339,7 @@ test("APPLIED lookup handling resolves uncertain mutation", function()
 	local queries = state:CheckTimeouts(1007, 6)
 	expectEqual(#queries, 1, "generated reconciliation query")
 	expectEqual(queries[1].payload.lookupRequestId, "mut_01", "lookup matches mut_01")
-	expectEqual(state:Get().status, "ConnectionUncertain", "status uncertain")
+	expectEqual(state:Get().status, "Closed", "timeout does not reopen a closed dashboard")
 
 	-- Reconcile via reply with APPLIED
 	local reply = {
@@ -410,7 +410,7 @@ test("PENDING preservation keeps uncertain mutation in flight", function()
 	}
 	state:ApplyReply(reply, 1008)
 	expectTrue(state:Get().uncertainMutations["mut_03"] ~= nil, "still preserved as uncertain")
-	expectEqual(state:Get().status, "ConnectionUncertain", "status remains uncertain")
+	expectEqual(state:Get().status, "Closed", "uncertainty does not change closed lifecycle")
 end)
 
 -- 20. UNKNOWN does not retry
@@ -433,9 +433,9 @@ test("UNKNOWN lookup does not trigger automatic retry or retransmission", functi
 		},
 	}
 	state:ApplyReply(reply, 1008)
-	-- Clears uncertain without retransmitting
-	expectEqual(state:Get().uncertainMutations["mut_04"], nil, "uncertain cleared on UNKNOWN")
-	expectEqual(state:Get().status, "Closed", "returned to normal")
+	-- UNKNOWN is not proof of rejection; retain the original intent reservation.
+	expectTrue(state:Get().uncertainMutations["mut_04"] ~= nil, "uncertain preserved on UNKNOWN")
+	expectEqual(state:Get().status, "Closed", "closed lifecycle preserved")
 	expectEqual(next(state:Get().inFlightRequests), nil, "no new request issued")
 end)
 

@@ -4,6 +4,10 @@
 -- Contract sources: docs/03, docs/05.
 
 local Theme = require(script.Parent:WaitForChild("Theme") :: any)
+local Composer = require(script.Parent:WaitForChild("PostComposer"))
+local Feed = require(script.Parent:WaitForChild("Feed"))
+local Missions = require(script.Parent:WaitForChild("Missions"))
+local Presentation = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Presentation"))
 local Desktop = {}
 Desktop.__index = Desktop
 
@@ -12,6 +16,8 @@ export type DesktopOptions = {
 	playerName: string,
 	onClose: () -> (),
 	onTabSelected: (string) -> (),
+	onAction: ((string, any) -> ())?,
+	getBlockReason: (() -> string?)?,
 }
 
 local TABS = {
@@ -29,6 +35,8 @@ function Desktop.new(options: DesktopOptions): any
 	self._playerName = options.playerName
 	self._onClose = options.onClose
 	self._onTabSelected = options.onTabSelected
+	self._onAction = options.onAction or function() end
+	self._getBlockReason = options.getBlockReason or function() return "Open BuzzerOS to begin." end
 	self._currentTab = "Home"
 	self._isMobile = false
 	self._moreMenuOpen = false
@@ -197,7 +205,7 @@ function Desktop.new(options: DesktopOptions): any
 	local moreDrawer = Instance.new("Frame")
 	moreDrawer.Name = "MoreDrawer"
 	moreDrawer.BackgroundColor3 = Theme.Colors.CharcoalDark
-	moreDrawer.Size = UDim2.new(1, 0, 0, 160)
+	moreDrawer.Size = UDim2.new(1, 0, 0, 176)
 	moreDrawer.Position = UDim2.new(0, 0, 1, 0) -- Hidden below
 	moreDrawer.Visible = false
 	moreDrawer.ZIndex = 5
@@ -235,6 +243,30 @@ function Desktop.new(options: DesktopOptions): any
 
 	table.insert(self._connections, window:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateLayout))
 	updateLayout()
+	table.insert(self._connections, game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
+		if processed or not self._gui.Enabled or input.KeyCode ~= Enum.KeyCode.Tab then return end
+		local candidates = {}
+		for _, child in ipairs(self._gui:GetDescendants()) do
+			if child:IsA("GuiButton") and child.Selectable and child.Active then
+				local visible = true
+				local ancestor = child
+				while ancestor and ancestor ~= self._gui do
+					if ancestor:IsA("GuiObject") and not ancestor.Visible then visible = false; break end
+					ancestor = ancestor.Parent
+				end
+				if visible then table.insert(candidates, child) end
+			end
+		end
+		table.sort(candidates, function(a, b)
+			if math.abs(a.AbsolutePosition.Y - b.AbsolutePosition.Y) > 4 then return a.AbsolutePosition.Y < b.AbsolutePosition.Y end
+			return a.AbsolutePosition.X < b.AbsolutePosition.X
+		end)
+		if #candidates > 0 then
+			local gui = game:GetService("GuiService")
+			local index = table.find(candidates, gui.SelectedObject) or 0
+			gui.SelectedObject = candidates[index % #candidates + 1]
+		end
+	end))
 
 	return self
 end
@@ -245,7 +277,7 @@ function Desktop:_buildNavigation()
 		local btn = Instance.new("TextButton")
 		btn.Name = `Nav_{tab.id}`
 		btn.BackgroundColor3 = if tab.id == self._currentTab then Theme.Colors.CharcoalLight else Theme.Colors.CharcoalDark
-		btn.Size = UDim2.new(1, 0, 0, 40)
+		btn.Size = UDim2.new(1, 0, 0, 44)
 		btn.LayoutOrder = i
 		btn.Font = Theme.Fonts.Medium
 		btn.Text = `  {tab.label}`
@@ -266,7 +298,7 @@ function Desktop:_buildNavigation()
 				btn.BackgroundColor3 = Theme.Colors.CharcoalDark
 			end
 		end)
-		btn.MouseButton1Click:Connect(function()
+		btn.Activated:Connect(function()
 			self:SelectTab(tab.id)
 		end)
 
@@ -294,7 +326,7 @@ function Desktop:_buildNavigation()
 		mBtn.Parent = self._mobileNav
 		Theme.applyCorner(mBtn, Theme.Radii.Small)
 
-		mBtn.MouseButton1Click:Connect(function()
+		mBtn.Activated:Connect(function()
 			if item.id == "More" then
 				self:ToggleMoreMenu()
 			else
@@ -314,7 +346,7 @@ function Desktop:_buildNavigation()
 		local dBtn = Instance.new("TextButton")
 		dBtn.Name = `DrawerNav_{dItem.id}`
 		dBtn.BackgroundColor3 = Theme.Colors.CharcoalLight
-		dBtn.Size = UDim2.new(1, 0, 0, 38)
+		dBtn.Size = UDim2.new(1, 0, 0, 44)
 		dBtn.Font = Theme.Fonts.Medium
 		dBtn.Text = `  {dItem.label}`
 		dBtn.TextColor3 = Theme.Colors.Cream
@@ -324,7 +356,7 @@ function Desktop:_buildNavigation()
 		dBtn.Parent = self._moreDrawer
 		Theme.applyCorner(dBtn, Theme.Radii.Small)
 
-		dBtn.MouseButton1Click:Connect(function()
+		dBtn.Activated:Connect(function()
 			self:SelectTab(dItem.id)
 			self:CloseMoreMenu()
 		end)
@@ -332,16 +364,17 @@ function Desktop:_buildNavigation()
 end
 
 function Desktop:_applyResponsiveMode(isCompact: boolean)
+	self._headerClock.Visible = self._window.AbsoluteSize.X >= 600
 	if isCompact then
 		-- Mobile view
 		self._navRail.Visible = false
-		self._contentArea.Size = UDim2.new(1, 0, 1, -104)
-		self._contentArea.Position = UDim2.new(0, 0, 0, 48)
+		self._contentArea.Size = UDim2.new(1, 0, 1, -56)
+		self._contentArea.Position = UDim2.new(0, 0, 0, 0)
 		self._mobileNav.Visible = true
 	else
 		-- Desktop view
 		self._navRail.Visible = true
-		self._contentArea.Size = UDim2.new(1, -180, 1, -48)
+		self._contentArea.Size = UDim2.new(1, -180, 1, 0)
 		self._contentArea.Position = UDim2.new(0, 180, 0, 0)
 		self._mobileNav.Visible = false
 		self:CloseMoreMenu()
@@ -394,7 +427,7 @@ function Desktop:ToggleMoreMenu()
 		self._moreMenuOpen = true
 		self._moreDrawer.Visible = true
 		Theme.tween(self._moreDrawer, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Position = UDim2.new(0, 0, 1, -216),
+			Position = UDim2.new(0, 0, 1, -232),
 		})
 	end
 end
@@ -442,26 +475,12 @@ function Desktop:_buildPages()
 	-- 1. Home Page (Rich confirmed profile overview)
 	self._contentContainers["Home"] = self:_createHomePage()
 
-	-- 2. Feed Page (Informational placeholder)
-	self._contentContainers["Feed"] = self:_createPlaceholderPage(
-		"Buzzline Feed",
-		"Browse authored NPC cards and community posts. Research viral audience affinities and trends.",
-		"Planned for Milestone BS-08"
-	)
-
-	-- 3. Create Page (Informational placeholder)
-	self._contentContainers["Create"] = self:_createPlaceholderPage(
-		"Post Composer",
-		"Craft high-engagement posts. Organic yield and reveal times are computed from your equipped phone.",
-		"Planned for Milestone BS-08"
-	)
-
-	-- 4. Missions Page (Informational placeholder)
-	self._contentContainers["Missions"] = self:_createPlaceholderPage(
-		"Campaign Missions",
-		"Accept commercial contracts from local brands and claim guaranteed Cuan bonuses upon goal delivery.",
-		"Planned for Milestone BS-08"
-	)
+	self._feed = Feed.new({parent = self._contentArea, playerName = self._playerName, onNavigate = function(tab) self:SelectTab(tab) end})
+	self._contentContainers.Feed = self._feed.Root
+	self._composer = Composer.new({parent = self._contentArea, mode = "organic", onAction = self._onAction, getBlockReason = self._getBlockReason})
+	self._contentContainers.Create = self._composer.Root
+	self._missions = Missions.new({parent = self._contentArea, onAction = self._onAction, getBlockReason = self._getBlockReason})
+	self._contentContainers.Missions = self._missions.Root
 
 	-- 5. Upgrades Page (Informational placeholder)
 	self._contentContainers["Upgrades"] = self:_createPlaceholderPage(
@@ -486,7 +505,8 @@ function Desktop:_createHomePage(): GuiObject
 	scroll.Name = "Page_Home"
 	scroll.BackgroundTransparency = 1
 	scroll.Size = UDim2.new(1, 0, 1, 0)
-	scroll.CanvasSize = UDim2.new(0, 0, 0, 680)
+	scroll.CanvasSize = UDim2.new()
+	scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	scroll.ScrollBarThickness = 6
 	scroll.ScrollBarImageColor3 = Theme.Colors.Border
 	scroll.Parent = self._contentArea
@@ -503,7 +523,12 @@ function Desktop:_createHomePage(): GuiObject
 	local welcome = Instance.new("Frame")
 	welcome.Name = "WelcomeCard"
 	welcome.BackgroundColor3 = Theme.Colors.CharcoalDark
-	welcome.Size = UDim2.new(1, 0, 0, 64)
+	welcome.Size = UDim2.new(1, 0, 0, 0)
+	welcome.AutomaticSize = Enum.AutomaticSize.Y
+	local welcomeLayout = Instance.new("UIListLayout")
+	welcomeLayout.Padding = UDim.new(0, 6)
+	welcomeLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	welcomeLayout.Parent = welcome
 	welcome.LayoutOrder = 1
 	welcome.Parent = scroll
 	Theme.applyCorner(welcome, Theme.Radii.Medium)
@@ -513,7 +538,10 @@ function Desktop:_createHomePage(): GuiObject
 	local wTitle = Instance.new("TextLabel")
 	wTitle.Name = "Title"
 	wTitle.BackgroundTransparency = 1
-	wTitle.Size = UDim2.new(1, 0, 0, 22)
+	wTitle.Size = UDim2.new(1, 0, 0, 0)
+	wTitle.AutomaticSize = Enum.AutomaticSize.Y
+	wTitle.TextWrapped = true
+	wTitle.LayoutOrder = 1
 	wTitle.Font = Theme.Fonts.Black
 	wTitle.Text = `Welcome to BuzzerOS, @{self._playerName}`
 	wTitle.TextColor3 = Theme.Colors.Cream
@@ -524,10 +552,12 @@ function Desktop:_createHomePage(): GuiObject
 	local wSub = Instance.new("TextLabel")
 	wSub.Name = "Subtitle"
 	wSub.BackgroundTransparency = 1
-	wSub.Size = UDim2.new(1, 0, 0, 18)
-	wSub.Position = UDim2.new(0, 0, 0, 24)
+	wSub.Size = UDim2.new(1, 0, 0, 0)
+	wSub.AutomaticSize = Enum.AutomaticSize.Y
+	wSub.TextWrapped = true
+	wSub.LayoutOrder = 2
 	wSub.Font = Theme.Fonts.Regular
-	wSub.Text = "Authoritative Bedroom Creator Workstation • Shipped V0 Prototype"
+	wSub.Text = "Read the room. Choose your words. Make your first post."
 	wSub.TextColor3 = Theme.Colors.Sage
 	wSub.TextSize = Theme.TextSizes.Small
 	wSub.TextXAlignment = Enum.TextXAlignment.Left
@@ -662,7 +692,7 @@ function Desktop:_createHomePage(): GuiObject
 	progressTip.Size = UDim2.new(1, 0, 0, 18)
 	progressTip.Position = UDim2.new(0, 0, 0, 72)
 	progressTip.Font = Theme.Fonts.Regular
-	progressTip.Text = "Next step: Post creation and campaign missions unlock in BS-08."
+	progressTip.Text = "Read the next context in Create, or visit the campaign desk."
 	progressTip.TextColor3 = Theme.Colors.Sage
 	progressTip.TextSize = Theme.TextSizes.Tiny
 	progressTip.TextXAlignment = Enum.TextXAlignment.Left
@@ -704,6 +734,26 @@ function Desktop:_createHomePage(): GuiObject
 	uDesc.TextWrapped = true
 	uDesc.Parent = upgradeCard
 	self._homeUpgradeDesc = uDesc
+
+	local actions = Composer.stack(scroll, "HomeActions")
+	actions.LayoutOrder = 0
+	self._homeContext = Composer.label(actions, "NextContext", "Loading next organic context...", 18, Theme.Colors.Amber)
+	self._homeResult = Composer.label(actions, "LatestResult", "No confirmed posts yet.", 15)
+	Composer.button(actions, "CreateOrganicShortcut", "Create organic post", function() self:SelectTab("Create") end)
+	Composer.button(actions, "FeedShortcut", "View Buzzline", function() self:SelectTab("Feed") end)
+	self._homeMissionAction = Composer.button(actions, "MissionShortcut", "View Missions", function() self:SelectTab("Missions") end)
+	self._homePendingAction = Composer.button(actions, "PendingShortcut", "View pending post", function()
+		local pendingPost = self._lastState and self._lastState.snapshot and self._lastState.snapshot.pendingPost
+		self:SelectTab(if pendingPost and pendingPost.mode == "mission" then "Missions" else "Create")
+	end)
+	self._homeRefresh = Composer.button(actions, "RefreshProgress", "Refresh confirmed progress", function() self._onAction("GetSnapshot", {}) end)
+	self._homeNotice = Composer.label(actions, "ConnectionNotice", "", 14, Theme.Colors.CreamMuted)
+	for _, control in ipairs(actions:GetChildren()) do
+		if control:IsA("TextButton") and control.Name ~= "CreateOrganicShortcut" then
+			control.BackgroundColor3 = Theme.Colors.CharcoalLight
+			control.TextColor3 = Theme.Colors.Cream
+		end
+	end
 
 	return scroll
 end
@@ -839,6 +889,10 @@ end
 -- ==================== UPDATE & LIFECYCLE ====================
 
 function Desktop:Update(stateData: any)
+	self._lastState = stateData
+	self._feed:Update(stateData)
+	self._composer:Update(stateData)
+	self._missions:Update(stateData)
 	local snap = stateData.snapshot
 	if snap == nil then
 		return
@@ -865,24 +919,29 @@ function Desktop:Update(stateData: any)
 		self._homeUpgradeDesc.Text = "PhoneFast (50 Cuan) — Boosts strong organic payout from 15 to 24 Cuan per post."
 	end
 
-	-- Update Post Summary
-	if snap.pendingPost ~= nil then
-		local p = snap.pendingPost
-		self._homePostSummary.Text = `Pending Post: Mode '{p.mode}' in review. Impact: {p.finalImpact}`
-	else
-		self._homePostSummary.Text = "Pending Post: None (Ready to compose)"
+	local context = Presentation.Contexts[snap.nextOrganicContextId]
+	self._homeContext.Text = if context then `Next organic post: {context.title}\n{context.trend} · {context.audience}` else "Waiting for next organic context"
+	local latest = nil
+	for _, post in ipairs(snap.ownPosts or {}) do
+		if latest == nil or post.publishedAt > latest.publishedAt then latest = post end
 	end
+	self._homeResult.Text = if latest then `Latest confirmed result: {latest.finalImpact} impact · +{latest.organicCuan} organic Cuan` else "No confirmed posts yet. Start with an organic post."
+	self._homePostSummary.Text = if snap.pendingPost then "Post resolving. You can browse, close, and return." else "Post slot available."
+	self._homePendingAction.Visible = snap.pendingPost ~= nil
+	local mission = snap.activeMission
+	self._homeMissionAction.Text = if mission and mission.status == "readyToClaim" then "Claim ready mission · open campaign desk" elseif mission then "Resume mission" else "View Missions"
+	self._homeMissionSummary.Text = if mission then `Campaign: {mission.status} · {mission.accumulatedImpact} confirmed impact` else "No active campaign. Visit Missions for a briefing."
+	self._homeProgressTip.Text = if mission and mission.status == "readyToClaim" then "Your separate campaign bonus is ready to claim in Missions." else "Organic-only posts never advance campaign progress."
+	self._homeNotice.Text = self._getBlockReason() or stateData.activeError or ""
+end
 
-	-- Update Mission Summary
-	if snap.activeMission ~= nil then
-		local m = snap.activeMission
-		self._homeMissionSummary.Text = `Active Mission: '{m.missionId}' ({m.status}) — Impact: {m.accumulatedImpact}`
-	else
-		self._homeMissionSummary.Text = "Active Mission: None (Ready for new campaign)"
-	end
+function Desktop:Tick(serverNow: number)
+	self._composer:Tick(serverNow)
+	self._missions:Tick(serverNow)
 end
 
 function Desktop:SetVisible(visible: boolean, reducedMotion: boolean?)
+	if self._gui.Enabled == visible then return end
 	self._gui.Enabled = visible
 	if visible then
 		self._window.Size = UDim2.new(0.85, 0, 0.83, 0)

@@ -249,6 +249,10 @@ local function transitionCameraToComputer(onComplete: () -> ())
 	-- Bind Escape key to close
 	ContextActionService:BindAction("BuzzerOS_Close", function(_actionName, inputState, _inputObj)
 		if inputState == Enum.UserInputState.Begin then
+			if desktop._moreMenuOpen then
+				desktop:CloseMoreMenu()
+				return Enum.ContextActionResult.Sink
+			end
 			local closeCmd = state:CloseLocally()
 			if closeCmd ~= nil then
 				sendCommand(closeCmd)
@@ -285,6 +289,14 @@ desktop = Desktop.new({
 	onTabSelected = function(tabId)
 		state:SetTab(tabId :: any)
 	end,
+	onAction = function(action, payload)
+		if commandRemote == nil then return end
+		local envelope = if action == "GetSnapshot"
+			then state:RefreshProgress(os.clock())
+			else state:BeginMutation(action, payload, os.clock())
+		if envelope then sendCommand(envelope) end
+	end,
+	getBlockReason = function() return state:MutationBlockReason() end,
 })
 -- Development-gated references and bridge for Studio verification and automated tests
 if RunService:IsStudio() then
@@ -404,7 +416,7 @@ local function setupNetworking()
 			if event.kind == "State" then
 				state:ApplyStateSnapshot(event.state)
 			elseif event.kind == "OpenComputer" then
-				state:ApplyOpenComputer(event, os.time())
+				state:ApplyOpenComputer(event, os.clock())
 			elseif event.kind == "OpenComputerDenied" then
 				state:ApplyOpenComputerDenied(event.code)
 			elseif event.kind == "ComputerSessionExpired" then
@@ -415,13 +427,13 @@ local function setupNetworking()
 
 	if reply ~= nil then
 		reply.OnClientEvent:Connect(function(rep: any)
-			state:ApplyReply(rep, os.time())
+			state:ApplyReply(rep, os.clock())
 		end)
 	end
 
 	-- Send initial query for authoritative snapshot on join
 	local queryId = ClientState.GenerateRequestId("init")
-	state:TrackRequest(queryId, "GetSnapshot", false, os.time(), nil)
+	state:TrackRequest(queryId, "GetSnapshot", false, os.clock(), nil)
 	sendCommand({
 		action = "GetSnapshot",
 		requestId = queryId,
@@ -433,8 +445,13 @@ task.spawn(setupNetworking)
 
 -- Heartbeat Loop: Local Watchdog and Mutation Timeout Checker
 RunService.Heartbeat:Connect(function()
-	local now = os.time()
-
+	local now = os.clock()
+	local ok, serverNow = pcall(function()
+		return Workspace:GetServerTimeNow()
+	end)
+	if ok and typeof(serverNow) == "number" then
+		desktop:Tick(serverNow)
+	end
 	-- Check local watchdog expiration
 	local expired = state:CheckLocalWatchdog(now)
 	if expired then

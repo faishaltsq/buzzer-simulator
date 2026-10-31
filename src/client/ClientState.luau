@@ -1,9 +1,10 @@
 --!strict
--- Buzzer Simulator — ClientState (BS-07)
--- Pure client state container and reducer for BuzzerOS shell & HUD.
--- Contract sources: docs/03, docs/05, docs/14.
+-- Buzzer Simulator — ClientState (BS-08)
+-- Owns confirmed snapshots, dashboard lifecycle, and mutation admission/recovery.
 
 local HttpService = game:GetService("HttpService")
+local Catalog = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Catalog"))
+local GameTypes = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GameTypes"))
 
 export type DashboardStatus =
 	"Closed"
@@ -34,6 +35,7 @@ export type UncertainMutation = {
 	requestId: string,
 	action: string,
 	timestamp: number,
+	dashboardSessionId: string?,
 }
 
 export type StateData = {
@@ -48,6 +50,8 @@ export type StateData = {
 	currentTab: TabName,
 	activeDenial: string?,
 	activeError: string?,
+	mutationNotice: string?,
+	awaitingSnapshotRevision: number?,
 	cameraCaptured: boolean,
 	inFlightRequests: { [string]: InFlightRequest },
 	uncertainMutations: { [string]: UncertainMutation },
@@ -75,6 +79,8 @@ function ClientState.new(initialSnapshot: any?): any
 		currentTab = "Home" :: TabName,
 		activeDenial = nil :: string?,
 		activeError = nil :: string?,
+		mutationNotice = nil :: string?,
+		awaitingSnapshotRevision = nil :: number?,
 		cameraCaptured = false,
 		inFlightRequests = {} :: { [string]: InFlightRequest },
 		uncertainMutations = {} :: { [string]: UncertainMutation },
@@ -118,19 +124,168 @@ function ClientState.GenerateRequestId(prefix: string?): string
 	return `{p}_{guid}`
 end
 
--- 1. Apply State snapshot (Snapshot.kind == "State")
--- Never opens the dashboard; updates confirmed balance and metadata if revision >= latestRevision.
-function ClientState:ApplyStateSnapshot(snapshot: any): boolean
-	if snapshot == nil or typeof(snapshot.revision) ~= "number" then
-		return false
+local MUTATION_FIELDS: { [string]: { [string]: boolean } } = {
+	AcceptMission = { missionId = true },
+	PublishOrganic = { templateId = true },
+	PublishPost = { runId = true, templateId = true },
+	ClaimMission = { runId = true },
+}
+local REPLY_MESSAGES: { [string]: string } = {
+	INVALID_INPUT = "This selection is no longer valid. Refresh progress and choose again.",
+	UNKNOWN_ACTION = "This action is not available.",
+	SESSION_EXPIRED = "The computer session ended. Use a terminal to reopen it.",
+	LOCKED = "This action is locked.",
+	BUSY = "The server is busy. Refresh progress before trying again.",
+	SAVE_UNAVAILABLE = "Saving is unavailable. Progress is read-only.",
+	NOT_READY = "This action is not ready. Refresh progress to see the current state.",
+	OUT_OF_RANGE = "Move back to the computer terminal.",
+	INSUFFICIENT_FUNDS = "There is not enough confirmed Cuan for this action.",
+	ALREADY_DONE = "This action has already completed.",
+	LIMIT_REACHED = "This action has reached its limit.",
+}
+
+local function errorText(code: string): string
+	return `{code}: {REPLY_MESSAGES[code] or "The action was rejected. Refresh progress."}`
+end
+
+local function missionDefinition(id: any): any?
+	if table.find(Catalog.V0Shipped.missionIds, id) == nil then return nil end
+	for _, mission in ipairs(Catalog.Missions) do
+		if mission.missionId == id then return mission end
 	end
-	if snapshot.revision < self._data.latestRevision then
-		-- Out-of-order older revision; drop to prevent balance regression.
-		return false
+	return nil
+end
+
+function ClientState:MutationBlockReason(): string?
+	local data = self._data
+	if data.status ~= "Open" or data.dashboardSessionId == nil then
+		return errorText("SESSION_EXPIRED")
+	end
+	if next(data.uncertainMutations) ~= nil then
+		return "BUSY: An earlier action is still unconfirmed. Refresh progress; do not send it again."
+	end
+	for _, request in pairs(data.inFlightRequests) do
+		if request.isMutation then return "BUSY: An action is already being sent." end
+	end
+	if data.awaitingSnapshotRevision ~= nil then
+		return "BUSY: Action accepted. Waiting for confirmed progress."
+	end
+	if data.snapshot == nil then return errorText("NOT_READY") end
+	if data.snapshot.saveStatus ~= "healthy" then
+		return errorText(if data.snapshot.saveStatus == "BUSY" then "BUSY" else "SAVE_UNAVAILABLE")
+	end
+	return nil
+end
+
+function ClientState:_rejectMutation(message: string): nil
+	self._data.activeError = message
+	self:_notify()
+	return nil
+end
+
+function ClientState:BeginMutation(action: string, payload: any, localNow: number): GameTypes.SessionCommand?
+	local fields = MUTATION_FIELDS[action]
+	if fields == nil then return self:_rejectMutation(errorText("UNKNOWN_ACTION")) end
+	self:CheckLocalWatchdog(localNow)
+	local blocked = self:MutationBlockReason()
+	if blocked ~= nil then return self:_rejectMutation(blocked) end
+	if typeof(payload) ~= "table" or getmetatable(payload) ~= nil then
+		return self:_rejectMutation(errorText("INVALID_INPUT"))
+	end
+	local fieldCount = 0
+	for key, value in pairs(payload) do
+		if not fields[key] or typeof(value) ~= "string" or #value == 0 or #value > 64 then
+			return self:_rejectMutation(errorText("INVALID_INPUT"))
+		end
+		fieldCount += 1
+	end
+	if fieldCount ~= (if action == "PublishPost" then 2 else 1) then
+		return self:_rejectMutation(errorText("INVALID_INPUT"))
 	end
 
+	local snapshot = self._data.snapshot
+	local active = snapshot.activeMission
+	if action == "AcceptMission" then
+		local definition = missionDefinition(payload.missionId)
+		if definition == nil then return self:_rejectMutation(errorText("INVALID_INPUT")) end
+		if active ~= nil or (snapshot.pendingPost ~= nil and snapshot.pendingPost.mode == "mission") then
+			return self:_rejectMutation("NOT_READY: A campaign is already active or resolving.")
+		end
+		if snapshot.tier < definition.minTier or snapshot.completedMissions < definition.unlockClaims then
+			return self:_rejectMutation("LOCKED: This campaign is not unlocked yet.")
+		end
+	elseif action == "PublishOrganic" then
+		if snapshot.pendingPost ~= nil then
+			return self:_rejectMutation("NOT_READY: Wait for the current post to finish revealing.")
+		end
+		local eligible = false
+		for _, context in ipairs(Catalog.OrganicContexts) do
+			if context.contextId == snapshot.nextOrganicContextId
+				and table.find(Catalog.V0Shipped.organicContextIds, context.contextId) ~= nil
+				and table.find(context.templates, payload.templateId) ~= nil then
+				eligible = true
+				break
+			end
+		end
+		if not eligible then return self:_rejectMutation(errorText("INVALID_INPUT")) end
+	else
+		if active == nil then return self:_rejectMutation("NOT_READY: Accept a campaign first.") end
+		if payload.runId ~= active.runId then
+			return self:_rejectMutation("INVALID_INPUT: This campaign run changed. Refresh progress.")
+		end
+		local definition = missionDefinition(active.missionId)
+		if definition == nil or table.find(definition.contexts, active.contextId) == nil then
+			return self:_rejectMutation(errorText("INVALID_INPUT"))
+		end
+		if action == "PublishPost" then
+			if snapshot.pendingPost ~= nil then
+				return self:_rejectMutation("NOT_READY: Wait for the current post to finish revealing.")
+			end
+			if active.postCount >= 2 then
+				return self:_rejectMutation("LIMIT_REACHED: A campaign allows at most two posts.")
+			end
+			if active.status ~= "accepted" and active.status ~= "resolvingPost" then
+				return self:_rejectMutation("NOT_READY: This campaign is not accepting posts.")
+			end
+			if table.find(definition.templates, payload.templateId) == nil then
+				return self:_rejectMutation(errorText("INVALID_INPUT"))
+			end
+		elseif active.status ~= "readyToClaim" then
+			return self:_rejectMutation("NOT_READY: This campaign is not ready to claim.")
+		end
+	end
+
+	local command: any = {
+		action = action,
+		requestId = ClientState.GenerateRequestId("mutation"),
+		dashboardSessionId = self._data.dashboardSessionId,
+		payload = table.clone(payload),
+	}
+	self:TrackRequest(command.requestId, action, true, localNow, nil, command.dashboardSessionId)
+	self._data.activeError = nil
+	self._data.mutationNotice = "Sending action..."
+	self:_notify()
+	return command
+end
+
+function ClientState:_acceptSnapshot(snapshot: any): boolean
+	if typeof(snapshot) ~= "table" or typeof(snapshot.revision) ~= "number"
+		or snapshot.revision < self._data.latestRevision then
+		return false
+	end
 	self._data.snapshot = snapshot
 	self._data.latestRevision = snapshot.revision
+	local waiting = self._data.awaitingSnapshotRevision
+	if waiting ~= nil and snapshot.revision >= waiting then
+		self._data.awaitingSnapshotRevision = nil
+		self._data.mutationNotice = "Progress confirmed."
+	end
+	return true
+end
+
+-- A Reply revision is not a snapshot. Only confirmed projections advance this watermark.
+function ClientState:ApplyStateSnapshot(snapshot: any): boolean
+	if not self:_acceptSnapshot(snapshot) then return false end
 	self:_notify()
 	return true
 end
@@ -148,13 +303,12 @@ function ClientState:ApplyOpenComputer(event: any, localNow: number): boolean
 	end
 
 	local wasOpenOrOpening = (self._data.status == "Open" or self._data.status == "Opening")
-
-	if event.state ~= nil and typeof(event.state.revision) == "number" then
-		if event.state.revision >= self._data.latestRevision then
-			self._data.snapshot = event.state
-			self._data.latestRevision = event.state.revision
-		end
+	local previousSessionId = self._data.dashboardSessionId
+	if previousSessionId ~= nil and previousSessionId ~= sessionId then
+		self._data.closedGenerations[previousSessionId] = true
 	end
+
+	self:_acceptSnapshot(event.state)
 
 	self._data.dashboardSessionId = sessionId
 	self._data.expiresAt = event.expiresAt
@@ -165,7 +319,9 @@ function ClientState:ApplyOpenComputer(event: any, localNow: number): boolean
 		else 600
 	self._data.localWatchdogTime = localNow + remaining
 	self._data.activeDenial = nil
-	self._data.activeError = nil
+	self._data.activeError = if next(self._data.uncertainMutations) ~= nil
+		then "BUSY: An earlier action is still unconfirmed. Refresh progress."
+		else nil
 
 	if wasOpenOrOpening then
 		-- Replaced generation in-flight. Retain open state; do not recapture camera.
@@ -322,93 +478,115 @@ function ClientState:OnCharacterLost(): boolean
 	return wasActive
 end
 
+function ClientState:_resolveMutation(requestId: string, result: any)
+	self._data.inFlightRequests[requestId] = nil
+	self._data.uncertainMutations[requestId] = nil
+	if result.ok then
+		if result.revision > self._data.latestRevision then
+			self._data.awaitingSnapshotRevision = math.max(self._data.awaitingSnapshotRevision or 0, result.revision)
+			self._data.mutationNotice = "Action accepted. Waiting for confirmed progress."
+		else
+			self._data.mutationNotice = "Progress confirmed."
+		end
+		self._data.activeError = nil
+	else
+		self._data.activeError = errorText(result.code)
+		self._data.mutationNotice = nil
+	end
+	if self._data.status == "ConnectionUncertain" and next(self._data.uncertainMutations) == nil then
+		self._data.status = if self._data.dashboardSessionId ~= nil then "Open" else "Closed"
+	end
+end
+
 function ClientState:ApplyReply(reply: any, localNow: number): boolean
-	if reply == nil or typeof(reply.requestId) ~= "string" then
+	if typeof(reply) ~= "table" or typeof(reply.requestId) ~= "string"
+		or typeof(reply.ok) ~= "boolean" or typeof(reply.code) ~= "string" then
 		return false
 	end
-
-	-- Correlate in-flight request
 	local inFlight = self._data.inFlightRequests[reply.requestId]
-	local requestSessionId = if inFlight ~= nil then inFlight.dashboardSessionId else nil
-	if inFlight ~= nil then
+	local uncertain = self._data.uncertainMutations[reply.requestId]
+	if inFlight == nil and uncertain == nil then return false end
+	if reply.ok and typeof(reply.revision) ~= "number" then return false end
+
+	local original = uncertain or inFlight
+	local expiredSessionId = nil
+	if uncertain ~= nil or (inFlight ~= nil and inFlight.isMutation) then
+		if not reply.ok and (reply.code == "SAVE_UNAVAILABLE" or reply.code == "BUSY") then
+			-- The wire omits SessionService's PENDING/UNKNOWN marker for failed writes.
+			self._data.inFlightRequests[reply.requestId] = nil
+			self._data.uncertainMutations[reply.requestId] = {
+				requestId = reply.requestId,
+				action = original.action,
+				timestamp = original.timestamp,
+				dashboardSessionId = original.dashboardSessionId,
+			}
+			self._data.activeError = `{reply.code}: The action is still unconfirmed. Refresh progress; do not send it again.`
+			self._data.mutationNotice = nil
+		else
+			self:_resolveMutation(reply.requestId, reply)
+			if reply.code == "SESSION_EXPIRED" then expiredSessionId = original.dashboardSessionId end
+		end
+	else
 		self._data.inFlightRequests[reply.requestId] = nil
+		if reply.code == "SESSION_EXPIRED" then expiredSessionId = inFlight.dashboardSessionId end
+		if reply.ok and inFlight.action == "GetSnapshot" and typeof(reply.data) == "table" then
+			self:_acceptSnapshot(reply.data.snapshot)
+			local lookup = reply.data.lookup
+			-- Query correlation and original-ID correlation are both required.
+			if typeof(lookup) == "table" and inFlight.lookupRequestId ~= nil
+				and lookup.originalRequestId == inFlight.lookupRequestId then
+				local id = inFlight.lookupRequestId
+				local pending = self._data.inFlightRequests[id]
+				local unresolved = self._data.uncertainMutations[id]
+					or (if pending ~= nil and pending.isMutation then pending else nil)
+				if unresolved ~= nil then
+					local result = lookup.originalResult
+					if (lookup.status == "APPLIED" and typeof(result) == "table" and result.ok == true
+							and result.code == "OK" and typeof(result.revision) == "number")
+						or (lookup.status == "REJECTED" and typeof(result) == "table" and result.ok == false
+							and typeof(result.code) == "string") then
+						self._data.resolvedLookups[id] = lookup
+						self:_resolveMutation(id, result)
+						if result.code == "SESSION_EXPIRED" then expiredSessionId = unresolved.dashboardSessionId end
+					elseif lookup.status == "PENDING" or lookup.status == "UNKNOWN" then
+						self._data.resolvedLookups[id] = lookup
+						self._data.activeError = if lookup.status == "PENDING"
+							then "BUSY: The earlier action is still pending. Refresh progress to check again."
+							else "BUSY: The earlier action is still unconfirmed. Refresh progress; do not send it again."
+						self._data.mutationNotice = nil
+					end
+				end
+			end
+		elseif not reply.ok then
+			self._data.activeError = errorText(reply.code)
+		end
 	end
 
-	-- Handle SESSION_EXPIRED reply
-	if reply.code == "SESSION_EXPIRED" then
-		-- Expire only if this request was bound to the active dashboard session,
-		-- or if the reply explicitly targets the current session.
-		local currentSid = self._data.dashboardSessionId
-		local targetSessionId = requestSessionId
-		if targetSessionId == nil and reply.dashboardSession ~= nil and typeof(reply.dashboardSession.dashboardSessionId) == "string" then
-			targetSessionId = reply.dashboardSession.dashboardSessionId
-		end
-
-		if currentSid ~= nil and targetSessionId == currentSid then
-			self._data.closedGenerations[currentSid] = true
-			self._data.dashboardSessionId = nil
+	if expiredSessionId ~= nil then
+		self._data.closedGenerations[expiredSessionId] = true
+		if expiredSessionId == self._data.dashboardSessionId then
 			self._data.status = "Expired"
+			self._data.dashboardSessionId = nil
 			self._data.expiresAt = nil
 			self._data.localWatchdogTime = nil
 			self:_notify()
 			return true
-		else
-			-- Uncorrelated old reply or reply for an already-closed generation:
-			-- Never close or expire a newer/active session.
-			if targetSessionId ~= nil then
-				self._data.closedGenerations[targetSessionId] = true
-			end
-			return false
 		end
+		self:_notify()
+		return false
 	end
-
-	-- Revision check: never regress confirmed state
-	if typeof(reply.revision) == "number" and reply.revision > self._data.latestRevision then
-		self._data.latestRevision = reply.revision
+	-- Metadata never establishes a session or revives a closed generation.
+	local metadata = reply.dashboardSession
+	if reply.code ~= "SESSION_EXPIRED" and typeof(metadata) == "table"
+		and self._data.dashboardSessionId ~= nil
+		and metadata.dashboardSessionId == self._data.dashboardSessionId
+		and typeof(metadata.expiresAt) == "number" then
+		self._data.expiresAt = math.max(self._data.expiresAt or 0, metadata.expiresAt)
+		local serverTime = if typeof(reply.serverTime) == "number" then reply.serverTime else localNow
+		self._data.localWatchdogTime = localNow + math.max(0, self._data.expiresAt - serverTime)
 	end
-
-	-- Dashboard metadata in reply: refreshes watchdog ONLY if matching current active session
-	if reply.dashboardSession ~= nil and typeof(reply.dashboardSession.dashboardSessionId) == "string" then
-		if reply.dashboardSession.dashboardSessionId == self._data.dashboardSessionId then
-			self._data.expiresAt = reply.dashboardSession.expiresAt
-			local srvTime = reply.serverTime or localNow
-			local diff = math.max(0, reply.dashboardSession.expiresAt - srvTime)
-			self._data.localWatchdogTime = localNow + diff
-		end
-	end
-
-	-- Reconcile GetSnapshot data
-	if reply.data ~= nil and typeof(reply.data) == "table" then
-		if reply.data.snapshot ~= nil and typeof(reply.data.snapshot.revision) == "number" then
-			if reply.data.snapshot.revision >= self._data.latestRevision then
-				self._data.snapshot = reply.data.snapshot
-				self._data.latestRevision = reply.data.snapshot.revision
-			end
-		end
-
-		if reply.data.lookup ~= nil and typeof(reply.data.lookup.originalRequestId) == "string" then
-			local lookup = reply.data.lookup
-			self._data.resolvedLookups[lookup.originalRequestId] = lookup
-
-			if lookup.status == "APPLIED" or lookup.status == "REJECTED" then
-				self._data.uncertainMutations[lookup.originalRequestId] = nil
-				if self._data.status == "ConnectionUncertain" and next(self._data.uncertainMutations) == nil then
-					self._data.status = if self._data.dashboardSessionId ~= nil then "Open" else "Closed"
-					self._data.activeError = nil
-				end
-			elseif lookup.status == "UNKNOWN" then
-				-- Never retry or re-issue on UNKNOWN
-				self._data.uncertainMutations[lookup.originalRequestId] = nil
-				if self._data.status == "ConnectionUncertain" and next(self._data.uncertainMutations) == nil then
-					self._data.status = if self._data.dashboardSessionId ~= nil then "Open" else "Closed"
-					self._data.activeError = nil
-				end
-			end
-		end
-	end
-
 	self:_notify()
-	return true
+	return reply.code ~= "SESSION_EXPIRED"
 end
 
 -- 11. Register in-flight request
@@ -426,40 +604,68 @@ function ClientState:TrackRequest(
 		timestamp = localNow,
 		isMutation = isMutation,
 		lookupRequestId = lookupRequestId,
-		dashboardSessionId = dashboardSessionId or self._data.dashboardSessionId,
+		dashboardSessionId = if action == "GetSnapshot" then nil else dashboardSessionId or self._data.dashboardSessionId,
 	}
 end
 
--- 12. Check request timeouts (6-second timeout for mutations)
-function ClientState:CheckTimeouts(localNow: number, timeoutSecs: number?): { { action: string, requestId: string, payload: any } }
-	local limit = timeoutSecs or 6
-	local queriesToSend: { { action: string, requestId: string, payload: any } } = {}
+function ClientState:_progressQuery(localNow: number, originalRequestId: string?): GameTypes.GetSnapshotCommand
+	local command: GameTypes.GetSnapshotCommand = {
+		action = "GetSnapshot",
+		requestId = ClientState.GenerateRequestId("progress"),
+		payload = if originalRequestId ~= nil then { lookupRequestId = originalRequestId } else {},
+	}
+	self:TrackRequest(command.requestId, command.action, false, localNow, originalRequestId)
+	return command
+end
 
-	for reqId, req in pairs(self._data.inFlightRequests) do
-		if (localNow - req.timestamp) >= limit then
-			self._data.inFlightRequests[reqId] = nil
-			if req.isMutation then
-				-- Mark mutation uncertain
-				self._data.uncertainMutations[reqId] = {
-					requestId = reqId,
-					action = req.action,
-					timestamp = req.timestamp,
-				}
-				self._data.status = "ConnectionUncertain"
-				self._data.activeError = "Connection uncertain. Refreshing progress..."
-
-				-- Generate fresh query to reconcile
-				local queryReqId = ClientState.GenerateRequestId("recon")
-				table.insert(queriesToSend, {
-					action = "GetSnapshot",
-					requestId = queryReqId,
-					payload = { lookupRequestId = reqId },
-				})
+function ClientState:RefreshProgress(localNow: number): GameTypes.GetSnapshotCommand
+	local originalId: string? = nil
+	local oldest = math.huge
+	for id, request in pairs(self._data.uncertainMutations) do
+		if request.timestamp < oldest or (request.timestamp == oldest and (originalId == nil or id < originalId)) then
+			originalId = id
+			oldest = request.timestamp
+		end
+	end
+	if originalId == nil then
+		for id, request in pairs(self._data.inFlightRequests) do
+			if request.isMutation
+				and (request.timestamp < oldest or (request.timestamp == oldest and (originalId == nil or id < originalId))) then
+				originalId = id
+				oldest = request.timestamp
 			end
 		end
 	end
+	local command = self:_progressQuery(localNow, originalId)
+	self:_notify()
+	return command
+end
 
+-- Timeouts reserve the original intent. Only explicit reads are sent afterward.
+function ClientState:CheckTimeouts(localNow: number, timeoutSecs: number?): { GameTypes.GetSnapshotCommand }
+	local limit = timeoutSecs or 6
+	local timedOutMutations: { string } = {}
+	for requestId, request in pairs(self._data.inFlightRequests) do
+		if localNow - request.timestamp >= limit then
+			self._data.inFlightRequests[requestId] = nil
+			if request.isMutation then
+				self._data.uncertainMutations[requestId] = {
+					requestId = requestId,
+					action = request.action,
+					timestamp = request.timestamp,
+					dashboardSessionId = request.dashboardSessionId,
+				}
+				table.insert(timedOutMutations, requestId)
+			end
+		end
+	end
+	local queriesToSend: { GameTypes.GetSnapshotCommand } = {}
+	for _, requestId in ipairs(timedOutMutations) do
+		table.insert(queriesToSend, self:_progressQuery(localNow, requestId))
+	end
 	if #queriesToSend > 0 then
+		self._data.activeError = "BUSY: Connection uncertain. Refreshing progress; do not send the action again."
+		self._data.mutationNotice = nil
 		self:_notify()
 	end
 	return queriesToSend
@@ -501,7 +707,7 @@ function ClientState:GetTier(): number
 end
 
 function ClientState:IsSaveBlocked(): boolean
-	if self._data.snapshot ~= nil and self._data.snapshot.saveStatus == "SAVE_UNAVAILABLE" then
+	if self._data.snapshot ~= nil and self._data.snapshot.saveStatus ~= "healthy" then
 		return true
 	end
 	return false
