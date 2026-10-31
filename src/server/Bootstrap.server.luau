@@ -1,5 +1,6 @@
 --!strict
 -- Production entry only. The isolated test project does not execute Bootstrap.
+local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ProximityPromptService = game:GetService("ProximityPromptService")
@@ -43,3 +44,14 @@ local runtime = BootstrapRuntime.new({
 	end,
 })
 runtime:Start()
+
+if RunService:IsStudio() then
+	_G.BuzzerRuntime = runtime
+	shared.BuzzerRuntime = runtime
+	local bridge = Instance.new("BindableFunction")
+	bridge.Name = "StudioPromptBridge"
+	bridge.OnInvoke = function(prompt, player)
+		return runtime._router:HandlePrompt(prompt, player)
+	end
+	bridge.Parent = ServerScriptService
+end

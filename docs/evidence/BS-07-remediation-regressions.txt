@@ -1,0 +1,81 @@
+==============================================
+ClientState spec: 30/30 passed, 0 failed
+[PASS] Snapshot updates spendable balance and revision monotonically
+[PASS] Out-of-order snapshot with lower revision is discarded
+[PASS] Unbanked worker income is tracked separately and not added to spendable balance
+[PASS] Offline income calculation uses bounded chunking
+[PASS] OpenComputer initiates Opening status and sets session ID
+[PASS] OnCameraOpened transitions Opening to Open and captures camera
+[PASS] CloseLocally transitions Open to Closing and generates CloseComputer command
+[PASS] OnCameraRestored transitions Closing to Closed and releases camera
+[PASS] Stale ComputerSessionExpired from older session is ignored
+[PASS] ComputerSessionExpired matching active session closes and expires dashboard
+[PASS] Session deadline watchdog triggers expiry and closes dashboard
+[PASS] Local watchdog timeout triggers expiry when server is unresponsive
+[PASS] In-flight mutations are preserved across state updates
+[PASS] Timeout converts mutation to uncertain and generates lookup query
+[PASS] Lookup reply APPLIED resolves uncertain mutation
+[PASS] Lookup reply REJECTED resolves uncertain mutation without duplicate execution
+[PASS] New generation replacement updates session and preserves camera capture
+[PASS] GetSnapshot correlation removes in-flight query and updates state
+[PASS] APPLIED lookup handling resolves uncertain mutation
+[PASS] REJECTED lookup handling clears uncertain mutation without retransmitting
+[PASS] Multiple concurrent in-flight requests track independently
+[PASS] Late Reply does not reopen closed dashboard
+[PASS] Matching dashboard metadata in Reply refreshes watchdog deadline
+[PASS] Stale dashboard metadata cannot refresh a new session watchdog
+[PASS] Blocked save state is reported accurately by IsSaveBlocked
+[PASS] UI cleanup does not leave duplicate listeners
+[PASS] Cancelled opening transition prevents late OnCameraOpened from reopening or capturing camera
+[PASS] Delayed SESSION_EXPIRED reply for older session does not close active newer session
+[PASS] Uncorrelated old SESSION_EXPIRED reply cannot close current session
+[PASS] ClientState:GetStatus() returns active status string matching internal state
+[PASS] AbortOpening transitions Opening to Closed, sets activeError, invalidates session, and dispatches CloseComputer
+==============================================
+AppClientIntegration spec: 9/9 passed, 0 failed
+[PASS] Valid server OpenComputer transitions Opening to Open via tween completion with no error
+[PASS] Reduced motion opening transitions Opening to Open immediately
+[PASS] Cancellation while Opening cancels tween, restores camera, and rejects late callback
+[PASS] User close from Open hides desktop and restores camera
+[PASS] Session expiry transitions Open to Expired, hides desktop, and restores camera
+[PASS] Character death closes Desktop and restores camera
+[PASS] Repeated State snapshots never trigger Opening or Desktop visibility
+[PASS] Repeated OpenComputer on active session updates session without duplicate opening transitions
+[PASS] Missing camera anchor aborts opening, displays activeError, restores camera to Custom, and dispatches CloseComputer with zero recursive loops
+==============================================
+Suite Breakdown (510 total):
+- Bootstrap.spec: 17/17 passed
+- ClientState.spec: 30/30 passed
+- AppClientIntegration.spec: 9/9 passed
+- EconomyService.spec: 39/39 passed
+- FeedService.spec: 18/18 passed
+- MissionService.spec: 85/85 passed
+- NetRouter.spec: 89/89 passed
+- ProfileStore.spec: 59/59 passed
+- Rules.spec: 16/16 passed
+- SessionIntegration.spec: 45/45 passed
+- SessionService.spec: 73/73 passed
+- WorldService.spec: 30/30 passed
+==============================================
+BS-01 suites: 12/12 passed, 0 failed
+BS01_TESTS_PASSED
+Total Test Cases: 510/510 passed (0 failed)
+Verified in Roblox Studio Play mode via StudioMCP.
+
+==============================================
+Client Runtime Smoke Verification (7 Scenarios):
+1. Successful CRT prompt opening: PASS (Server triggers prompt -> client tweens camera to CRT at TerminalSlot -> status Open, desktop enabled, camera Scriptable)
+2. Open -> Close -> world camera restored: PASS (Client close -> command dispatched -> camera restored to character Humanoid, camera Custom, desktop disabled, status Closed)
+3. Missing anchor during opening: PASS (CameraFocus removed -> AbortOpening invoked -> camera restored to Custom, status Closed, desktop disabled, activeError banner displayed, no recursive loop)
+4. Death during animation: PASS (Humanoid health set to 0 mid-animation -> camera restored to Custom, desktop disabled, status Closed)
+5. Session expiration: PASS (Session expired event -> desktop hidden, camera restored to Custom, status Closed)
+6. Rapid close/reopen: PASS (Opening interrupted by Close followed by re-open -> generation tracking cleanly cancels tween and settles in Open with camera focused)
+7. Reduced motion: PASS (Transitions immediately without tween delay, reaches Open and closes cleanly to Custom)
+Studio Output Inspection: 0 runtime errors.
+
+==============================================
+ProfileStore Offline Studio Fallback Review:
+- Fallback in ProfileStore default store is strictly guarded behind `RunService:IsStudio()`.
+- Triggers exclusively when `DataStoreService:GetDataStore("PlayerData")` throws or fails to return a handle in offline Studio.
+- Emits explicit dev warning: `[ProfileStore:DEV_FALLBACK] DataStore handle 'PlayerData' unavailable in offline Studio... Using ephemeral in-memory store for local Studio session only. Real DataStore G2 remains OPEN.`
+- Production runtime and live cloud servers will error cleanly if DataStoreService is unavailable, ensuring live persistence cannot silently degrade to ephemeral memory.

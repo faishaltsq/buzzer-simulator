@@ -16,7 +16,7 @@ for _, spec in ipairs(specsFolder:GetChildren()) do
 		table.insert(results, {
 			name = spec.Name,
 			ok = ok,
-			detail = if ok then tostring(summary) else "see error output above",
+			detail = if ok then tostring(summary) else ("ERROR: " .. tostring(summary)),
 		})
 	end
 end
