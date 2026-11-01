@@ -1,0 +1,96 @@
+{
+  "universeId": 10774181892,
+  "placeId": 100558697471228,
+  "executionMode": "RealDataStore_StudioMCP",
+  "scenarios": {
+    "G2-01": {
+      "testId": "G2-01",
+      "description": "Fresh Account Initial Join & Rejoin Invariant",
+      "pass": true,
+      "initialBalance": 0,
+      "initialDevice": "phone_cheap",
+      "initialRevision": 2,
+      "rejoinBalance": 0,
+      "rejoinDevice": "phone_cheap",
+      "rejoinRevision": 2
+    },
+    "G2-02": {
+      "testId": "G2-02",
+      "description": "Organic Post Settlement Across Disconnect/Rejoin",
+      "pass": true,
+      "settledBalance": 15,
+      "repeatBalance": 15,
+      "revision": 4
+    },
+    "G2-03": {
+      "testId": "G2-03",
+      "description": "Campaign Post Reveal & Rejoin Survival",
+      "pass": true,
+      "balance": 30,
+      "revision": 7,
+      "runId": "run-2",
+      "missionStatus": "readyToClaim",
+      "postCount": 1
+    },
+    "G2-04": {
+      "testId": "G2-04",
+      "description": "Mission Claim Persistence & Duplicate Rejection",
+      "pass": true,
+      "claimedBalance": 110,
+      "rejoinBalance": 110,
+      "balanceAfterDup": 110,
+      "completedMissions": 1,
+      "revision": 8
+    },
+    "G2-05": {
+      "testId": "G2-05",
+      "description": "Fast Phone Purchase & Deduplication Invariant",
+      "pass": true,
+      "boughtBalance": 60,
+      "boughtDevice": "phone_fast",
+      "rejoinBalance": 60,
+      "rejoinDevice": "phone_fast",
+      "balanceAfterDup": 60,
+      "revision": 9
+    },
+    "G2-06": {
+      "testId": "G2-06",
+      "description": "Post-Upgrade Organic Reveal & Accelerated Yield",
+      "pass": true,
+      "payout": 24,
+      "settledBalance": 84,
+      "rejoinBalance": 84,
+      "device": "phone_fast",
+      "revision": 11
+    },
+    "G2-07": {
+      "testId": "G2-07",
+      "description": "Competing Server Lease Exclusion & Clean Handoff",
+      "pass": true,
+      "competingCode": "LOCKED",
+      "handoffOk": true,
+      "confirmedBalance": 84,
+      "revision": 11
+    },
+    "G2-08": {
+      "testId": "G2-08",
+      "description": "Idempotent Replay, Tamper Rejection & Safe Storage Failure",
+      "pass": true,
+      "replayNoRevisionBump": true,
+      "spoofRejected": true,
+      "badBuyRejected": true,
+      "balanceAfterBadBuy": 0,
+      "readFailedSafe": true
+    },
+    "G2-09": {
+      "testId": "G2-09",
+      "description": "Client State Machine, Character Loss & UI Viewports",
+      "pass": true,
+      "statusLifecycle": "Opening->Open->Closing->Closed",
+      "characterDeathHandled": true,
+      "uncertainTracked": true,
+      "desktopLayout": true,
+      "mobileLayout": true
+    }
+  }
+}
