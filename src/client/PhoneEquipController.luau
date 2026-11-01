@@ -49,8 +49,8 @@ local PHONE_SIZE = {
 -- screen facing outward from the palm. R6 arms are thicker and shorter than
 -- R15 hands, so they get their own offset.
 local GRIP = {
-	R15 = CFrame.new(0, -0.42, 0.02) * CFrame.Angles(math.rad(-96), 0, 0),
-	R6 = CFrame.new(0, -0.5, 0.05) * CFrame.Angles(math.rad(-96), 0, 0),
+	R15 = CFrame.new(0, -0.25, 0.02) * CFrame.Angles(math.rad(15), 0, 0),
+	R6 = CFrame.new(0, -0.5, 0.05) * CFrame.Angles(math.rad(15), 0, 0),
 }
 
 -- Procedural pose offsets applied to the shoulder Motor6D C0. Animations write

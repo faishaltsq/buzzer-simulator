@@ -36,9 +36,9 @@ Milestone BS-09 delivers the first equipment upgrade loop and handheld device pr
 
 ### Handoff Test Count Reconciliation
 - **BS-08 Documented Count**: 606 tests reported in earlier handoff document.
-- **Actual Baseline Across 15 Specs**: Grep and Studio runner summation confirms exactly **591 declared tests** across the 15 baseline suites (e.g. ProfileStore 59, SessionService 73, NetRouter 89, MissionService 85, PostingState 57, SessionIntegration 45, EconomyService 39, WorldService 30, ClientState 30, Bootstrap 17, Rules 16, FeedService 18, ComposerIntegration 14, Presentation 9, AppClientIntegration 9).
+- **Actual Baseline Across 15 Specs**: Authoritative Studio runner summation confirms exactly **590 declared tests** across the 15 baseline suites (ProfileStore 59, SessionService 73, NetRouter 89, MissionService 85, PostingState 57, SessionIntegration 45, EconomyService 39, WorldService 30, ClientState 30, Bootstrap 17, Rules 16, FeedService 18, ComposerIntegration 14, Presentation 9, AppClientIntegration 9).
 - **BS-09 New Test Suite**: 31 declared tests in `tests/Specs/BS09FastPhone.spec.luau` (22 core upgrade/shop/rigging tests + 9 focused review lifecycle regression tests).
-- **True Test-Runner Total**: **622 tests across 16 suites** (591 baseline + 31 BS-09). 0 failed, 100% passing.
+- **True Test-Runner Total**: Exactly **621 tests across 16 suites** (590 baseline + 31 BS-09). 0 failed, 100% passing.
 
 All 16 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxlx`, Studio runner `Runner.server.luau`):
 
@@ -62,7 +62,7 @@ All 16 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxl
 ==============================================
 BS-01 suites: 16/16 passed, 0 failed
 BS01_TESTS_PASSED
-Total Test Cases: 622/622 passed (0 failed)
+Total Test Cases: 621/621 passed (0 failed)
 ```
 
 ---
@@ -122,15 +122,15 @@ Total Test Cases: 622/622 passed (0 failed)
 
 Real screenshots captured directly in Roblox Studio Play mode (`BuzzerSimulator.rbxlx`) and archived in `assets/ui/bs09-review/`:
 
-| Artifact | File Path | Description |
-|---|---|---|
-| 1. Cheap Phone in Hand | `assets/ui/bs09-review/cheap-phone-hand.jpg` | Player holding procedural retro keypad handset in bedroom third-person view. Docked phone slot concealed locally. |
-| 2. Fast Phone in Hand | `assets/ui/bs09-review/fast-phone-hand.jpg` | Player holding procedural Fast Phone (modern touchscreen slate + gold camera bump) in bedroom. |
-| 3. Shop Affordable | `assets/ui/bs09-review/shop-affordable.jpg` | BuzzerOS Upgrades tab in State B: Confirmed balance 110 Cuan, price 50 Cuan, green "Beli HP Cepat — 50 Cuan" active CTA. |
-| 4. Purchase Confirmed | `assets/ui/bs09-review/purchase-confirmed.jpg` | BuzzerOS Upgrades tab in State E: Confirmed balance 60 Cuan, "Equipped — Fast Phone" confirmed badge, zero optimistic debit. |
-| 5. Phone After CRT Close | `assets/ui/bs09-review/phone-after-crt-close.jpg` | Player returning to third-person view after closing BuzzerOS; held phone and holding arm pose restored automatically. |
-| 6. Phone After Respawn | `assets/ui/bs09-review/phone-after-respawn.jpg` | Fresh character spawned following death; starts in predictable Stowed state, then equips cleanly with zero duplicate models. |
-| 7. Mobile Equip Controls | `assets/ui/bs09-review/mobile-equip-controls.jpg` | Contextual mobile equip button (`BuzzerPhoneControls`) rendered at 46px height with touch targets and dynamic state attributes. |
+| Artifact | File Path | Resolution | Size | SHA-256 | Description |
+|---|---|---|---|---|---|
+| 1. Cheap Phone in Hand | `assets/ui/bs09-review/cheap-phone-hand.jpg` | 637x283 | 57,111 B | `7bb7cdaba25baea7e42eb69dbf8f9200e00976cc6b0e847acd5c134121a5b35f` | Player holding procedural retro keypad handset in bedroom third-person view. Docked phone slot concealed locally. |
+| 2. Fast Phone in Hand | `assets/ui/bs09-review/fast-phone-hand.jpg` | 637x283 | 59,673 B | `c854d94b1b0a41bd2b40226ad7827822a534241d30b1ec9cafd496994a6c4dd9` | Player holding procedural Fast Phone (modern touchscreen slate + gold camera bump) in bedroom. |
+| 3. Shop Affordable | `assets/ui/bs09-review/shop-affordable.jpg` | 637x283 | 33,781 B | `d8dd6ad4a84cb0385ea6d82ce815e76ba9c30d90b1fc710279d157ffc2260fd2` | BuzzerOS Upgrades tab in State B: Confirmed balance 110 Cuan, price 50 Cuan, "Purchase Fast Phone · 50 Cuan" active CTA. |
+| 4. Purchase Confirmed | `assets/ui/bs09-review/purchase-confirmed.jpg` | 637x283 | 34,774 B | `efeb83a981542b7c71c59f852aeae500ed4d92f06ca63071ce99e9047ccbb73e` | BuzzerOS Upgrades tab in State E: Confirmed balance 60 Cuan, "Equipped — Fast Phone" confirmed badge, zero optimistic debit. |
+| 5. Phone After CRT Close | `assets/ui/bs09-review/phone-after-crt-close.jpg` | 637x283 | 59,161 B | `90710829697791cdd323bb0c061d708380a8c611f0f3680328fc06d2d113050e` | Player returning to third-person view after closing BuzzerOS; held phone and holding arm pose restored automatically. |
+| 6. Phone After Respawn | `assets/ui/bs09-review/phone-after-respawn.jpg` | 637x283 | 57,961 B | `3317aa9d943c49c1822bb75b7083a494f9bd96dd95755f08cf1591c993ba90cb` | Fresh character spawned following death; starts in predictable Stowed state, then equips cleanly with zero duplicate models. |
+| 7. Mobile Equip Controls | `assets/ui/bs09-review/mobile-equip-controls.jpg` | 637x283 | 59,933 B | `e795e1b686aa0c14cdb8128d09bacbba13340bbc837498f3f8a505214e9408b4` | Contextual mobile equip button (`BuzzerPhoneControls`) rendered at 46px height with touch targets and dynamic state attributes. |
 
 ---
 
@@ -194,5 +194,5 @@ All journeys were executed natively in Roblox Studio Play mode (`BuzzerSimulator
 
 - **Branch**: `agent/BS-09-fast-phone-handheld`
 - **Base**: `master` (`afa920dc821f2c449a95083f6ec6f51ccfc9c963`)
-- **Status**: Milestone BS-09 fully implemented, verified across 16 test suites (612 tests, 0 failed), Rojo builds verified, ready for commit and push.
+- **Status**: Milestone BS-09 fully implemented, verified across 16 test suites (621 tests, 0 failed), Rojo builds verified, ready for commit and push.
 - **Rules Compliance**: Automated merging is NOT performed; milestone BS-10 is NOT initiated.
