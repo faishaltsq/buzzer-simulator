@@ -7,7 +7,10 @@ local Theme = require(script.Parent:WaitForChild("Theme") :: any)
 local Composer = require(script.Parent:WaitForChild("PostComposer"))
 local Feed = require(script.Parent:WaitForChild("Feed"))
 local Missions = require(script.Parent:WaitForChild("Missions"))
-local Presentation = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Presentation"))
+local Upgrades = require(script.Parent:WaitForChild("Upgrades"))
+local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
+local Catalog = require(Shared:WaitForChild("Catalog") :: any)
+local Presentation = require(Shared:WaitForChild("Presentation") :: any)
 local Desktop = {}
 Desktop.__index = Desktop
 
@@ -481,13 +484,8 @@ function Desktop:_buildPages()
 	self._contentContainers.Create = self._composer.Root
 	self._missions = Missions.new({parent = self._contentArea, onAction = self._onAction, getBlockReason = self._getBlockReason})
 	self._contentContainers.Missions = self._missions.Root
-
-	-- 5. Upgrades Page (Informational placeholder)
-	self._contentContainers["Upgrades"] = self:_createPlaceholderPage(
-		"Hardware & Studio Upgrades",
-		"Upgrade from Cheap Phone to Fast Phone, install PC Rumah, and expand your home studio desks.",
-		"Planned for Milestone BS-09"
-	)
+	self._upgrades = Upgrades.new({parent = self._contentArea, onAction = self._onAction, getBlockReason = self._getBlockReason})
+	self._contentContainers.Upgrades = self._upgrades.Root
 
 	-- 6. Workers Page (Informational placeholder)
 	self._contentContainers["Workers"] = self:_createPlaceholderPage(
@@ -893,6 +891,7 @@ function Desktop:Update(stateData: any)
 	self._feed:Update(stateData)
 	self._composer:Update(stateData)
 	self._missions:Update(stateData)
+	self._upgrades:Update(stateData)
 	local snap = stateData.snapshot
 	if snap == nil then
 		return
@@ -908,15 +907,45 @@ function Desktop:Update(stateData: any)
 	self._homePendingVal.Text = `{Theme.formatNumber(pending)} Cuan`
 	self._homeRateVal.Text = `+{string.format("%.1f", rate)}/s`
 
-	-- Update Hardware Display
-	if deviceId == "phone_fast" then
-		self._homeDeviceName.Text = "Fast Phone (Equipped)"
-		self._homeDeviceNote.Text = "Enhanced mobile production hardware. 1.6x yield multiplier active on organic posts."
-		self._homeUpgradeDesc.Text = "PC Rumah (Workstation) — Available in BS-09 expansion."
+	-- Update Hardware Display (all copy derived from Catalog; never hardcoded
+	-- numbers that can drift from the settled economy).
+	local device = Upgrades.deviceById(deviceId)
+	local deviceLabel = Presentation.Devices[deviceId] or deviceId
+	if device ~= nil then
+		local strong, weak = Upgrades.payoutOf(device)
+		local nextDevice = nil
+		for _, candidate in ipairs(Catalog.Devices) do
+			if candidate.order == device.order + 1 and table.find(Catalog.V0Shipped.deviceIds, candidate.id) ~= nil then
+				nextDevice = candidate
+				break
+			end
+		end
+		self._homeDeviceName.Text = `{deviceLabel} (Equipped)`
+		self._homeDeviceNote.Text = string.format(
+			"%.2fx yield · strong %d Cuan · weak %d Cuan · reveal %ds. This phone produces your posts; the CRT is a dashboard terminal only.",
+			device.deviceYield,
+			strong,
+			weak,
+			device.revealSeconds
+		)
+		if nextDevice ~= nil then
+			local nextStrong = Upgrades.payoutOf(nextDevice)
+			self._homeUpgradeDesc.Text = string.format(
+				"%s (%d Cuan) — strong payout %d -> %d Cuan, reveal %ds -> %ds. Buy it in Upgrades.",
+				Presentation.Devices[nextDevice.id] or nextDevice.id,
+				nextDevice.price,
+				strong,
+				nextStrong,
+				device.revealSeconds,
+				nextDevice.revealSeconds
+			)
+		else
+			self._homeUpgradeDesc.Text = "Fast Phone is equipped. PC Rumah belongs to a later milestone and is not purchasable in this build."
+		end
 	else
-		self._homeDeviceName.Text = "Cheap Phone (Equipped)"
-		self._homeDeviceNote.Text = "Starter mobile phone. Yield multiplier is 1.0x. Fast Phone upgrade available."
-		self._homeUpgradeDesc.Text = "PhoneFast (50 Cuan) — Boosts strong organic payout from 15 to 24 Cuan per post."
+		self._homeDeviceName.Text = "Unknown device"
+		self._homeDeviceNote.Text = "Confirmed hardware could not be resolved from the catalog."
+		self._homeUpgradeDesc.Text = "Open Upgrades to review available hardware."
 	end
 
 	local context = Presentation.Contexts[snap.nextOrganicContextId]

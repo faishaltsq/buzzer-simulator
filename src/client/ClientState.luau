@@ -129,6 +129,7 @@ local MUTATION_FIELDS: { [string]: { [string]: boolean } } = {
 	PublishOrganic = { templateId = true },
 	PublishPost = { runId = true, templateId = true },
 	ClaimMission = { runId = true },
+	BuyDevice = { deviceId = true },
 }
 local REPLY_MESSAGES: { [string]: string } = {
 	INVALID_INPUT = "This selection is no longer valid. Refresh progress and choose again.",
@@ -228,6 +229,37 @@ function ClientState:BeginMutation(action: string, payload: any, localNow: numbe
 			end
 		end
 		if not eligible then return self:_rejectMutation(errorText("INVALID_INPUT")) end
+	elseif action == "BuyDevice" then
+		-- Purchases carry an ID only. Price, balance, ownership and yield are
+		-- resolved here from Catalog and the confirmed snapshot, never from the
+		-- caller; the server re-checks all of it authoritatively.
+		if table.find(Catalog.V0Shipped.deviceIds, payload.deviceId) == nil then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		local target = nil
+		local ownedOrder = nil
+		for _, device in ipairs(Catalog.Devices) do
+			if device.id == payload.deviceId then target = device end
+			if device.id == snapshot.deviceId then ownedOrder = device.order end
+		end
+		if target == nil then return self:_rejectMutation(errorText("INVALID_INPUT")) end
+		if snapshot.deviceId == payload.deviceId then
+			return self:_rejectMutation(errorText("ALREADY_DONE"))
+		end
+		-- Only the exact next device in catalog order is purchasable; no skipping.
+		local isNext = false
+		if ownedOrder ~= nil then
+			for _, device in ipairs(Catalog.Devices) do
+				if device.order == ownedOrder + 1 then
+					isNext = device.id == payload.deviceId
+					break
+				end
+			end
+		end
+		if not isNext then return self:_rejectMutation(errorText("NOT_READY")) end
+		if typeof(snapshot.balance) ~= "number" or snapshot.balance < target.price then
+			return self:_rejectMutation(errorText("INSUFFICIENT_FUNDS"))
+		end
 	else
 		if active == nil then return self:_rejectMutation("NOT_READY: Accept a campaign first.") end
 		if payload.runId ~= active.runId then
