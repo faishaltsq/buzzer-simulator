@@ -710,6 +710,7 @@ function PhoneEquipController:Unequip()
 			return
 		end
 		if self._state == "Unequipping" then
+			self:_teardownIK()
 			self:_teardownModel()
 			self._state = "Stowed"
 			self:_render()
@@ -778,6 +779,7 @@ function PhoneEquipController:StowForDashboard(): boolean
 			self._shoulder.C0 = self._shoulderBase
 		end)
 	end
+	self:_teardownIK()
 	self:_teardownModel()
 	self._state = "Stowed"
 	self:_setDockedHidden(false)

@@ -3,7 +3,31 @@ import json
 import os
 import sys
 
-EXE = r"C:/Users/cubeb/AppData/Local/Roblox/Versions/version-7062aec9dbe74b14/StudioMCP.exe"
+import glob
+import shutil
+
+def find_studiomcp_exe() -> str:
+    env_path = os.environ.get("STUDIOMCP_PATH")
+    if env_path and os.path.exists(env_path):
+        return env_path
+
+    which_path = shutil.which("StudioMCP") or shutil.which("StudioMCP.exe")
+    if which_path and os.path.exists(which_path):
+        return which_path
+
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        pattern = os.path.join(local_app_data, "Roblox", "Versions", "*", "StudioMCP.exe")
+        candidates = glob.glob(pattern)
+        if candidates:
+            candidates.sort(key=os.path.getmtime, reverse=True)
+            return candidates[0]
+
+    raise FileNotFoundError(
+        "StudioMCP executable not found. Set the STUDIOMCP_PATH environment variable."
+    )
+
+EXE = find_studiomcp_exe()
 
 class StudioClient:
     def __init__(self):

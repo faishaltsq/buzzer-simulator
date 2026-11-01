@@ -28,7 +28,7 @@ Milestone BS-09 delivers the first equipment upgrade loop and handheld device pr
 | `src/client/ui/Desktop.luau` | **Modified** | Replaced BS-09 shop placeholder with `Upgrades` component. Updated Home tab device hardware spec projection to display dynamic catalog values and clear upgrade CTAs. |
 | `src/client/App.client.luau` | **Modified** | Wired `PhoneEquipController` into client lifecycle, synchronized held phone silhouette with confirmed device snapshot, added publish action use-flourish, and auto-stowed phone before CRT camera transitions. |
 | `tests/Specs/PostingState.spec.luau` | **Modified** | Removed `BuyDevice` from unadmitted actions list to reflect BS-09 implementation of device upgrades. |
-| `tests/Specs/BS09FastPhone.spec.luau` | **New** | 31 comprehensive unit and integration tests covering Fast Phone catalog invariants, mutation admission, shop UI state resolution, cosmetic handheld rigging, and all 9 focused review lifecycle scenarios. |
+| `tests/Specs/BS09FastPhone.spec.luau` | **New** | 36 comprehensive unit and integration tests covering Fast Phone catalog invariants, mutation admission, shop UI state resolution, cosmetic handheld rigging, and all 14 focused review lifecycle scenarios (including 5 targeted IKControl fallback regression tests). |
 
 ---
 
@@ -37,14 +37,14 @@ Milestone BS-09 delivers the first equipment upgrade loop and handheld device pr
 ### Handoff Test Count Reconciliation
 - **BS-08 Documented Count**: 606 tests reported in earlier handoff document.
 - **Actual Baseline Across 15 Specs**: Authoritative Studio runner summation confirms exactly **590 declared tests** across the 15 baseline suites (ProfileStore 59, SessionService 73, NetRouter 89, MissionService 85, PostingState 57, SessionIntegration 45, EconomyService 39, WorldService 30, ClientState 30, Bootstrap 17, Rules 16, FeedService 18, ComposerIntegration 14, Presentation 9, AppClientIntegration 9).
-- **BS-09 New Test Suite**: 31 declared tests in `tests/Specs/BS09FastPhone.spec.luau` (22 core upgrade/shop/rigging tests + 9 focused review lifecycle regression tests).
-- **True Test-Runner Total**: Exactly **621 tests across 16 suites** (590 baseline + 31 BS-09). 0 failed, 100% passing.
+- **BS-09 New Test Suite**: 36 declared tests in `tests/Specs/BS09FastPhone.spec.luau` (22 core upgrade/shop/rigging tests + 9 baseline lifecycle regression tests + 5 targeted IKControl fallback regression tests).
+- **True Test-Runner Total**: Exactly **626 tests across 16 suites** (590 baseline + 36 BS-09). 0 failed, 100% passing.
 
 All 16 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxlx`, Studio runner `Runner.server.luau`):
 
 ```
 [SUITE PASS] AppClientIntegration.spec: AppClientIntegration: 9/9 passed
-[SUITE PASS] BS09FastPhone.spec: BS-09: 31/31 passed
+[SUITE PASS] BS09FastPhone.spec: BS-09: 36/36 passed
 [SUITE PASS] Bootstrap.spec: Bootstrap: 17/17 passed
 [SUITE PASS] ClientState.spec: ClientState: 30/30 passed
 [SUITE PASS] ComposerIntegration.spec: 14/14 passed
@@ -62,12 +62,12 @@ All 16 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxl
 ==============================================
 BS-01 suites: 16/16 passed, 0 failed
 BS01_TESTS_PASSED
-Total Test Cases: 621/621 passed (0 failed)
+Total Test Cases: 626/626 passed (0 failed)
 ```
 
 ---
 
-## 4. Remediation Matrix & Lifecycle Regression Scenarios (39 / 39 Verified)
+## 4. Remediation Matrix & Lifecycle Regression Scenarios (44 / 44 Verified)
 
 ### Core Invariants (1–30)
 | # | Category | Scenario Description | Verification Status | Spec / Trace |
@@ -115,6 +115,11 @@ Total Test Cases: 621/621 passed (0 failed)
 | 37 | Lifecycle Remediation | PhoneSlot replacement observation conceals newly inserted docked model while held | PASS | `BS09FastPhone.spec` (Lifecycle 7) |
 | 38 | Lifecycle Remediation | Gamepad ButtonY and equip actions ignored while dashboard is open | PASS | `BS09FastPhone.spec` (Lifecycle 8) |
 | 39 | Lifecycle Remediation | Mobile equip touch button height >= 44 reference pixels with valid attributes | PASS | `BS09FastPhone.spec` (Lifecycle 9) |
+| 40 | IK Fallback | IK equip binds ChainRoot, EndEffector, target attachment, and unequip completely destroys IKControl | PASS | `BS09FastPhone.spec` (Lifecycle 10) |
+| 41 | IK Fallback | StowForDashboard tears down IKControl without losing stored preferEquipped | PASS | `BS09FastPhone.spec` (Lifecycle 11) |
+| 42 | IK Fallback | RestoreAfterDashboard cleanly restores IKControl holding pose after CRT close | PASS | `BS09FastPhone.spec` (Lifecycle 12) |
+| 43 | IK Fallback | Rapid equip/stow toggles prevent orphaned IKControl or Attachment instances | PASS | `BS09FastPhone.spec` (Lifecycle 13) |
+| 44 | IK Fallback | Character death tears down IKControl; fresh character starts stowed and re-equips cleanly | PASS | `BS09FastPhone.spec` (Lifecycle 14) |
 
 ---
 
@@ -126,8 +131,8 @@ Real screenshots captured directly in Roblox Studio Play mode (`BuzzerSimulator.
 |---|---|---|---|---|---|
 | 1. Cheap Phone in Hand | `assets/ui/bs09-review/cheap-phone-hand.jpg` | 1280×720 | 199,983 B | `aa4247bdc8c0b13c8a1be3b2f392c79a4927ffe22cbba9af3e53f94654411e07` | Player holding procedural retro keypad handset in bedroom third-person view with visible avatar and raised holding arm. Docked phone slot concealed locally. |
 | 2. Fast Phone in Hand | `assets/ui/bs09-review/fast-phone-hand.jpg` | 1280×720 | 203,171 B | `4d6d78385c34c2d8d5bcad13109172d6854f528ad7a6b81f65d79f00ab4b18b6` | Player holding procedural Fast Phone (modern touchscreen slate + gold camera bump) in bedroom third-person view. |
-| 3. Shop Affordable | `assets/ui/bs09-review/shop-affordable.jpg` | 1280×720 | 212,215 B | `b88244fad1ac8005540aeb419c1140278b25c5a987cc3f0d6425fb0dd062fece` | BuzzerOS Upgrades tab in State B: Confirmed balance 110 Cuan, price 50 Cuan, comparison card, Fast Phone card, and "Purchase Fast Phone · 50 Cuan" active CTA completely visible. |
-| 4. Purchase Confirmed | `assets/ui/bs09-review/purchase-confirmed.jpg` | 1280×720 | 212,512 B | `65e6112bff55952b2979c56d0ae13c62890a67fe1d0df5b5b1fb18ac22dc6e76` | BuzzerOS Upgrades tab in State E: Confirmed balance 60 Cuan, full card and "Equipped — Fast Phone" badge, zero optimistic debit. |
+| 3. Shop Affordable | `assets/ui/bs09-review/shop-affordable.jpg` | 1280×720 | 104,349 B | `74c99a79700a0d7c1b25b568e01a9252cf53ffa09bc7c5468bff4fc2c184c32f` | BuzzerOS Upgrades tab in State B (Affordable): Confirmed balance 110 Cuan, price 50 Cuan, comparison card, Fast Phone card, and "Purchase Fast Phone · 50 Cuan" active CTA completely visible in the CRT terminal window. |
+| 4. Purchase Confirmed | `assets/ui/bs09-review/purchase-confirmed.jpg` | 1280×720 | 100,584 B | `e53a347897e9c548d96077b8cc1c73191709f1999e70a4c341aad9782889c513` | BuzzerOS Upgrades tab in State E (Equipped): Confirmed balance 60 Cuan, full card, "OWNED · EQUIPPED" tag, and "Equipped — Fast Phone" badge visible in the CRT terminal window. |
 | 5. Phone After CRT Close | `assets/ui/bs09-review/phone-after-crt-close.jpg` | 1280×720 | 203,186 B | `56ea7fe80532c0a81097c972c26f5b0c9ec7d473049a18eb61c31c808add5cbd` | Player returning to third-person view after closing BuzzerOS; held phone and holding arm pose restored automatically on avatar. |
 | 6. Phone After Respawn | `assets/ui/bs09-review/phone-after-respawn.jpg` | 1280×720 | 193,137 B | `7547690af75d35363e118a5b4ac46299dace403a40590931c1325b899a383ffc` | Fresh character spawned following death; starts in predictable Stowed state, then equips cleanly with zero duplicate models. |
 | 7. Mobile Equip Controls | `assets/ui/bs09-review/mobile-equip-controls.jpg` | 390×844 | 84,272 B | `2fdf68c46ebb1ffd2c0a600c7a19711e5c9f10c5a1ed6ccef8bf443db0c44dd6` | Mobile portrait simulation (`iphone_14`, 390×844) with native touch controls (`TouchGui` thumbstick/jump) and contextual equip button (`BuzzerPhoneControls`). |
@@ -194,5 +199,5 @@ All journeys were executed natively in Roblox Studio Play mode (`BuzzerSimulator
 
 - **Branch**: `agent/BS-09-fast-phone-handheld`
 - **Base**: `master` (`afa920dc821f2c449a95083f6ec6f51ccfc9c963`)
-- **Status**: Milestone BS-09 fully implemented, verified across 16 test suites (621 tests, 0 failed), Rojo builds verified, ready for commit and push.
+- **Status**: Milestone BS-09 fully implemented, verified across 16 test suites (626 tests, 0 failed), Rojo builds verified, ready for commit and push.
 - **Rules Compliance**: Automated merging is NOT performed; milestone BS-10 is NOT initiated.

@@ -416,6 +416,36 @@ local function createTestRig(): (Model, Humanoid, BasePart, Motor6D)
 	char.Parent = Workspace
 	return char, hum, hand, shoulder
 end
+local function createIKTestRig(): (Model, Humanoid, BasePart, BasePart, BasePart)
+	local char = Instance.new("Model")
+	char.Name = "TestPlayerIK"
+	local hum = Instance.new("Humanoid")
+	hum.RigType = Enum.HumanoidRigType.R15
+	hum.Health = 100
+	hum.MaxHealth = 100
+	hum.Parent = char
+
+	local root = Instance.new("Part")
+	root.Name = "HumanoidRootPart"
+	root.Parent = char
+	char.PrimaryPart = root
+
+	local upperTorso = Instance.new("Part")
+	upperTorso.Name = "UpperTorso"
+	upperTorso.Parent = char
+
+	local upperArm = Instance.new("Part")
+	upperArm.Name = "RightUpperArm"
+	upperArm.Parent = char
+
+	local hand = Instance.new("Part")
+	hand.Name = "RightHand"
+	hand.Parent = char
+
+	char.Parent = Workspace
+	return char, hum, upperTorso, upperArm, hand
+end
+
 
 local function createTestController(char: Model?): (any, ScreenGui)
 	local gui = Instance.new("ScreenGui")
@@ -640,6 +670,142 @@ test("Lifecycle 9: Mobile button accessibility and attributes", function()
 
 	ctrl:Destroy()
 	gui:Destroy()
+end)
+test("Lifecycle 10: IK fallback equip, target attachment, chain root, and unequip teardown", function()
+	local char, hum, upperTorso, upperArm, hand = createIKTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_fast")
+
+	ctrl:Equip()
+	expectTrue(ctrl:GetState() == "Equipping" or ctrl:GetState() == "Equipped", "phone equipped in IK rig")
+	expectTrue(ctrl:GetPreferEquipped(), "preference saved as true")
+
+	local ik = hum:FindFirstChild("PhoneHoldIK") :: IKControl?
+	expectTrue(ik ~= nil, "IKControl created on Humanoid")
+	expectEqual(ik.Type, Enum.IKControlType.Transform, "IKControl type is Transform")
+	expectEqual(ik.ChainRoot, upperArm, "IK chain root is RightUpperArm")
+	expectEqual(ik.EndEffector, hand, "IK end effector is RightHand")
+
+	local att = upperTorso:FindFirstChild("PhoneHoldTarget") :: Attachment?
+	expectTrue(att ~= nil, "Attachment created on UpperTorso")
+	expectEqual(ik.Target, att, "IKControl target points to PhoneHoldTarget attachment")
+
+	ctrl:Unequip()
+	task.wait(0.35)
+	expectEqual(ctrl:GetState(), "Stowed", "state transitions to Stowed")
+	expectFalse(ctrl:GetPreferEquipped(), "preferEquipped set to false")
+	expectTrue(hum:FindFirstChild("PhoneHoldIK") == nil, "IKControl destroyed on unequip")
+	expectTrue(upperTorso:FindFirstChild("PhoneHoldTarget") == nil, "PhoneHoldTarget destroyed on unequip")
+
+	ctrl:Destroy()
+	gui:Destroy()
+	char:Destroy()
+end)
+
+test("Lifecycle 11: IK fallback StowForDashboard tears down IKControl without losing preferEquipped", function()
+	local char, hum, upperTorso = createIKTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_cheap")
+
+	ctrl:Equip()
+	expectTrue(hum:FindFirstChild("PhoneHoldIK") ~= nil, "IKControl active before dashboard")
+	expectTrue(ctrl:GetPreferEquipped(), "preferred equipped")
+
+	ctrl:StowForDashboard()
+	expectEqual(ctrl:GetState(), "Stowed", "stowed for dashboard")
+	expectTrue(ctrl:GetPreferEquipped(), "preferEquipped preserved for post-dashboard restoration")
+	expectTrue(hum:FindFirstChild("PhoneHoldIK") == nil, "IKControl cleanly torn down during dashboard view")
+	expectTrue(upperTorso:FindFirstChild("PhoneHoldTarget") == nil, "PhoneHoldTarget cleaned up during dashboard view")
+
+	ctrl:Destroy()
+	gui:Destroy()
+	char:Destroy()
+end)
+
+test("Lifecycle 12: IK fallback RestoreAfterDashboard restores IKControl holding pose", function()
+	local char, hum, _upperTorso, upperArm, hand = createIKTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_fast")
+
+	ctrl:Equip()
+	ctrl:StowForDashboard()
+	expectTrue(hum:FindFirstChild("PhoneHoldIK") == nil, "IKControl torn down while open")
+
+	ctrl:RestoreAfterDashboard()
+	expectTrue(ctrl:GetState() == "Equipped" or ctrl:GetState() == "Equipping", "phone re-equipped")
+
+	local ik = hum:FindFirstChild("PhoneHoldIK") :: IKControl?
+	expectTrue(ik ~= nil, "IKControl restored after CRT close")
+	expectEqual(ik.ChainRoot, upperArm, "restored IK chain root is RightUpperArm")
+	expectEqual(ik.EndEffector, hand, "restored IK end effector is RightHand")
+
+	ctrl:Destroy()
+	gui:Destroy()
+	char:Destroy()
+end)
+
+test("Lifecycle 13: IK fallback rapid equip and stow transitions prevent orphaned IK instances", function()
+	local char, hum, upperTorso = createIKTestRig()
+	local ctrl, gui = createTestController(char)
+	ctrl:SetDevice("phone_cheap")
+
+	for _ = 1, 10 do
+		ctrl:Toggle()
+	end
+	task.wait(0.2)
+
+	local ikCount = 0
+	for _, child in ipairs(hum:GetChildren()) do
+		if child:IsA("IKControl") and child.Name == "PhoneHoldIK" then
+			ikCount += 1
+		end
+	end
+	local attCount = 0
+	for _, child in ipairs(upperTorso:GetChildren()) do
+		if child:IsA("Attachment") and child.Name == "PhoneHoldTarget" then
+			attCount += 1
+		end
+	end
+
+	expectTrue(ikCount <= 1, "at most one IKControl exists after rapid toggling")
+	expectTrue(attCount <= 1, "at most one PhoneHoldTarget exists after rapid toggling")
+
+	ctrl:Destroy()
+	gui:Destroy()
+	char:Destroy()
+end)
+
+test("Lifecycle 14: IK fallback death and respawn reset IK pose cleanly", function()
+	local char1, hum1, upperTorso1 = createIKTestRig()
+	local ctrl, gui = createTestController(char1)
+	ctrl:SetDevice("phone_fast")
+
+	ctrl:Equip()
+	expectTrue(hum1:FindFirstChild("PhoneHoldIK") ~= nil, "IK active on char1")
+
+	hum1.Health = 0
+	ctrl:_onCharacterDied()
+
+	expectEqual(ctrl:GetState(), "Stowed", "stowed on death")
+	expectFalse(ctrl:GetPreferEquipped(), "preference reset on death")
+	expectTrue(hum1:FindFirstChild("PhoneHoldIK") == nil, "char1 IKControl cleaned up on death")
+	expectTrue(upperTorso1:FindFirstChild("PhoneHoldTarget") == nil, "char1 PhoneHoldTarget cleaned up on death")
+
+	local char2, hum2, _upperTorso2, upperArm2, hand2 = createIKTestRig()
+	ctrl:_onCharacter(char2)
+	expectEqual(ctrl:GetState(), "Stowed", "fresh character starts stowed")
+	expectTrue(hum2:FindFirstChild("PhoneHoldIK") == nil, "no premature IK on fresh character")
+
+	ctrl:Equip()
+	local ik2 = hum2:FindFirstChild("PhoneHoldIK") :: IKControl?
+	expectTrue(ik2 ~= nil, "IKControl cleanly bound to fresh character's Humanoid")
+	expectEqual(ik2.ChainRoot, upperArm2, "bound to char2 upper arm")
+	expectEqual(ik2.EndEffector, hand2, "bound to char2 hand")
+
+	ctrl:Destroy()
+	gui:Destroy()
+	char1:Destroy()
+	char2:Destroy()
 end)
 
 -- ===== runner =====
