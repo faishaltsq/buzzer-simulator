@@ -427,6 +427,16 @@ local function bindCharacter(character: Model)
 			hud:SetDashboardOpen(false, isReducedMotion())
 		end)
 	end
+	character.AncestryChanged:Connect(function(_child, parent)
+		if parent == nil then
+			state:OnCharacterLost()
+			if preCameraState.captured then
+				restoreCameraAndControls()
+				desktop:SetVisible(false, isReducedMotion())
+				hud:SetDashboardOpen(false, isReducedMotion())
+			end
+		end
+	end)
 end
 
 if player.Character ~= nil then
@@ -468,6 +478,11 @@ local function setupNetworking()
 				state:ApplyOpenComputer(event, os.clock())
 			elseif event.kind == "OpenComputerDenied" then
 				state:ApplyOpenComputerDenied(event.code)
+				if preCameraState.captured then
+					restoreCameraAndControls()
+					desktop:SetVisible(false, isReducedMotion())
+					hud:SetDashboardOpen(false, isReducedMotion())
+				end
 			elseif event.kind == "ComputerSessionExpired" then
 				state:ApplySessionExpired(event.dashboardSessionId, event.reason)
 			end

@@ -371,6 +371,17 @@ end
 -- 3. Apply OpenComputerDenied (Snapshot.kind == "OpenComputerDenied")
 function ClientState:ApplyOpenComputerDenied(code: string): boolean
 	self._data.activeDenial = code
+	if self._data.status == "Opening" or self._data.status == "Open" then
+		local sid = self._data.dashboardSessionId
+		if sid ~= nil then
+			self._data.closedGenerations[sid] = true
+		end
+		self._data.status = "Closed"
+		self._data.dashboardSessionId = nil
+		self._data.expiresAt = nil
+		self._data.localWatchdogTime = nil
+		self._data.cameraCaptured = false
+	end
 	self:_notify()
 	return true
 end
