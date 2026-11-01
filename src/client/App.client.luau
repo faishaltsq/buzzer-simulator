@@ -477,8 +477,8 @@ local function setupNetworking()
 			elseif event.kind == "OpenComputer" then
 				state:ApplyOpenComputer(event, os.clock())
 			elseif event.kind == "OpenComputerDenied" then
-				state:ApplyOpenComputerDenied(event.code)
-				if preCameraState.captured then
+				local applied = state:ApplyOpenComputerDenied(event.code)
+				if applied and preCameraState.captured and state:GetStatus() == "Closed" then
 					restoreCameraAndControls()
 					desktop:SetVisible(false, isReducedMotion())
 					hud:SetDashboardOpen(false, isReducedMotion())

@@ -7,7 +7,7 @@ Milestone BS-10 hardens and mathematically verifies the end-to-end recovery, per
 2. **Server-Owned Settlement**: Organic and campaign posts freeze payout and impact at publish time. Settlements use deterministic, stable operation identities (`settle-<postId>`), ensuring that retries due to transport loss or throttling credit Cuan exactly once.
 3. **Hardware Purchase Idempotency**: Fast Phone purchases deduct 50 Cuan once, bind device ownership durably, and replay cached outcomes on duplicate or retried requests without second deductions.
 4. **Ambiguous Write Reconciliation**: 32-entry bounded durable mutation ring records applied mutations. A 6-second client timeout moves mutations to `uncertainMutations`, disables double-clicks, and emits progress queries (`lookupRequestId`) that resolve to `APPLIED`, `REJECTED`, or explicit `UNKNOWN`.
-5. **Session Lease Concurrency & Shutdown**: Strict 240s lease duration with 60s heartbeats. Competing servers receive `LOCKED`. Expired leases are safely assumed without profile data loss. Server shutdown (`Stop`) reconciles and flushes pending mutations before releasing leases.
+5. **Session Lease Concurrency & Shutdown**: Strict 240s lease duration with 90s lease renewal in SessionService. Competing servers receive `LOCKED`. Expired leases are safely assumed without profile data loss. Server shutdown (`Stop`) reconciles and flushes pending mutations before releasing leases.
 6. **Client Input & Camera Resilience**: Client camera and control capture are hardened against network denials (`OpenComputerDenied`), session expiration, watchdog timeouts, and character parent removal (`AncestryChanged`).
 
 ---
@@ -16,9 +16,9 @@ Milestone BS-10 hardens and mathematically verifies the end-to-end recovery, per
 
 | File | Change | Description |
 |---|---|---|
-| `src/client/ClientState.luau` | **Modified** | Hardened `ApplyOpenComputerDenied(code)` to cleanly reset status from `Opening` or `Open` to `Closed`, drop `dashboardSessionId`, and reset `cameraCaptured`. |
-| `src/client/App.client.luau` | **Modified** | Bound `character.AncestryChanged` to trigger `state:OnCharacterLost()` and camera/control restoration on parent removal (`nil`), ensuring players never get stuck when characters despawn without `Humanoid.Died`. Wired `OpenComputerDenied` to restore camera and controls immediately. |
-| `tests/Specs/BS10Recovery.spec.luau` | **New** | 38 comprehensive unit and integration tests covering load failures, corrupt payloads, unsupported schemas, lease collisions, post reveal survival, Fast Phone retry idempotency, ambiguous write reconciliation, client timeout lookups, shutdown safety, and full multi-rejoin player journeys. |
+| `src/client/ClientState.luau` | **Modified** | Hardened `ApplyOpenComputerDenied(code)` to protect active (`Open`) and in-flight (`Opening`) dashboard sessions from untagged late denials while preserving safe cleanup for genuinely aborted opening (`AbortOpening` and denial while `Closed`). |
+| `src/client/App.client.luau` | **Modified** | Bound `character.AncestryChanged` to trigger `state:OnCharacterLost()` and camera/control restoration on parent removal (`nil`), ensuring players never get stuck when characters despawn without `Humanoid.Died`. Wired `OpenComputerDenied` to only restore camera/controls when status is `Closed` and denial applied, protecting active sessions. |
+| `tests/Specs/BS10Recovery.spec.luau` | **New** | 41 comprehensive unit and integration tests covering load failures, corrupt payloads, unsupported schemas, lease collisions, post reveal survival, Fast Phone retry idempotency, ambiguous write reconciliation, client timeout lookups, shutdown safety, late denial / generation replacement protection, and full multi-rejoin player journeys. |
 | `build/BuzzerTests.rbxlx` | **Rebuilt** | Test place updated with `BS10Recovery.spec.luau` and hardened client scripts via Rojo. |
 | `build/BuzzerSimulator.rbxlx` | **Rebuilt** | Main production place updated with hardened client scripts via Rojo. |
 
@@ -28,8 +28,8 @@ Milestone BS-10 hardens and mathematically verifies the end-to-end recovery, per
 
 ### Test Count Reconciliation
 - **Baseline Across 16 Specs**: Exactly **626 tests** (590 pre-BS-09 baseline + 36 BS-09 tests).
-- **BS-10 New Test Suite**: Exactly **38 tests** in `tests/Specs/BS10Recovery.spec.luau`.
-- **True Test-Runner Total**: Exactly **664 tests across 17 suites**. 0 failed, 100% passing.
+- **BS-10 New Test Suite**: Exactly **41 tests** in `tests/Specs/BS10Recovery.spec.luau` (including focused regression tests for late denial and session generation replacement).
+- **True Test-Runner Total**: Exactly **667 tests across 17 suites**. 0 failed, 100% passing.
 
 ### Roblox Studio Play Mode Runner Output
 All 17 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxlx`, Studio runner `Runner.server.luau`):
@@ -37,7 +37,7 @@ All 17 test suites passed natively in Roblox Studio Play mode (`BuzzerTests.rbxl
 ```
 [SUITE PASS] AppClientIntegration.spec: AppClientIntegration: 9/9 passed
 [SUITE PASS] BS09FastPhone.spec: BS-09: 36/36 passed
-[SUITE PASS] BS10Recovery.spec: BS-10: 38/38 passed
+[SUITE PASS] BS10Recovery.spec: BS-10: 41/41 passed
 [SUITE PASS] Bootstrap.spec: Bootstrap: 17/17 passed
 [SUITE PASS] ClientState.spec: ClientState: 30/30 passed
 [SUITE PASS] ComposerIntegration.spec: 14/14 passed
@@ -102,14 +102,16 @@ BS01_TESTS_PASSED
 - **E4**: `Stop()` is strictly idempotent; calling twice avoids redundant writes or release attempts.
 - **E5**: `Stop()` with an unresolved write failure retains the lease token so rejoin reconciliation can resolve it.
 
-### Phase F: Client Session, Camera & Control Recovery (6 Tests)
-- **F1**: `OpenComputerDenied` while in `Opening` status restores camera/controls and cleanly resets status to `Closed`.
-- **F2**: Server session expiration during `Open` status transitions to `Expired` and closes the dashboard.
-- **F3**: Local watchdog expiration (exceeding server lease duration) transitions to `Expired` and clears session state.
-- **F4**: `SAVE_UNAVAILABLE` save status blocks mutation requests locally in `ClientState`.
-- **F5**: Stale expiration notifications from older session generations are safely ignored.
-- **F6**: Character loss (parenting to `nil` or death) resets dashboard state to `Closed` and invalidates the session.
-
+### Phase F: Client Session, Camera & Control Recovery (9 Tests)
+- **F1**: Genuinely aborted opening via `AbortOpening` (e.g. missing room anchors) resets status to `Closed` with `CloseComputer` command; denial while `Closed` records denial code with zero camera capture.
+- **F2**: Late `OpenComputerDenied` arriving after successful `OpenComputer` cannot close or invalidate an active (`Open`) session.
+- **F3**: Late `OpenComputerDenied` arriving during in-flight `Opening` cannot abort the accepted session; transition completes to `Open`.
+- **F4**: Late `OpenComputerDenied` arriving after session generation replacement preserves the replacement generation (`sess-2`).
+- **F5**: Server session expiration during `Open` status transitions to `Expired` and closes the dashboard.
+- **F6**: Local watchdog expiration (exceeding server lease duration) transitions to `Expired` and clears session state.
+- **F7**: `SAVE_UNAVAILABLE` save status blocks mutation requests locally in `ClientState`.
+- **F8**: Stale expiration notifications from older session generations are safely ignored.
+- **F9**: Character loss (parenting to `nil` or death) resets dashboard state to `Closed` and invalidates the session.
 ### Phase G: End-to-End Multi-Step Recovery Journey (1 Test)
 - **G1**: Complete player journey across three server rejoins (Server 1: Organic Post -> Server 2: Campaign Post & Claim -> Server 3: Fast Phone Purchase -> Server 4: Fast Phone Organic Yield Verification) conserves Cuan exactly:
   - Start: 0 Cuan
@@ -138,8 +140,8 @@ BS01_TESTS_PASSED
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| **DataStore Throttling During Peak Hours** | High | `ProfileStore` implements exponential backoff (1s, 2s, 4s) across 3 save attempts. Failed operations report `SAVE_UNAVAILABLE` without corrupting local memory. |
+| **DataStore Throttling During Peak Hours** | High | `ProfileStore` implements 3 maximum save attempts with 1s and 2s backoff (`{ 1, 2 }`) on ambiguous/failed writes. Unresolved operations report `SAVE_UNAVAILABLE` without corrupting local memory. |
 | **Server Crash Mid-Mutation** | High | Durable 32-entry outcome ring records applied mutations before acknowledging to client. On rejoin, retried requests find cached outcomes and replay without double-charging. |
-| **Split-Brain Server Execution** | Critical | Exclusive lease locking with 240s timeout and 60s heartbeats. Servers verify lease token on every `UpdateAsync` transform; stale servers are rejected with `LOCKED`. |
+| **Split-Brain Server Execution** | Critical | Exclusive lease locking with 240s timeout and 90s lease renewal in `SessionService`. Servers verify lease token on every `UpdateAsync` transform; stale servers are rejected with `LOCKED`. |
 | **Client Network Hiccups During Purchase** | Medium | Client 6s timeout moves pending requests to `uncertainMutations` and polls with `lookupRequestId`. UI disables duplicate clicks. |
 | **Character Despawn / Streaming Drop** | Low | `AncestryChanged` listener on Character detects parent removal to `nil`, restoring camera and UserInputService controls immediately. |

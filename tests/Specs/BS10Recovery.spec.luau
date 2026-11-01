@@ -907,21 +907,90 @@ end)
 -- Phase F — client session, camera and control recovery
 -- =============================================================================
 
-test("F1: Denied open while Opening restores camera/controls and resets to Closed", function()
+test("F1: Genuinely aborted opening via AbortOpening or denial while Closed preserves safe cleanup", function()
+	local snap = sampleClientSnapshot(1, 100)
+	local state = ClientState.new(snap)
+
+	-- Denial while Closed records denial code and keeps status Closed
+	local applied = state:ApplyOpenComputerDenied("NOT_READY")
+	expectTrue(applied, "denial applied while Closed")
+	expectEqual(state:GetStatus(), "Closed", "status remains Closed")
+	expectEqual(state:Get().activeDenial, "NOT_READY", "denial code recorded")
+	expectFalse(state:Get().cameraCaptured, "camera not captured")
+
+	-- Opening transition aborted via AbortOpening (e.g. missing room anchors)
+	state:ApplyOpenComputer(openEvent("sess-1", snap), 1000)
+	expectEqual(state:GetStatus(), "Opening", "state is Opening")
+	local closeCmd = state:AbortOpening("Terminal camera anchor missing")
+	expectNotNil(closeCmd, "close command returned to release server session")
+	expectEqual(closeCmd.action, "CloseComputer", "action is CloseComputer")
+	expectEqual(closeCmd.dashboardSessionId, "sess-1", "targets session sess-1")
+	expectEqual(state:GetStatus(), "Closed", "status cleanly reset to Closed")
+	expectEqual(state:Get().dashboardSessionId, nil, "session cleared")
+	expectFalse(state:Get().cameraCaptured, "camera not captured")
+	expectEqual(state:Get().activeError, "Terminal camera anchor missing", "error recorded")
+end)
+
+test("F2: Late OpenComputerDenied after successful OpenComputer cannot invalidate active session", function()
+	local snap = sampleClientSnapshot(1, 100)
+	local state = ClientState.new(snap)
+
+	state:ApplyOpenComputer(openEvent("sess-1", snap), 1000)
+	state:OnCameraOpened()
+	expectEqual(state:GetStatus(), "Open", "dashboard is open")
+	expectEqual(state:Get().dashboardSessionId, "sess-1", "sess-1 active")
+
+	-- Late denial arriving after successful OpenComputer
+	local applied = state:ApplyOpenComputerDenied("OUT_OF_RANGE")
+	expectFalse(applied, "denial ignored on active session")
+	expectEqual(state:GetStatus(), "Open", "status remains Open")
+	expectEqual(state:Get().dashboardSessionId, "sess-1", "session sess-1 preserved")
+	expectTrue(state:Get().cameraCaptured, "camera capture preserved")
+	expectEqual(state:Get().activeDenial, nil, "activeDenial not overwritten")
+end)
+
+test("F3: Late OpenComputerDenied during in-flight Opening cannot abort accepted session", function()
 	local snap = sampleClientSnapshot(1, 100)
 	local state = ClientState.new(snap)
 
 	state:ApplyOpenComputer(openEvent("sess-1", snap), 1000)
 	expectEqual(state:GetStatus(), "Opening", "state is Opening")
+	expectEqual(state:Get().dashboardSessionId, "sess-1", "sess-1 accepted")
 
-	state:ApplyOpenComputerDenied("NOT_READY")
-	expectEqual(state:GetStatus(), "Closed", "status cleanly reset to Closed")
-	expectEqual(state:Get().activeDenial, "NOT_READY", "denial code recorded")
-	expectEqual(state:Get().dashboardSessionId, nil, "session cleared")
-	expectFalse(state:Get().cameraCaptured, "camera not captured")
+	-- Late denial arrives while camera is transitioning in Opening
+	local applied = state:ApplyOpenComputerDenied("NOT_READY")
+	expectFalse(applied, "denial ignored during Opening")
+	expectEqual(state:GetStatus(), "Opening", "status remains Opening")
+	expectEqual(state:Get().dashboardSessionId, "sess-1", "session sess-1 preserved")
+
+	-- Camera completes transition successfully
+	state:OnCameraOpened()
+	expectEqual(state:GetStatus(), "Open", "opened successfully")
+	expectTrue(state:Get().cameraCaptured, "camera captured")
 end)
 
-test("F2: Session expiration during Open transitions to Expired and closes dashboard", function()
+test("F4: Late OpenComputerDenied after session generation replacement preserves new generation", function()
+	local snap = sampleClientSnapshot(1, 100)
+	local state = ClientState.new(snap)
+
+	state:ApplyOpenComputer(openEvent("sess-1", snap), 1000)
+	state:OnCameraOpened()
+	expectEqual(state:Get().dashboardSessionId, "sess-1", "sess-1 active")
+
+	-- Session generation replaced by new server OpenComputer event
+	state:ApplyOpenComputer(openEvent("sess-2", snap), 1050)
+	expectEqual(state:GetStatus(), "Open", "remains Open")
+	expectEqual(state:Get().dashboardSessionId, "sess-2", "sess-2 active")
+	expectTrue(state:Get().closedGenerations["sess-1"], "sess-1 retired")
+
+	-- Late denial from earlier prompt arrives
+	local applied = state:ApplyOpenComputerDenied("INVALID_STATE")
+	expectFalse(applied, "denial ignored after generation replacement")
+	expectEqual(state:GetStatus(), "Open", "status remains Open")
+	expectEqual(state:Get().dashboardSessionId, "sess-2", "sess-2 preserved")
+end)
+
+test("F5: Session expiration during Open transitions to Expired and closes dashboard", function()
 	local snap = sampleClientSnapshot(1, 100)
 	local state = ClientState.new(snap)
 
@@ -935,7 +1004,7 @@ test("F2: Session expiration during Open transitions to Expired and closes dashb
 	expectEqual(state:Get().dashboardSessionId, nil, "sessionId dropped")
 end)
 
-test("F3: Local watchdog expiration transitions to Expired and clears session", function()
+test("F6: Local watchdog expiration transitions to Expired and clears session", function()
 	local snap = sampleClientSnapshot(1, 100)
 	local state = ClientState.new(snap)
 
@@ -949,7 +1018,7 @@ test("F3: Local watchdog expiration transitions to Expired and clears session", 
 	expectEqual(state:Get().dashboardSessionId, nil, "sessionId cleared")
 end)
 
-test("F4: SAVE_UNAVAILABLE status blocks mutation requests in ClientState", function()
+test("F7: SAVE_UNAVAILABLE status blocks mutation requests in ClientState", function()
 	local snap = sampleClientSnapshot(1, 100)
 	snap.saveStatus = "SAVE_UNAVAILABLE"
 	local state = ClientState.new(snap)
@@ -965,7 +1034,7 @@ test("F4: SAVE_UNAVAILABLE status blocks mutation requests in ClientState", func
 	expectEqual(cmd, nil, "mutation rejected locally")
 end)
 
-test("F5: Stale expiry for an older session generation is safely ignored", function()
+test("F8: Stale expiry for an older session generation is safely ignored", function()
 	local snap = sampleClientSnapshot(1, 100)
 	local state = ClientState.new(snap)
 
@@ -979,7 +1048,7 @@ test("F5: Stale expiry for an older session generation is safely ignored", funct
 	expectEqual(state:Get().dashboardSessionId, "sess-2", "current session preserved")
 end)
 
-test("F6: Character loss resets dashboard state to Closed and invalidates session", function()
+test("F9: Character loss resets dashboard state to Closed and invalidates session", function()
 	local snap = sampleClientSnapshot(1, 100)
 	local state = ClientState.new(snap)
 
@@ -992,7 +1061,6 @@ test("F6: Character loss resets dashboard state to Closed and invalidates sessio
 	expectEqual(state:GetStatus(), "Closed", "state is Closed")
 	expectEqual(state:Get().dashboardSessionId, nil, "dashboard session dropped")
 end)
-
 -- =============================================================================
 -- Phase G — end-to-end recovery journey across three rejoin boundaries
 -- =============================================================================
