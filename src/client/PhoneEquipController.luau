@@ -156,6 +156,9 @@ function PhoneEquipController.new(options: ControllerOptions): any
 	self._dashboardOpen = false
 	self._preferEquipped = false
 	self._poseTween = nil :: Tween?
+	self._ikControl = nil :: IKControl?
+	self._ikTarget = nil :: Attachment?
+	self._ikTween = nil :: Tween?
 	self._lifecycleGen = 1
 	self._player = options.player or player
 
@@ -298,6 +301,7 @@ function PhoneEquipController:_onCharacterDied()
 			self._shoulder.C0 = self._shoulderBase
 		end)
 	end
+	self:_teardownIK()
 	self:_teardownModel()
 	self._state = "Stowed"
 	self:_setDockedHidden(false)
@@ -312,6 +316,7 @@ function PhoneEquipController:_onCharacter(character: Model)
 	table.clear(self._charConnections)
 
 	self:_teardownModel()
+	self:_teardownIK()
 	self._character = character
 	self._shoulder = nil
 	self._shoulderBase = nil
@@ -354,6 +359,7 @@ function PhoneEquipController:_onCharacterRemoving()
 			self._shoulder.C0 = self._shoulderBase
 		end)
 	end
+	self:_teardownIK()
 	self:_teardownModel()
 	self._character = nil
 	self._shoulder = nil
@@ -440,26 +446,122 @@ function PhoneEquipController:_teardownModel()
 	end
 end
 
+function PhoneEquipController:_teardownIK()
+	if self._ikTween ~= nil then
+		self._ikTween:Cancel()
+		self._ikTween = nil
+	end
+	if self._ikControl ~= nil then
+		self._ikControl:Destroy()
+		self._ikControl = nil
+	end
+	if self._ikTarget ~= nil then
+		self._ikTarget:Destroy()
+		self._ikTarget = nil
+	end
+end
+
 function PhoneEquipController:_poseTo(offset: CFrame?, seconds: number)
 	local shoulder = self._shoulder
 	local base = self._shoulderBase
-	if shoulder == nil or base == nil then
+	if shoulder ~= nil and base ~= nil then
+		if self._poseTween ~= nil then
+			self._poseTween:Cancel()
+			self._poseTween = nil
+		end
+		local target = if offset == nil then base else base * offset
+		if isReducedMotion() or seconds <= 0 then
+			shoulder.C0 = target
+			return
+		end
+		local tween = TweenService:Create(shoulder, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			C0 = target,
+		})
+		self._poseTween = tween
+		tween:Play()
 		return
 	end
-	if self._poseTween ~= nil then
-		self._poseTween:Cancel()
-		self._poseTween = nil
-	end
-	local target = if offset == nil then base else base * offset
-	if isReducedMotion() or seconds <= 0 then
-		shoulder.C0 = target
+
+	-- Modern R15 fallback with IKControl when Motor6D is absent
+	local char = self._character
+	if char == nil then
 		return
 	end
-	local tween = TweenService:Create(shoulder, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		C0 = target,
-	})
-	self._poseTween = tween
-	tween:Play()
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	local upperArm = char:FindFirstChild("RightUpperArm") :: BasePart?
+	local hand = char:FindFirstChild("RightHand") :: BasePart?
+	local upperTorso = char:FindFirstChild("UpperTorso") :: BasePart?
+	if hum == nil or upperArm == nil or hand == nil or upperTorso == nil then
+		return
+	end
+
+	if offset ~= nil then
+		local att = self._ikTarget
+		if att == nil or att.Parent ~= upperTorso then
+			if att ~= nil then
+				att:Destroy()
+			end
+			att = Instance.new("Attachment")
+			att.Name = "PhoneHoldTarget"
+			att.Position = Vector3.new(0.45, 0.15, -1.0)
+			att.Orientation = Vector3.new(25, -15, 15)
+			att.Parent = upperTorso
+			self._ikTarget = att
+		end
+
+		local ik = self._ikControl
+		if ik == nil or ik.Parent ~= hum then
+			if ik ~= nil then
+				ik:Destroy()
+			end
+			ik = Instance.new("IKControl")
+			ik.Name = "PhoneHoldIK"
+			ik.Type = Enum.IKControlType.Transform
+			ik.ChainRoot = upperArm
+			ik.EndEffector = hand
+			ik.Target = self._ikTarget
+			ik.Weight = 0
+			ik.Parent = hum
+			self._ikControl = ik
+		end
+
+		if self._ikTween ~= nil then
+			self._ikTween:Cancel()
+			self._ikTween = nil
+		end
+
+		if isReducedMotion() or seconds <= 0 then
+			ik.Weight = 1
+			return
+		end
+		local tween = TweenService:Create(ik, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Weight = 1,
+		})
+		self._ikTween = tween
+		tween:Play()
+	else
+		local ik = self._ikControl
+		if ik ~= nil then
+			if self._ikTween ~= nil then
+				self._ikTween:Cancel()
+				self._ikTween = nil
+			end
+			if isReducedMotion() or seconds <= 0 then
+				self:_teardownIK()
+				return
+			end
+			local tween = TweenService:Create(ik, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Weight = 0,
+			})
+			self._ikTween = tween
+			tween.Completed:Connect(function()
+				self:_teardownIK()
+			end)
+			tween:Play()
+		else
+			self:_teardownIK()
+		end
+	end
 end
 
 -- ===== docked presentation =====
@@ -752,6 +854,7 @@ function PhoneEquipController:Destroy()
 			self._shoulder.C0 = self._shoulderBase
 		end)
 	end
+	self:_teardownIK()
 	self:_teardownModel()
 	self:_setDockedHidden(false)
 	self._gui:Destroy()
