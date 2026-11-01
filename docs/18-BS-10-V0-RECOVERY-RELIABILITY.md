@@ -163,8 +163,8 @@ Economic Invariant Confirmed: $\Delta\text{Balance} = (15 + 15 + 80 + 24) - 50 =
 
 ### 5.3 Live In-Experience Gameplay Smoke Test & Mobile Viewport
 
-- **In-Experience Smoke Test**: Executed with test player `galonnaquaaa` (UserId `7554478273`) on development Place `100558697471228`. Verified fresh join (0 Cuan), CRT open via proximity prompt (camera transitions to `Scriptable`), post publish and confirmed reward (+15 Cuan), CRT close with camera restoration to `Custom` on `Humanoid`, clean leave and rejoin verifying 15 Cuan persistence from Cloud DataStore. Machine evidence recorded in `docs/evidence/bs10/gameplay_smoke_results.json`.
-- **Mobile Portrait Viewport (390×844)**: 8 actionable buttons measured (0 clipped buttons, 100% touch target compliant $\ge 44\times 44\text{ px}$). Photographic evidence recorded in `docs/evidence/bs10/mobile_portrait_390x844.png`.
+- **In-Experience Smoke Test**: Executed with test player `galonnaquaaa` (UserId `7554478273`) on development Place `100558697471228`. Verified non-destructive player join, CRT open via proximity prompt (camera transitions to `Scriptable`), post publish and confirmed reward (+15 Cuan), CRT close with camera restoration to `Custom` on `Humanoid`, clean leave and rejoin verifying balance persistence ($B_0 + 15$ Cuan) from Cloud DataStore with 0 profile wipes. Machine evidence recorded in `docs/evidence/bs10/gameplay_smoke_results.json`.
+- **Mobile Portrait Viewport (390×844)**: Captured and validated directly in authentic Roblox Studio Device Emulator (iPhone 14 portrait configuration, 390×844 resolution, viewport 390×763 with safe area insets, touch enabled). In-engine layout validated with `isMobile = true`, `mobileNavVisible = true`, `navRailVisible = false`, 8 actionable buttons measured (0 clipped buttons, 100% touch target compliant $\ge 44\times 44\text{ px}$). Photographic evidence recorded in `docs/evidence/bs10/mobile_portrait_390x844.png`.
 
 ### 5.4 Development Universe Configuration Record
 

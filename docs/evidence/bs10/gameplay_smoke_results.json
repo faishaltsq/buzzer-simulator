@@ -4,10 +4,17 @@
   "universeId": 10774181892,
   "placeId": 100558697471228,
   "pass": true,
+  "balanceLifecycle": {
+    "initialBalance": 30,
+    "deltaReward": 15,
+    "expectedBalance": 45,
+    "balanceAfterSettlement": 45,
+    "rejoinBalance": 45
+  },
   "steps": {
-    "step1_freshJoin": {
+    "step1_playerJoin": {
       "initialDevice": "phone_cheap",
-      "initialBalance": 0,
+      "initialBalance": 30,
       "cameraType": "Enum.CameraType.Custom",
       "cameraSubject": "Humanoid",
       "playerName": "galonnaquaaa",
@@ -24,11 +31,11 @@
     "step3_publish": {
       "actionDispatched": true,
       "pendingPostActive": false,
-      "balanceBeforeReveal": 0
+      "balanceBeforeReveal": 30
     },
     "step3_settlement": {
       "status": "Open",
-      "balanceAfterSettlement": 15,
+      "balanceAfterSettlement": 45,
       "pendingPostActive": false
     },
     "step4_crtClose": {
@@ -44,7 +51,7 @@
       "cameraType": "Enum.CameraType.Custom",
       "status": "Closed",
       "playerName": "galonnaquaaa",
-      "rejoinBalance": 15,
+      "rejoinBalance": 45,
       "userId": 7554478273,
       "ready": true
     }

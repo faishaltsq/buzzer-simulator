@@ -15,22 +15,8 @@ print("Target Player: galonnaquaaa (UserId: 7554478273)")
 print("Development Universe: 10774181892, Place: 100558697471228")
 print("=================================================================")
 
-# Pre-check: Reset galonnaquaaa's dev DataStore key to start fresh
-print("\n[Step 0] Initializing fresh profile for galonnaquaaa in dev DataStore...")
-reset_code = """
-local DataStoreService = game:GetService("DataStoreService")
-local ds = DataStoreService:GetDataStore("PlayerData")
-local ok, err = pcall(function()
-    ds:RemoveAsync("Player_7554478273")
-end)
-return ok
-"""
-reset_ok = studio.luau(reset_code, "Edit")
-print("DataStore reset result:", reset_ok)
-time.sleep(2)
-
-# Step 1: Join with fresh profile
-print("\n[Step 1] Starting Play Solo (Fresh Join)...")
+# Step 1: Join with existing profile (RemoveAsync removed to preserve progress)
+print("\n[Step 1] Starting Play Solo (Player Join)...")
 client.call_tool("start_stop_play", {"studio_id": sid, "is_start": True})
 time.sleep(6) # wait for world, character, and session startup
 
@@ -184,21 +170,25 @@ print("Rejoin Cloud Persistence Verified:", rejoin_res)
 client.call_tool("start_stop_play", {"studio_id": sid, "is_start": False})
 time.sleep(2)
 
-# Evaluation of all invariants
+# Evaluation of all invariants with incremental delta balance
+initial_balance = join_res.get("initialBalance") or 0
+expected_balance = initial_balance + 15
+print(f"\n[Balance Validation] Initial: {initial_balance}, Expected after organic post (+15): {expected_balance}")
+
 all_passed = (
     join_res.get("ready") == True
-    and join_res.get("initialBalance") == 0
+    and isinstance(join_res.get("initialBalance"), (int, float))
     and join_res.get("initialDevice") == "phone_cheap"
     and open_res.get("cameraType") == "Enum.CameraType.Scriptable"
     and open_res.get("desktopVisible") == True
     and pub_res.get("actionDispatched") == True
-    and settle_res.get("balanceAfterSettlement") == 15
+    and settle_res.get("balanceAfterSettlement") == expected_balance
     and settle_res.get("pendingPostActive") == False
     and restore_res.get("cameraType") == "Enum.CameraType.Custom"
     and restore_res.get("cameraSubject") == "Humanoid"
     and restore_res.get("desktopVisible") == False
     and rejoin_res.get("ready") == True
-    and rejoin_res.get("rejoinBalance") == 15
+    and rejoin_res.get("rejoinBalance") == expected_balance
     and rejoin_res.get("rejoinDevice") == "phone_cheap"
 )
 
@@ -208,8 +198,15 @@ summary = {
     "universeId": 10774181892,
     "placeId": 100558697471228,
     "pass": all_passed,
+    "balanceLifecycle": {
+        "initialBalance": initial_balance,
+        "deltaReward": 15,
+        "expectedBalance": expected_balance,
+        "balanceAfterSettlement": settle_res.get("balanceAfterSettlement"),
+        "rejoinBalance": rejoin_res.get("rejoinBalance")
+    },
     "steps": {
-        "step1_freshJoin": join_res,
+        "step1_playerJoin": join_res,
         "step2_crtOpen": open_res,
         "step3_publish": pub_res,
         "step3_settlement": settle_res,
