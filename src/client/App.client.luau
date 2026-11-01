@@ -369,6 +369,21 @@ if RunService:IsStudio() then
 		elseif action == "ApplySnapshot" then
 			state:ApplyStateSnapshot(payload)
 			return true
+		elseif action == "Action" then
+			if commandRemote == nil then return false end
+			local actName = payload.action
+			local actPayload = payload.payload
+			local envelope = if actName == "GetSnapshot"
+				then state:RefreshProgress(os.clock())
+				else state:BeginMutation(actName, actPayload, os.clock())
+			if envelope then
+				if (actName == "PublishOrganic" or actName == "PublishPost") and phoneEquip ~= nil then
+					phoneEquip:PlayUse()
+				end
+				sendCommand(envelope)
+				return true
+			end
+			return false
 		end
 		return nil
 	end

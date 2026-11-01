@@ -6,11 +6,26 @@ import time
 sys.path.append(os.path.abspath("tools/agent"))
 import studio
 
+import uuid
+import random
+
+run_key = uuid.uuid4().hex[:8]
+run_user_id = random.randint(88100000, 88900000)
+run_fail_id = run_user_id + 1
+
 code = """
 local HttpService = game:GetService("HttpService")
 local sss = game:GetService("ServerScriptService")
 local rep = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
+
+-- Fail-closed: assert we are in the expected development universe
+local EXPECTED_UNIVERSE = 10774181892
+local EXPECTED_PLACE = 100558697471228
+assert(game.GameId == EXPECTED_UNIVERSE,
+    "FAIL CLOSED: Universe ID " .. tostring(game.GameId) .. " != expected " .. tostring(EXPECTED_UNIVERSE))
+assert(game.PlaceId == EXPECTED_PLACE,
+    "FAIL CLOSED: Place ID " .. tostring(game.PlaceId) .. " != expected " .. tostring(EXPECTED_PLACE))
 
 local SessionService = require(sss:WaitForChild("SessionService"))
 local ProfileStore = require(sss:WaitForChild("ProfileStore"))
@@ -20,13 +35,22 @@ local ClientState = require(spScripts:WaitForChild("ClientState"))
 local uiFolder = spScripts:WaitForChild("ui")
 local Desktop = require(uiFolder:WaitForChild("Desktop"))
 
-local devUserId = 88005001
+-- Unique per-run dev keys to avoid collisions with prior runs or production data
+local RUN_KEY = "__RUN_KEY__"
+local devUserId = __DEV_USER_ID__
+local devUserFail = __DEV_USER_FAIL__
 local results = {}
+local function jobId(scenario, idx)
+    return "job-" .. scenario .. "-" .. RUN_KEY .. "-" .. tostring(idx)
+end
+local function reqId(scenario, tag)
+    return scenario .. "-" .. tag .. "-" .. RUN_KEY
+end""".replace("__RUN_KEY__", run_key).replace("__DEV_USER_ID__", str(run_user_id)).replace("__DEV_USER_FAIL__", str(run_fail_id)) + """
 
 -- =========================================================================
 -- G2-01: Fresh Account
 -- =========================================================================
-local g1_s1 = SessionService.new({ userId = devUserId, jobId = "job-g201-1" })
+local g1_s1 = SessionService.new({ userId = devUserId, jobId = jobId("g201", 1) })
 local g1_start1 = g1_s1:Start()
 if not g1_start1.ok and g1_start1.code == "NOT_READY" then
     g1_start1 = g1_s1:InitializeStarter()
@@ -35,7 +59,7 @@ local g1_prof1 = g1_s1:GetConfirmedProfile()
 local g1_rev1 = g1_s1:GetRevision()
 local g1_stop1 = g1_s1:Stop()
 
-local g1_s2 = SessionService.new({ userId = devUserId, jobId = "job-g201-2" })
+local g1_s2 = SessionService.new({ userId = devUserId, jobId = jobId("g201", 2) })
 local g1_start2 = g1_s2:Start()
 local g1_prof2 = g1_s2:GetConfirmedProfile()
 local g1_rev2 = g1_s2:GetRevision()
@@ -61,11 +85,11 @@ results["G2-01"] = {
 -- =========================================================================
 -- G2-02: Organic Pending Recovery
 -- =========================================================================
-local g2_s1 = SessionService.new({ userId = devUserId, jobId = "job-g202-1" })
+local g2_s1 = SessionService.new({ userId = devUserId, jobId = jobId("g202", 1) })
 g2_s1:Start()
 g2_s1:Snapshot()
 g2_s1:Mutate({
-    requestId = "g202-pub-1",
+    requestId = reqId("g202", "pub-1"),
     action = "PublishOrganic",
     payload = { templateId = "snack_meme" }
 })
@@ -75,7 +99,7 @@ g2_s1:Stop()
 -- Wait 18s reveal duration
 task.wait(18)
 
-local g2_s2 = SessionService.new({ userId = devUserId, jobId = "job-g202-2" })
+local g2_s2 = SessionService.new({ userId = devUserId, jobId = jobId("g202", 2) })
 g2_s2:Start()
 g2_s2:Snapshot() -- triggers _settleDue()
 local g2_prof = g2_s2:GetConfirmedProfile()
@@ -83,7 +107,7 @@ local g2_rev = g2_s2:GetRevision()
 g2_s2:Stop()
 
 -- Rejoin to verify no duplicate
-local g2_s3 = SessionService.new({ userId = devUserId, jobId = "job-g202-3" })
+local g2_s3 = SessionService.new({ userId = devUserId, jobId = jobId("g202", 3) })
 g2_s3:Start()
 g2_s3:Snapshot()
 local g2_profRepeat = g2_s3:GetConfirmedProfile()
@@ -104,17 +128,17 @@ results["G2-02"] = {
 -- =========================================================================
 -- G2-03: Campaign Pending Recovery
 -- =========================================================================
-local g3_s1 = SessionService.new({ userId = devUserId, jobId = "job-g203-1" })
+local g3_s1 = SessionService.new({ userId = devUserId, jobId = jobId("g203", 1) })
 g3_s1:Start()
 g3_s1:Snapshot()
 g3_s1:Mutate({
-    requestId = "g203-acc-1",
+    requestId = reqId("g203", "acc-1"),
     action = "AcceptMission",
     payload = { missionId = "food_stall_launch" }
 })
 local runId = g3_s1:GetConfirmedProfile().activeMission.runId
 g3_s1:Mutate({
-    requestId = "g203-pub-1",
+    requestId = reqId("g203", "pub-1"),
     action = "PublishPost",
     payload = { runId = runId, templateId = "meal_meme" }
 })
@@ -124,7 +148,7 @@ g3_s1:Stop()
 -- Wait 18s reveal duration
 task.wait(18)
 
-local g3_s2 = SessionService.new({ userId = devUserId, jobId = "job-g203-2" })
+local g3_s2 = SessionService.new({ userId = devUserId, jobId = jobId("g203", 2) })
 g3_s2:Start()
 g3_s2:Snapshot()
 local g3_prof = g3_s2:GetConfirmedProfile()
@@ -151,23 +175,23 @@ results["G2-03"] = {
 -- =========================================================================
 -- G2-04: Claim Persistence
 -- =========================================================================
-local g4_s1 = SessionService.new({ userId = devUserId, jobId = "job-g204-1" })
+local g4_s1 = SessionService.new({ userId = devUserId, jobId = jobId("g204", 1) })
 g4_s1:Start()
 g4_s1:Snapshot()
 local g4_clm = g4_s1:Mutate({
-    requestId = "g204-clm-1",
+    requestId = reqId("g204", "clm-1"),
     action = "ClaimMission",
     payload = { runId = runId }
 })
 local g4_prof1 = g4_s1:GetConfirmedProfile()
 g4_s1:Stop()
 
-local g4_s2 = SessionService.new({ userId = devUserId, jobId = "job-g204-2" })
+local g4_s2 = SessionService.new({ userId = devUserId, jobId = jobId("g204", 2) })
 g4_s2:Start()
 g4_s2:Snapshot()
 local g4_prof2 = g4_s2:GetConfirmedProfile()
 local g4_dup = g4_s2:Mutate({
-    requestId = "g204-clm-dup",
+    requestId = reqId("g204", "clm-dup"),
     action = "ClaimMission",
     payload = { runId = runId }
 })
@@ -195,23 +219,23 @@ results["G2-04"] = {
 -- =========================================================================
 -- G2-05: Fast Phone Purchase Persistence
 -- =========================================================================
-local g5_s1 = SessionService.new({ userId = devUserId, jobId = "job-g205-1" })
+local g5_s1 = SessionService.new({ userId = devUserId, jobId = jobId("g205", 1) })
 g5_s1:Start()
 g5_s1:Snapshot()
 local g5_buy = g5_s1:Mutate({
-    requestId = "g205-buy-1",
+    requestId = reqId("g205", "buy-1"),
     action = "BuyDevice",
     payload = { deviceId = "phone_fast" }
 })
 local g5_prof1 = g5_s1:GetConfirmedProfile()
 g5_s1:Stop()
 
-local g5_s2 = SessionService.new({ userId = devUserId, jobId = "job-g205-2" })
+local g5_s2 = SessionService.new({ userId = devUserId, jobId = jobId("g205", 2) })
 g5_s2:Start()
 g5_s2:Snapshot()
 local g5_prof2 = g5_s2:GetConfirmedProfile()
 local g5_dup = g5_s2:Mutate({
-    requestId = "g205-buy-dup",
+    requestId = reqId("g205", "buy-dup"),
     action = "BuyDevice",
     payload = { deviceId = "phone_fast" }
 })
@@ -241,11 +265,11 @@ results["G2-05"] = {
 -- =========================================================================
 -- G2-06: Post-Upgrade Payout
 -- =========================================================================
-local g6_s1 = SessionService.new({ userId = devUserId, jobId = "job-g206-1" })
+local g6_s1 = SessionService.new({ userId = devUserId, jobId = jobId("g206", 1) })
 g6_s1:Start()
 g6_s1:Snapshot()
 g6_s1:Mutate({
-    requestId = "g206-pub-1",
+    requestId = reqId("g206", "pub-1"),
     action = "PublishOrganic",
     payload = { templateId = "snack_meme" }
 })
@@ -254,7 +278,7 @@ g6_s1:Snapshot()
 local g6_prof1 = g6_s1:GetConfirmedProfile()
 g6_s1:Stop()
 
-local g6_s2 = SessionService.new({ userId = devUserId, jobId = "job-g206-2" })
+local g6_s2 = SessionService.new({ userId = devUserId, jobId = jobId("g206", 2) })
 g6_s2:Start()
 g6_s2:Snapshot()
 local g6_prof2 = g6_s2:GetConfirmedProfile()
@@ -278,11 +302,11 @@ results["G2-06"] = {
 -- =========================================================================
 -- G2-07: Lease Behavior
 -- =========================================================================
-local g7_sA = SessionService.new({ userId = devUserId, jobId = "job-g207-A" })
+local g7_sA = SessionService.new({ userId = devUserId, jobId = jobId("g207", "A") })
 g7_sA:Start()
 g7_sA:Snapshot()
 
-local g7_sB = SessionService.new({ userId = devUserId, jobId = "job-g207-B" })
+local g7_sB = SessionService.new({ userId = devUserId, jobId = jobId("g207", "B") })
 local g7_startB = g7_sB:Start() -- expected LOCKED
 local g7_locked = (not g7_startB.ok and g7_startB.code == "LOCKED")
 
@@ -310,22 +334,21 @@ results["G2-07"] = {
 -- =========================================================================
 -- G2-08: Failure Recovery
 -- =========================================================================
-local devUserFail = 88005002
-local g8_s = SessionService.new({ userId = devUserFail, jobId = "job-g208-1" })
+local g8_s = SessionService.new({ userId = devUserFail, jobId = jobId("g208", 1) })
 local g8_start = g8_s:Start()
 if not g8_start.ok and g8_start.code == "NOT_READY" then
     g8_start = g8_s:InitializeStarter()
 end
 
 local g8_mut1 = g8_s:Mutate({
-    requestId = "g208-req-1",
+    requestId = reqId("g208", "req-1"),
     action = "PublishOrganic",
     payload = { templateId = "snack_meme" }
 })
 local g8_rev1 = g8_s:GetRevision()
 
 local g8_mutRetry = g8_s:Mutate({
-    requestId = "g208-req-1",
+    requestId = reqId("g208", "req-1"),
     action = "PublishOrganic",
     payload = { templateId = "snack_meme" }
 })
@@ -333,14 +356,14 @@ local g8_rev2 = g8_s:GetRevision()
 local g8_replayNoBump = (g8_rev2 == g8_rev1)
 
 local g8_spoof = g8_s:Mutate({
-    requestId = "g208-req-1",
+    requestId = reqId("g208", "req-1"),
     action = "PublishOrganic",
     payload = { templateId = "tampered_payload" }
 })
 local g8_spoofRejected = (not g8_spoof.ok and g8_spoof.code == "INVALID_INPUT")
 
 local g8_badBuy = g8_s:Mutate({
-    requestId = "g208-req-badbuy",
+    requestId = reqId("g208", "req-badbuy"),
     action = "BuyDevice",
     payload = { deviceId = "phone_fast" }
 })

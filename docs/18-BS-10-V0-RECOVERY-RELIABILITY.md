@@ -132,17 +132,22 @@ BS01_TESTS_PASSED
 
 ### 5.1 G2 Scenario-by-Scenario Verification Matrix
 
-| Scenario ID | Name | Target Invariant & Actions | Expected State / Balances | Observed Live Result | Execution Mode | Result |
-|---|---|---|---|---|---|---|
-| **G2-01** | Fresh Account | Initial join, verify starter profile, clean exit, rejoin | 0 Cuan, `phone_cheap`, revision >= 1. Rejoin preserves identity. | Initial: 0 Cuan, `phone_cheap`, rev 2. Rejoin: 0 Cuan, `phone_cheap`, rev 2. | Cloud DataStore | **PASS** |
-| **G2-02** | Organic Pending Recovery | Post organic content, disconnect before 18s reveal, rejoin post-deadline | +15 Cuan (Balance: 15). No duplicate credit on reconnect. | Settled: 15 Cuan, pendingPost cleared. Repeat rejoin: 15 Cuan, rev 4. | Cloud DataStore | **PASS** |
-| **G2-03** | Campaign Pending Recovery | Accept Food Stall mission, publish mission post, disconnect before reveal | Run ID, post count, and context consistent. Single payout (+15). | Balance: 30 Cuan, runId: `run-2`, status: `readyToClaim`, postCount: 1, rev 7. | Cloud DataStore | **PASS** |
-| **G2-04** | Claim Persistence | Claim 80 Cuan mission reward, disconnect/rejoin, attempt duplicate claim | Balance: 110 (15+15+80). Claimed status persists. Duplicate claim refused. | Claimed: 110 Cuan. Rejoin: 110 Cuan, completedMissions: 1. Duplicate refused (`NO_ACTIVE_MISSION`), rev 8. | Cloud DataStore | **PASS** |
-| **G2-05** | Fast Phone Purchase | Buy Fast Phone for 50 Cuan, verify deviceId & cosmetic, rejoin, retry | Balance: 60, `phone_fast` equipped, cosmetic updated. Duplicate purchase refused. | Bought: 60 Cuan, `phone_fast`. Rejoin: 60 Cuan, `phone_fast`. Duplicate refused (`ALREADY_DONE`), rev 9. | Cloud DataStore | **PASS** |
-| **G2-06** | Post-Upgrade Payout | Publish organic post with Fast Phone, disconnect/rejoin | +24 Cuan payout (Balance: 84). Final balance persists across restart. | Settled: 84 Cuan (+24 yield). Rejoin: 84 Cuan, `phone_fast`, rev 11. | Cloud DataStore | **PASS** |
-| **G2-07** | Lease Behavior | Multi-session concurrency, clean logout vs stop, verify foreign lease lockout | Exclusive lease lock (240s), clean handoff on stop, no data overwrite. | Server B competing start: `LOCKED`. Server A stop: clean. Server B handoff start: `OK`, balance: 84, rev 11. | Cloud DataStore | **PASS** |
-| **G2-08** | Failure Recovery | Controlled failure injection on dev key (simulated read/write error) | Failed read preserves existing data, no unconfirmed Cuan, stable op ID. | Replay no bump: `true`. Spoof: `INVALID_INPUT`. Bad buy: `INSUFFICIENT_FUNDS` (bal: 0). Store failure: `SAVE_UNAVAILABLE`. | Cloud DataStore | **PASS** |
-| **G2-09** | Client & Device Recovery | Reopen BuzzerOS, test camera/control restoration, character respawn, viewports | Camera restores, controls active, UI opens, 1280x720 & 390x844 responsive. | Lifecycle: `Opening->Open->Closing->Closed`. Death handled: `true`. Uncertain tracked: `true`. Responsive layouts: Desktop & Mobile `true`. | Cloud DataStore & Client | **PASS** |
+Gate G2 scenarios distinguish execution tiers:
+- **Real Cloud-Backed SessionService Tests (G2-01 through G2-07)**: Real Roblox cloud `DataStoreService:GetDataStore("PlayerData")` operations with isolated per-run dev test identities.
+- **Mixed Real-Cloud / Fault-Injection Test (G2-08)**: Live cloud operations for mutations and replay idempotency, coupled with isolated mock failure store for backend outage simulation.
+- **Simulated ClientState / UI Checks (G2-09)**: In-engine client state machine lifecycle, character death handling, mutation timeouts, and 1280x720 / 390x844 responsive layout verification.
+
+| Scenario ID | Name | Test Category | Target Invariant & Actions | Expected State / Balances | Observed Live Result | Execution Mode | Result |
+|---|---|---|---|---|---|---|---|
+| **G2-01** | Fresh Account | Real Cloud | Initial join, verify starter profile, clean exit, rejoin | 0 Cuan, `phone_cheap`, revision >= 1. Rejoin preserves identity. | Initial: 0 Cuan, `phone_cheap`, rev 2. Rejoin: 0 Cuan, `phone_cheap`, rev 2. | Real Cloud DataStore | **PASS** |
+| **G2-02** | Organic Pending Recovery | Real Cloud | Post organic content, disconnect before 18s reveal, rejoin post-deadline | +15 Cuan (Balance: 15). No duplicate credit on reconnect. | Settled: 15 Cuan, pendingPost cleared. Repeat rejoin: 15 Cuan, rev 4. | Real Cloud DataStore | **PASS** |
+| **G2-03** | Campaign Pending Recovery | Real Cloud | Accept Food Stall mission, publish mission post, disconnect before reveal | Run ID, post count, and context consistent. Single payout (+15). | Balance: 30 Cuan, runId: `run-2`, status: `readyToClaim`, postCount: 1, rev 7. | Real Cloud DataStore | **PASS** |
+| **G2-04** | Claim Persistence | Real Cloud | Claim 80 Cuan mission reward, disconnect/rejoin, attempt duplicate claim | Balance: 110 (15+15+80). Claimed status persists. Duplicate claim refused. | Claimed: 110 Cuan. Rejoin: 110 Cuan, completedMissions: 1. Duplicate refused (`NO_ACTIVE_MISSION`), rev 8. | Real Cloud DataStore | **PASS** |
+| **G2-05** | Fast Phone Purchase | Real Cloud | Buy Fast Phone for 50 Cuan, verify deviceId & cosmetic, rejoin, retry | Balance: 60, `phone_fast` equipped, cosmetic updated. Duplicate purchase refused. | Bought: 60 Cuan, `phone_fast`. Rejoin: 60 Cuan, `phone_fast`. Duplicate refused (`ALREADY_DONE`), rev 9. | Real Cloud DataStore | **PASS** |
+| **G2-06** | Post-Upgrade Payout | Real Cloud | Publish organic post with Fast Phone, disconnect/rejoin | +24 Cuan payout (Balance: 84). Final balance persists across restart. | Settled: 84 Cuan (+24 yield). Rejoin: 84 Cuan, `phone_fast`, rev 11. | Real Cloud DataStore | **PASS** |
+| **G2-07** | Lease Behavior | Real Cloud | Multi-session concurrency, clean logout vs stop, verify foreign lease lockout | Exclusive lease lock (240s), clean handoff on stop, no data overwrite. | Server B competing start: `LOCKED`. Server A stop: clean. Server B handoff start: `OK`, balance: 84, rev 11. | Real Cloud DataStore | **PASS** |
+| **G2-08** | Failure Recovery | Mixed Cloud / Fault | Controlled failure injection on dev key (simulated read/write error) | Failed read preserves existing data, no unconfirmed Cuan, stable op ID. | Replay no bump: `true`. Spoof: `INVALID_INPUT`. Bad buy: `INSUFFICIENT_FUNDS` (bal: 0). Store failure: `SAVE_UNAVAILABLE`. | Mixed Cloud & Injected Fault | **PASS** |
+| **G2-09** | Client & Device Recovery | Simulated Client / UI | Reopen BuzzerOS, test camera/control restoration, character respawn, viewports | Camera restores, controls active, UI opens, 1280x720 & 390x844 responsive. | Lifecycle: `Opening->Open->Closing->Closed`. Death handled: `true`. Uncertain tracked: `true`. Responsive layouts: Desktop & Mobile `true`. | Simulated ClientState & UI | **PASS** |
 
 ### 5.2 Confirmed Balance & Revision History (Actual Live Execution)
 
@@ -156,7 +161,12 @@ BS01_TESTS_PASSED
 
 Economic Invariant Confirmed: $\Delta\text{Balance} = (15 + 15 + 80 + 24) - 50 = 84\text{ Cuan}$ (Verified on live Roblox DataStore backend).
 
-### 5.3 Development Universe Configuration Record
+### 5.3 Live In-Experience Gameplay Smoke Test & Mobile Viewport
+
+- **In-Experience Smoke Test**: Executed with test player `galonnaquaaa` (UserId `7554478273`) on development Place `100558697471228`. Verified fresh join (0 Cuan), CRT open via proximity prompt (camera transitions to `Scriptable`), post publish and confirmed reward (+15 Cuan), CRT close with camera restoration to `Custom` on `Humanoid`, clean leave and rejoin verifying 15 Cuan persistence from Cloud DataStore. Machine evidence recorded in `docs/evidence/bs10/gameplay_smoke_results.json`.
+- **Mobile Portrait Viewport (390×844)**: 8 actionable buttons measured (0 clipped buttons, 100% touch target compliant $\ge 44\times 44\text{ px}$). Photographic evidence recorded in `docs/evidence/bs10/mobile_portrait_390x844.png`.
+
+### 5.4 Development Universe Configuration Record
 
 - **Experience Name**: `Buzzer Simulator [DEV - BS-10]`
 - **Game ID**: `10774181892`

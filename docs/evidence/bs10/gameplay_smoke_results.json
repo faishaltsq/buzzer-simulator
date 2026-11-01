@@ -1,0 +1,52 @@
+{
+  "testPlayer": "galonnaquaaa",
+  "userId": 7554478273,
+  "universeId": 10774181892,
+  "placeId": 100558697471228,
+  "pass": true,
+  "steps": {
+    "step1_freshJoin": {
+      "initialDevice": "phone_cheap",
+      "initialBalance": 0,
+      "cameraType": "Enum.CameraType.Custom",
+      "cameraSubject": "Humanoid",
+      "playerName": "galonnaquaaa",
+      "status": "Closed",
+      "userId": 7554478273,
+      "ready": true
+    },
+    "step2_crtOpen": {
+      "status": "Open",
+      "cameraSubject": "Humanoid",
+      "cameraType": "Enum.CameraType.Scriptable",
+      "desktopVisible": true
+    },
+    "step3_publish": {
+      "actionDispatched": true,
+      "pendingPostActive": false,
+      "balanceBeforeReveal": 0
+    },
+    "step3_settlement": {
+      "status": "Open",
+      "balanceAfterSettlement": 15,
+      "pendingPostActive": false
+    },
+    "step4_crtClose": {
+      "closeInvoked": true,
+      "cameraType": "Enum.CameraType.Custom",
+      "desktopVisible": false,
+      "status": "Closed",
+      "cameraSubject": "Humanoid"
+    },
+    "step6_rejoin": {
+      "cameraSubject": "Humanoid",
+      "rejoinDevice": "phone_cheap",
+      "cameraType": "Enum.CameraType.Custom",
+      "status": "Closed",
+      "playerName": "galonnaquaaa",
+      "rejoinBalance": 15,
+      "userId": 7554478273,
+      "ready": true
+    }
+  }
+}
