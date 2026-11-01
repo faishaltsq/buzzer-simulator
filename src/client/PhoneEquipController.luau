@@ -19,7 +19,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Presentation = require(Shared:WaitForChild("Presentation"))
-local Theme = require(script.Parent:WaitForChild("ui"):WaitForChild("Theme"))
+local Theme = require(script.Parent:WaitForChild("ui", 10):WaitForChild("Theme", 10) :: any) :: any
 
 local player = Players.LocalPlayer
 
@@ -554,8 +554,10 @@ function PhoneEquipController:_poseTo(offset: CFrame?, seconds: number)
 				Weight = 0,
 			})
 			self._ikTween = tween
-			tween.Completed:Connect(function()
-				self:_teardownIK()
+			tween.Completed:Connect(function(playbackState: Enum.PlaybackState)
+				if playbackState == Enum.PlaybackState.Completed and self._ikTween == tween and self._ikControl == ik then
+					self:_teardownIK()
+				end
 			end)
 			tween:Play()
 		else

@@ -8,11 +8,11 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 
-local scripts = StarterPlayer:WaitForChild("StarterPlayerScripts")
-local ClientState = require(scripts:WaitForChild("ClientState")) :: any
-local uiFolder = scripts:WaitForChild("ui")
-local Upgrades = require(uiFolder:WaitForChild("Upgrades")) :: any
-local PhoneEquipController = require(scripts:WaitForChild("PhoneEquipController")) :: any
+local scripts = StarterPlayer:WaitForChild("StarterPlayerScripts", 10) :: any
+local ClientState = require(scripts:WaitForChild("ClientState", 10)) :: any
+local uiFolder = scripts:WaitForChild("ui", 10) :: any
+local Upgrades = require(uiFolder:WaitForChild("Upgrades", 10)) :: any
+local PhoneEquipController = require(scripts:WaitForChild("PhoneEquipController", 10)) :: any
 local Catalog = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Catalog")) :: any
 local Rules = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Rules")) :: any
 
@@ -745,30 +745,55 @@ test("Lifecycle 12: IK fallback RestoreAfterDashboard restores IKControl holding
 end)
 
 test("Lifecycle 13: IK fallback rapid equip and stow transitions prevent orphaned IK instances", function()
-	local char, hum, upperTorso = createIKTestRig()
+	local char, hum, upperTorso, upperArm, hand = createIKTestRig()
 	local ctrl, gui = createTestController(char)
-	ctrl:SetDevice("phone_cheap")
+	ctrl:SetDevice("phone_fast")
 
-	for _ = 1, 10 do
-		ctrl:Toggle()
-	end
-	task.wait(0.2)
+	-- Rapid equip / stow / equip transitions that cancel in-flight fade tweens
+	ctrl:Equip()
+	ctrl:Unequip()
+	ctrl:Equip()
+	ctrl:Toggle()
+	ctrl:Toggle()
+	ctrl:Equip()
+
+	-- Allow completion timer (EQUIP_SECONDS = 0.28s) to settle
+	task.wait(0.35)
+
+	expectEqual(ctrl:GetState(), "Equipped", "final state is Equipped")
+	expectTrue(ctrl:GetPreferEquipped(), "preferEquipped is true")
 
 	local ikCount = 0
+	local activeIK: IKControl? = nil
 	for _, child in ipairs(hum:GetChildren()) do
 		if child:IsA("IKControl") and child.Name == "PhoneHoldIK" then
 			ikCount += 1
+			activeIK = child
 		end
 	end
 	local attCount = 0
+	local activeAtt: Attachment? = nil
 	for _, child in ipairs(upperTorso:GetChildren()) do
 		if child:IsA("Attachment") and child.Name == "PhoneHoldTarget" then
 			attCount += 1
+			activeAtt = child
 		end
 	end
 
-	expectTrue(ikCount <= 1, "at most one IKControl exists after rapid toggling")
-	expectTrue(attCount <= 1, "at most one PhoneHoldTarget exists after rapid toggling")
+	expectEqual(ikCount, 1, "exactly one active IKControl on Humanoid")
+	expectEqual(attCount, 1, "exactly one target attachment on UpperTorso")
+	expectTrue(activeIK ~= nil, "active IKControl exists")
+	expectTrue(activeAtt ~= nil, "active target attachment exists")
+
+	expectEqual(activeIK.ChainRoot, upperArm, "active IK ChainRoot is RightUpperArm")
+	expectEqual(activeIK.EndEffector, hand, "active IK EndEffector is RightHand")
+	expectEqual(activeIK.Target, activeAtt, "active IK Target points to PhoneHoldTarget")
+	expectEqual(activeIK.Weight, 1, "active IK Weight is 1")
+
+	-- Wait additional interval to verify no stale fade-out callbacks asynchronously destroy the active pose
+	task.wait(0.2)
+	expectTrue(hum:FindFirstChild("PhoneHoldIK") ~= nil, "no stale tween callback destroyed the final active pose")
+	expectEqual(ctrl:GetState(), "Equipped", "state remains Equipped")
 
 	ctrl:Destroy()
 	gui:Destroy()
