@@ -49,12 +49,16 @@ These prefabs are synchronized directly into Roblox Studio via Rojo:
 ### 3.2. Structural Anchors
 `Bedroom.rbxmx` must contain the 12 immutable anchors:
 - `Spawn`, `PlayerDesk`, `DashboardPromptAnchor`, `TerminalSlot`, `PhoneSlot`, `WorkerDeskSlot1`, `WorkerSeat1`, `WorkerDeskSlot2`, `WorkerSeat2`, `CameraFocus`, `Door`, `LightGroup`.
-- All technical anchors must enforce:
+- **10 Technical Markers** (`Spawn`, `PlayerDesk`, `DashboardPromptAnchor`, `TerminalSlot`, `PhoneSlot`, `WorkerDeskSlot1`, `WorkerSeat1`, `WorkerDeskSlot2`, `WorkerSeat2`, `CameraFocus`):
   - `Transparency = 1`
   - `Anchored = true`
   - `CanCollide = false`
   - `CanTouch = false`
   - `CanQuery = false`
+- **1 Physical Architectural Prop** (`Door`):
+  - Physical room door (`Transparency = 0`, `CanCollide = true`, `Anchored = true`).
+- **1 Organizational Container** (`LightGroup`):
+  - Roblox `Folder` containing the room's PointLight instances (not a BasePart marker).
 
 ### 3.3. Security & Clean Model Gate
 Every file in `assets/world/` must be a clean, inert container:
@@ -63,8 +67,9 @@ Every file in `assets/world/` must be a clean, inert container:
 - **No external asset URLs** (`rbxassetid://`).
 - Built-in Roblox materials only (`SmoothPlastic`, `Wood`, `Metal`, `Fabric`, `Glass`, `Neon`).
 
-### 3.4. Lighting Rules
+### 3.4. Lighting & Performance Rules
 - All point lights must live inside the `LightGroup` folder in `Bedroom.rbxmx`.
-- Maximum 4 light sources per room.
+- Maximum 4 light sources per room to protect mobile frame rates (target $\ge 30\text{ FPS}$ verified via real-device profiling).
+- Part budgets strictly enforced: $\le 250$ BaseParts for V0 starter room; $\le 350$ BaseParts for M1 expanded home studio.
 - `Shadows = true` is enforced on all light sources.
 - No unshielded neon slabs or ambient light overrides.

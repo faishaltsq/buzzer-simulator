@@ -110,17 +110,19 @@ Roblox built-in materials provide tactile differentiation without texture bloat:
 
 ## 6. Contrast Ratios & Accessibility Compliance (WCAG 2.2 AA)
 
-All color pairings are mathematically verified against WCAG 2.2 Level AA requirements (minimum 4.5:1 for normal text, 3.0:1 for large text/graphical elements):
+All color pairings are mathematically calculated and verified against WCAG 2.2 Level AA requirements (minimum 4.5:1 for normal text, 3.0:1 for large text/graphical elements) using standard relative luminance ($L = 0.2126 R + 0.7152 G + 0.0722 B$ with sRGB gamma expansion):
 
 | Foreground Color | Background Surface | Contrast Ratio | Evaluation | Context |
 |---|---|---|---|---|
-| `Cream` (`#F2E5D5`) | `Charcoal` (`#30343C`) | **9.24 : 1** | **PASS (AAA)** | Primary UI body text & headers |
-| `CreamMuted` (`#C8BEB2`) | `Charcoal` (`#30343C`) | **6.81 : 1** | **PASS (AA)** | Secondary card subtitles & metadata |
-| `Lime` (`#8CB369`) | `CharcoalDark` (`#24272E`) | **5.42 : 1** | **PASS (AA)** | Active purchase buttons & income rate |
-| `Coral` (`#D97D64`) | `CharcoalDark` (`#24272E`) | **4.87 : 1** | **PASS (AA)** | Save blocked alerts & error banners |
-| `Amber` (`#F2BC79`) | `Navy` (`#34465A`) | **5.38 : 1** | **PASS (AA)** | BuzzerOS header highlights & equipped badge |
+| `Cream` (`#F2E5D5`) | `Charcoal` (`#30343C`) | **10.07 : 1** | **PASS (AAA)** | Primary UI body text & headers |
+| `CreamMuted` (`#C8BEB2`) | `Charcoal` (`#30343C`) | **6.82 : 1** | **PASS (AA)** | Secondary card subtitles & metadata |
+| `Lime` (`#8CB369`) | `CharcoalDark` (`#24272E`) | **6.24 : 1** | **PASS (AA)** | Active purchase buttons & income rate on nav rail |
+| `Lime` (`#8CB369`) | `Charcoal` (`#30343C`) | **5.21 : 1** | **PASS (AA)** | Active purchase CTA buttons & tags on cards |
+| `Coral` (`#D97D64`) | `CharcoalDark` (`#24272E`) | **5.03 : 1** | **PASS (AA)** | Save blocked alerts & error banners |
+| `Coral` (`#D97D64`) | `Charcoal` (`#30343C`) | **4.20 : 1** | **PASS (AA Large)** | Warning notices (large text / graphical boundary $\ge 3:1$) |
+| `Amber` (`#F2BC79`) | `Navy` (`#34465A`) | **5.64 : 1** | **PASS (AA)** | BuzzerOS header highlights & equipped badge |
 | `Phosphor` (`#B1CEA6`) | `Screen` (`#273F3E`) | **6.56 : 1** | **PASS (AA)** | Physical 3D CRT on-screen text |
-| `DisabledText` (`#828892`)| `Disabled` (`#5A606A`) | **1.86 : 1** | **INTENTIONAL**| Non-interactive state (exempt from AA) |
+| `DisabledText` (`#828892`)| `Disabled` (`#5A606A`) | **1.77 : 1** | **INTENTIONAL**| Non-interactive state (exempt from AA) |
 
 ---
 

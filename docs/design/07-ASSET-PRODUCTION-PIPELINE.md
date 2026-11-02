@@ -98,23 +98,44 @@ All exported `.rbxmx` models must pass strict security sanitization:
 
 ## 4. Part Budgets & Performance Ceilings
 
-To guarantee steady 60 FPS on low-end mobile devices (e.g. iPhone 8, 2GB RAM Android):
+Performance on mobile devices is governed by measurable targets verified through real-device profiling (targeting steady $\ge 30\text{ FPS}$ on baseline mobile hardware without persistent $>100\text{ms}$ script stalls), rather than assumed guarantees from part counts alone.
+
+To ensure geometric efficiency, asset budgets strictly separate the **V0 Starter Room** from the **M1 Expanded Studio**:
+
+### 4.1. V0 Starter Room Part Budget ($\le 250$ BaseParts)
+In V0 (including BS-09), the starter room consists of the bedroom shell, the OldCRT access terminal, and one owned productive phone (Cheap or Fast):
+- `Bedroom.rbxmx`: 155 BaseParts (including 10 technical anchors and 3 light diffusers)
+- `OldCRT.rbxmx`: 52 BaseParts
+- Equipped Phone: 25 BaseParts (`PhoneCheap`) or 23 BaseParts (`PhoneFast`)
+- **Total V0 Furnished Room**: **230–232 BaseParts** (strictly compliant with the $\le 250$ BasePart V0 ceiling).
+
+### 4.2. M1 Expanded Studio Part Budget ($\le 340\text{--}350$ BaseParts)
+In M1, the bedroom expands into a functional home studio with hardware replacement, passive worker stations, and animated trainee rigs:
+- `Bedroom.rbxmx`: 155 BaseParts
+- `PCRumah.rbxmx`: 60 BaseParts maximum (replaces 52-part `OldCRT`; net addition: +8 BaseParts)
+- Inert Phone Prop: 23 BaseParts (retained on desk pad as inert keepsake)
+- Worker Workstation 1 (`WorkerDeskSlot1` + `WorkerSeat1`): ~30 BaseParts
+- Worker Workstation 2 (`WorkerDeskSlot2` + `WorkerSeat2`): ~30 BaseParts
+- Client-Side Ambient Trainee Rigs: 2 R15 visual rigs (~15–20 visual parts each, purely client-side with zero server physics or controllers)
+- **Total M1 Expanded Studio**: **~320–340 BaseParts** (strictly within the $\le 350$ BasePart M1 ceiling).
 
 ```
-+---------------------------------------------------------------------------------------+
-|                               ASSET BUDGET ALLOCATIONS                                |
-+---------------------------+-------------------+-------------------+-------------------+
-| Asset Component           | Actual Shipped    | Maximum Ceiling   | Compliance Status |
-+---------------------------+-------------------+-------------------+-------------------+
-| `Bedroom.rbxmx`           | 155 BaseParts     | 175 BaseParts     | **PASS (Within)** |
-| `OldCRT.rbxmx`            | 52 BaseParts      | 60 BaseParts      | **PASS (Within)** |
-| `PhoneCheap.rbxmx`        | 25 BaseParts      | 30 BaseParts      | **PASS (Within)** |
-| `PhoneFast.rbxmx`         | 23 BaseParts      | 30 BaseParts      | **PASS (Within)** |
-| Total Furnished Room (V0) | 232 BaseParts     | **250 BaseParts** | **PASS (Within)** |
-| Total Furnished Room (BS-09)| 230 BaseParts   | **250 BaseParts** | **PASS (Within)** |
-| `PCRumah.rbxmx` (BS-11)   | 0 (Planned)       | 60 BaseParts      | **BUDGETED**      |
-| Worker Station (BS-12)    | 0 (Planned)       | 40 BaseParts/desk | **BUDGETED**      |
-+---------------------------+-------------------+-------------------+-------------------+
++---------------------------------------------------------------------------------------------------+
+|                                   ASSET BUDGET ALLOCATIONS                                        |
++-------------------------------+-------------------+-------------------+---------------------------+
+| Asset Component               | Actual Shipped    | Maximum Ceiling   | Compliance Status         |
++-------------------------------+-------------------+-------------------+---------------------------+
+| `Bedroom.rbxmx`               | 155 BaseParts     | 175 BaseParts     | **PASS (Within)**         |
+| `OldCRT.rbxmx`                | 52 BaseParts      | 60 BaseParts      | **PASS (Within)**         |
+| `PhoneCheap.rbxmx`            | 25 BaseParts      | 30 BaseParts      | **PASS (Within)**         |
+| `PhoneFast.rbxmx`             | 23 BaseParts      | 30 BaseParts      | **PASS (Within)**         |
+| Total Furnished Room (V0)     | 232 BaseParts     | **250 BaseParts** | **PASS (Within V0)**      |
+| Total Furnished Room (BS-09)  | 230 BaseParts     | **250 BaseParts** | **PASS (Within V0)**      |
+| `PCRumah.rbxmx` (BS-11)       | 0 (Planned)       | 60 BaseParts      | **BUDGETED (M1)**         |
+| Worker Station 1 & 2 (BS-12)  | 0 (Planned)       | 35 BaseParts/desk | **BUDGETED (M1)**         |
+| Trainee Rigs x2 (BS-13)       | 0 (Planned)       | Client-only rigs  | **BUDGETED (M1)**         |
+| Total Expanded Studio (M1)    | ~320 BaseParts    | **350 BaseParts** | **BUDGETED (Within M1)**  |
++-------------------------------+-------------------+-------------------+---------------------------+
 ```
 
 ---

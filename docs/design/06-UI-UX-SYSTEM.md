@@ -115,13 +115,25 @@ Always rendered in screen space during exploration; softly dims (`GroupTranspare
 Opens via `ProximityPrompt` at `DashboardPromptAnchor`.
 
 #### Responsive Layout Modes:
-1. **Desktop Wide Mode ($\ge 800\text{px}$ width)**:
-   - Fixed left-hand vertical navigation rail ($160\text{px}$ width) in `CharcoalDark`.
-   - Central content viewport in `Charcoal`.
-   - Top-right persistent $44\text{px}$ square Close button with an `"X"` icon.
-2. **Mobile Compact Mode ($< 800\text{px}$ width)**:
-   - Fullscreen modal window with safe-area insets.
-   - Bottom horizontal navigation bar ($56\text{px}$ height) with 4 primary destinations (Home, Buzzline, Create, Missions) plus a "More..." tab that opens Upgrades and Workers in an overlay sheet.
+1. **Desktop Wide Mode ($\ge 640\text{px}$ width and $\ge 500\text{px}$ height)**:
+   - Fixed left-hand vertical navigation rail ($180\text{px}$ width) in `CharcoalDark` (`navRail.Size = UDim2.new(0, 180, 1, 0)`).
+   - Central content viewport in `Charcoal` (`contentArea.Size = UDim2.new(1, -180, 1, 0)`, `Position = UDim2.new(0, 180, 0, 0)`).
+   - Header bar contains top-right persistent $72 \times 44\text{px}$ Close button (`CloseButton`) labeled "Close" in `CharcoalLight` with Cream text, meeting the $\ge 44\text{px}$ touch target height standard (`closeBtn.Size = UDim2.new(0, 72, 0, 44)`).
+   - Navigation rail displays all 6 primary system tabs: `Home`, `Feed`, `Create`, `Missions`, `Upgrades`, `Workers`.
+2. **Mobile Compact Mode ($< 640\text{px}$ width or $< 500\text{px}$ height)**:
+   - Compact layout active on narrow portrait mobile viewports ($< 640\text{px}$) and short landscape mobile screens ($< 500\text{px}$).
+   - Left navigation rail hidden; content area expands to full window width (`UDim2.new(1, 0, 1, -56)`).
+   - Header bar retains the $72 \times 44\text{px}$ Close button for immediate dismissal.
+   - Bottom horizontal navigation bar (`_mobileNav`, height 56px) provides 4 primary touch targets:
+     - `Home` (`MobileNav_Home`)
+     - `Feed` (`MobileNav_Feed`)
+     - `Create` (`MobileNav_Create`)
+     - `More` (`MobileNav_More`)
+   - The `More` tab toggles a dedicated drawer menu (`_moreMenu`) containing the secondary destinations:
+     - `Missions`
+     - `Upgrades`
+     - `Workers`
+     Selecting any destination in the `More` drawer switches to that tab and closes the drawer.
 
 ---
 

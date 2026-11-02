@@ -83,8 +83,10 @@ All 12 required anchors are present at exact specified coordinates:
 8. `WorkerDeskSlot2`: $(-8.0, 3.2, -2.0)$, size $(4, 0.4, 2.4)$
 9. `WorkerSeat2`: $(-8.0, 1.6, -0.2)$, size $(2, 2, 2)$
 10. `CameraFocus`: $(7.0, 5.5, 3.0)$, size $(1, 1, 1)$
-11. `Door`: $(-6.0, 3.65, 11.6)$, size $(3.7, 7.3, 0.18)$
-12. `LightGroup`: Folder containing 3 PointLight diffusers.
+11. `Door`: $(-6.0, 3.65, 11.6)$, size $(3.7, 7.3, 0.18)$ — Physical visible architectural prop (`CanCollide = true`, `Transparency = 0`)
+12. `LightGroup`: Folder containing 3 PointLight diffusers — Organizational `Folder` (not a BasePart marker)
+
+*Anchor Breakdown*: 10 technical invisible BasePart markers (`Transparency = 1`, `Anchored = true`, `CanCollide = false`, `CanTouch = false`, `CanQuery = false`), 1 physical architectural door component (`Door`, `CanCollide = true`), and 1 organizational `Folder` container (`LightGroup`). Part budget compliance: V0 starter room strictly $\le 250$ BaseParts (actual shipped room: 155 BaseParts; fully furnished with OldCRT and phone: 230–232 BaseParts); M1 expanded room budget $\le 350$ BaseParts. Performance subject to real-device profiling.
 
 ---
 

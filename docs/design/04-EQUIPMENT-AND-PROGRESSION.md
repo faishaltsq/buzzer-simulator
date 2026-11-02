@@ -81,18 +81,18 @@ The following specifications are blueprints for upcoming milestones. They must *
 
 ### 3.1. PC Rumah (`PCRumah.rbxmx` — Planned Milestone BS-11)
 - **Status**: **NOT IMPLEMENTED (PROPOSED DESIGN SPECIFICATION)**
-- **Gameplay Role**: Tier 2 upgraded hardware (Catalog cost: 120 Cuan). Replaces `OldCRT` at `TerminalSlot` and becomes the **sole productive device** (yield: 2.5x, strong payout 37 Cuan, reveal time: 13s). The phone becomes an inert desk prop.
+- **Gameplay Role**: Tier 2 upgraded hardware (Catalog cost: 220 Cuan, strictly matching `src/shared/Catalog.luau`). Replaces `OldCRT` at `TerminalSlot` and becomes the **sole productive device** (yield: 2.5x, strong payout 37 Cuan, reveal time: 13s). The phone becomes an inert desk prop.
 - **Spatial Footprint Contract**:
-  - Must fit strictly within the bounding box of `TerminalSlot`: $3.0 \text{ studs (W)} \times 2.6 \text{ studs (D)}$ on the desktop surface ($Y = 3.35$).
+  - Must fit strictly within the bounding box of `TerminalSlot`: $3.0 \text{ studs (W)} \times 2.6 \text{ studs (D)}$ on the desktop surface ($Y = 3.35$). The monitor width must not exceed $2.8\text{ studs}$ ($2.7 \times 1.6\text{ studs}$ panel) so it remains entirely within the $3.0\text{ stud}$ slot width without overhang or altering existing anchors.
   - Must preserve unobstructed line-of-sight and activation radius for `DashboardPromptAnchor` at $(7.4, 3.6, -2.4)$.
   - Must maintain a minimum 0.5-stud gap from `PhoneSlot` $(4.6, 3.35, -3.8)$ to avoid prop interpenetration.
 - **Silhouette & Industrial Design**:
-  - **Monitor**: Slim-bezel 16:9 flat panel display (approx. 3.2 studs wide × 2.0 studs high) on an angled metal neck and weighted pedestal base.
+  - **Monitor**: Slim-bezel 16:9 flat panel display (approx. $2.7\text{ studs}$ wide $\times 1.6\text{ studs}$ high, max width $\le 2.8\text{ studs}$) on an angled metal neck and weighted pedestal base (depth $\le 1.8\text{ studs}$), fitting comfortably within the $3.0 \times 2.6\text{ stud}$ slot without overhanging desk edges.
   - **Screen Glow**: Soft amber/cyan desktop glow casting subtle light onto the desk surface.
   - **Computer Tower (Case)**: Mid-tower PC chassis resting beside or beneath the desk leg. Features dark charcoal casing, subtle front intake vents, and a faint amber internal LED glow (no chaotic RGB cycling).
   - **Peripherals**: Low-profile mechanical keyboard with dark navy keycaps, cream spacebar, and an accompanying optical mouse on a sage fabric desk mat.
 - **Technical Standards**:
-  - Maximum BasePart budget: **60 BaseParts**.
+  - Maximum BasePart budget: **60 BaseParts** (replaces 52-part `OldCRT`, resulting in a net addition of only +8 BaseParts).
   - No client physics; all parts anchored.
   - Screen displays an embedded `SurfaceGui` with updated high-resolution BuzzerOS branding.
 
@@ -105,11 +105,12 @@ The following specifications are blueprints for upcoming milestones. They must *
 - **Furniture Kit Language**:
   - Compact desks built with the same `wood_light` and `wood_dark` timber joinery as the player desk, maintaining architectural unity.
   - Wooden ergonomic swivel chairs scaled to standard Roblox avatars ($2 \times 2 \times 2 \text{ studs}$).
-  - Simple budget desktop monitors and second-hand peripherals matching the humble home-studio aesthetic.
+  - Simple budget desktop monitors and second-hand peripherals matching the humble home-studio aesthetic ($\le 30\text{--}40$ BaseParts per workstation kit).
 - **Trainee Character Rigs**:
   - Standard blocky R15 rigs dressed in casual domestic clothing (cream t-shirts, navy pants).
   - Seated ambient typing loop: gentle arm oscillations towards keyboard; occasional head nod.
   - Strict performance rule: Trainee animation runs purely client-side; server maintains zero AnimationControllers or physics instances.
+  - World Budget: Both workstations and trainee rigs are accommodated within the M1 expanded-world room budget ($\le 340\text{--}350$ BaseParts total), cleanly separated from the V0 room limit ($\le 250$ BaseParts). Mobile performance is subject to real-device profiling rather than guaranteed by part counts alone.
 
 ---
 

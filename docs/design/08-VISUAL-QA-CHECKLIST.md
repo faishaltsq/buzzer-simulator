@@ -33,10 +33,11 @@ Every current and planned asset in *Buzzer Simulator* must satisfy all six quali
 |                   | * Controlled detail density; no noisy micro-patterns.         |
 |                   | * WCAG 2.2 AA contrast compliance on all readable surfaces.   |
 +-------------------+---------------------------------------------------------------+
-| **4. Performance**| * Strict part budget compliance (Room <= 250 BaseParts).      |
+| **4. Performance**| * Strict part budget compliance (V0 <= 250 BaseParts; M1 <= 350).|
 |                   | * Max 4 light sources per room; no unshielded neon slabs.     |
 |                   | * Minimal transparent overdraw (Glass transparency = 0.35).   |
-|                   | * 60 FPS target maintained on mobile emulator devices.        |
+|                   | * Target >= 30 FPS on baseline mobile hardware; no >100ms lag. |
+|                   | * Performance verified by profiling, not part counts alone.   |
 +-------------------+---------------------------------------------------------------+
 | **5. Interaction**| * ProximityPrompt reachable and non-obstructed (10-stud range)|
 |                   | * Held equipment synchronized with server-confirmed profile.  |
@@ -71,7 +72,7 @@ Based on an exhaustive inspection of the actual repository assets (`assets/world
 | **V-01** | Geometry / Scaling | `PhoneCheap` & `PhoneFast` | `assets/world/review/desk-cheap.jpg` vs `assets/ui/bs09-review/cheap-phone-hand.jpg` | **P2** | **Scale Discrepancy Between Desk & Handheld**: Desk phone is 2.0 studs tall; held phone is 1.02 studs tall. This was an intentional ergonomic choice (desk phone needs third-person visibility; held phone must fit avatar palm), but creates a slight perceptual pop on equip. | Retain current sizing for ergonomic safety, but add a 0.15s scale-blend tween during equip to visually smooth the volume transition. |
 | **V-02** | Shimmering / Geometry | `Bedroom` (Rug & Bed) | `assets/world/Bedroom.rbxmx` (`RugStripe` Y=0.01, `BlanketHem` Y=0.06) | **P2** | **Potential Coplanar Shimmering at Distance**: Rug stripes (0.01 stud thick) and mattress piping (0.07 stud thick) sit very close to base surfaces. On mobile devices without anti-aliasing, extreme camera grazing angles can produce subtle specular shimmering. | In a future asset polish pass, increase vertical thickness of decorative fabric stripes from 0.01 to 0.035 studs to ensure robust depth-buffer separation. |
 | **V-03** | Lighting / Atmosphere | `Bedroom` (North Window) | `assets/world/review/room-interior.jpg` | **P2** | **Unshielded Window Exterior Space**: The north window looks out directly into the empty default Roblox baseplate/skybox. While `SoftDaylight` provides an effective cool fill (17-stud range), looking directly through the glass reveals raw engine sky. | Introduce a lightweight exterior window backdrop card (a simple night/day city silhouette or tree trellis, ~4 BaseParts) outside the wall in a future environment update. |
-| **V-04** | UI / Responsive | `Desktop.luau` (Mobile Nav) | `assets/ui/review/mobile-portrait-home.jpg` & `docs/evidence/bs10/mobile_portrait_390x844.png` | **P2** | **Mobile Bottom Nav Density on Narrow Screens**: On narrow 360px portrait devices, the 5-tab bottom navigation rail (Home, Feed, Create, Missions, More) approaches the 44px minimum tap target boundary with tight horizontal margins. | Increase bottom rail icon padding and ensure the "More..." dropdown modal has generous touch targets ($\ge 48\text{px}$) on compact viewports. |
+| **V-04** | UI / Responsive | `Desktop.luau` (Mobile Nav) | `assets/ui/review/mobile-portrait-home.jpg` & `docs/evidence/bs10/mobile_portrait_390x844.png` | **P2** | **Mobile Bottom Nav Density on Narrow Screens**: On narrow 360px portrait devices, the 4-tab bottom navigation rail (Home, Feed, Create, More) approaches horizontal tap margins, and the More drawer items (Missions, Upgrades, Workers) require ample vertical separation to ensure touch accessibility. | Enforce minimum 48px height on More drawer items and verify 4-tab bottom rail spacing meets touch target guidelines on compact viewports (< 640px). |
 | **V-05** | Surface Contrast | `OldCRT` (SurfaceGui Title) | `assets/world/review/crt-close-up.jpg` | **P3** | **Small Font Size on Physical Screen at Distance**: The green phosphor title `"BuzzerOS"` on the CRT screen is sharp at desk approach (6.56:1 contrast), but shrinks below legible threshold when standing at spawn ($Z = 6$). | The primary prompt text (`"Open BuzzerOS"`) on `DashboardPrompt` correctly handles distant orientation; the physical screen title is secondary flavor. No code change needed; behavior is working as designed. |
 
 ---
@@ -103,7 +104,7 @@ The following sequenced roadmap outlines visual enhancements for upcoming milest
   - **Scope**: Add a subtle, low-part exterior wall sill and stylized horizon silhouette outside the north window opening.
   - **Files**: `tools/gen_world_prefabs.py`, `assets/world/Bedroom.rbxmx`.
   - **Dependencies**: Item 1.1.
-  - **Risk**: Low (stays within 250-part budget; adds <= 6 BaseParts).
+  - **Risk**: Low (stays within V0 250-part budget; adds <= 6 BaseParts).
   - **Acceptance Criteria**: Camera facing north window sees stylized domestic backdrop instead of empty void.
   - **Screenshot Requirement**: Studio capture facing window from bed headboard.
 

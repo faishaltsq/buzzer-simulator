@@ -57,10 +57,13 @@ The 12 named anchors in `Bedroom.rbxmx` are hardcoded server-to-client contracts
 | `WorkerDeskSlot2` | `(-8.00, 3.20, -2.00)` | `(4.0, 0.4, 2.4)` | Identity | Reserved future desk 2 bounding volume |
 | `WorkerSeat2` | `(-8.00, 1.60, -0.20)` | `(2.0, 2.0, 2.0)` | Identity | Reserved future trainee seat 2 volume |
 | `CameraFocus` | `(7.00, 5.50, 3.00)` | `(1.0, 1.0, 1.0)` | Identity | Pre-BS-07 camera target anchor |
-| `Door` | `(-6.00, 3.65, 11.60)` | `(3.7, 7.3, 0.18)` | Identity | Physical entry door prop (CanCollide = true)|
-| `LightGroup` | N/A (Folder) | N/A | Identity | Container for all bedroom PointLight sources|
+| `Door` | `(-6.00, 3.65, 11.60)` | `(3.7, 7.3, 0.18)` | Identity | Physical entry door prop (visible architecture, CanCollide = true)|
+| `LightGroup` | N/A (Folder) | N/A | Identity | Organizational Folder containing all bedroom PointLight sources (not a BasePart)|
 
-*Note: All anchors except `Door` and `LightGroup` are fully transparent (`Transparency = 1`), anchored, non-colliding (`CanCollide = false`), non-touching (`CanTouch = false`), and non-queryable (`CanQuery = false`).*
+*Clarification on Anchor Types & Contracts*:
+- **10 Technical Markers** (`Spawn`, `PlayerDesk`, `DashboardPromptAnchor`, `TerminalSlot`, `PhoneSlot`, `WorkerDeskSlot1`, `WorkerSeat1`, `WorkerDeskSlot2`, `WorkerSeat2`, `CameraFocus`): Invisible BaseParts (`Transparency = 1`), anchored (`Anchored = true`), non-colliding (`CanCollide = false`), non-touching (`CanTouch = false`), and non-queryable (`CanQuery = false`).
+- **1 Physical Architectural Prop** (`Door`): A visible physical architectural door component (`Transparency = 0`, `CanCollide = true`, `CanQuery = true`, Material = Wood) representing the room entry.
+- **1 Organizational Container** (`LightGroup`): An organizational Roblox `Folder` instance containing the room's point lights, not an invisible BasePart marker.
 
 ---
 
@@ -101,7 +104,7 @@ The room’s illumination is governed entirely by three carefully balanced `Poin
 
 ### Lighting Constraints:
 - `Shadows = true` is enforced on all fixtures to produce soft contact shadows under the bed frame, desk apron, and bookshelf.
-- Total light sources must never exceed 4 per room in V0/M1 to maintain 60 FPS performance on low-end mobile devices (e.g., iPhone 8 / low-end Android).
+- Total light sources must never exceed 4 per room in V0/M1 to maintain stable mobile performance subject to real-device profiling (target $\ge 30\text{ FPS}$ on baseline mobile hardware without persistent $>100\text{ms}$ script freezes; part counts and light limits alone do not guarantee performance).
 - Zero unshielded neon placement geometry is allowed.
 
 ---
@@ -136,7 +139,7 @@ All furnishings are built to standard Roblox avatar ergonomics (assuming standar
 | **12 Named Anchors** | **NO** | Core server contract. Moving or renaming breaks `WorldService`. |
 | **Desk Surface Height (Y=3.35)** | **NO** | Frozen placement height for OldCRT, phones, and future PC. |
 | **Window Frame / Mullions** | **YES** | May adjust frame thickness or sill bevel without moving opening. |
-| **Decorative Props (Mug/Book)**| **YES** | May add subtle dressing props as long as part budget $\le 250$. |
+| **Decorative Props (Mug/Book)**| **YES** | May add subtle dressing props as long as room part budgets are strictly observed ($\le 250$ BaseParts in V0; $\le 350$ BaseParts in M1 expanded world). |
 | **Poster Artwork** | **YES** | Geometric abstract designs only; no uploaded external image IDs. |
 | **Curtain Drapes** | **YES** | Minor folding tweaks allowed if they don't block desk sightlines. |
 | **Ceiling Lid** | **NO** | Adding a solid ceiling lid is strictly forbidden (breaks camera orbit). |
