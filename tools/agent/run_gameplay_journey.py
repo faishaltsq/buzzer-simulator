@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+"""In-Engine Integration Harness: Gameplay Domain & Service Verification.
+
+NOTICE & EVIDENCE LABEL:
+This script executes real Luau code inside Roblox Studio Server DataModel,
+verifying domain logic across SessionService, ProfileStore, MissionService,
+EconomyService, Catalog, Rules, and WorldService.
+It uses an in-memory FakeStore and simulated player identity for isolated,
+fast-forwarded deterministic verification without requiring live external
+network access. It does NOT provide proof of live Roblox DataStore API
+cloud persistence. Real player UI and DataStore checks are handled separately.
+"""
+
 import sys
 import os
 import time
@@ -317,6 +330,7 @@ return table.concat(logs, "\\n")
 studio.call('start_stop_play', {'is_start': True})
 time.sleep(2.0)
 try:
+    print("=== [IN-ENGINE INTEGRATION HARNESS: In-Memory FakeStore & Simulated Player] ===")
     res = studio.call("execute_luau", {"code": code, "datamodel_type": "Server"})
     print("Gameplay Journey Execution Result:")
     print(res)
