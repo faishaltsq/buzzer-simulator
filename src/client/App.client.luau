@@ -369,6 +369,21 @@ if RunService:IsStudio() then
 		elseif action == "ApplySnapshot" then
 			state:ApplyStateSnapshot(payload)
 			return true
+		elseif action == "Action" then
+			if commandRemote == nil then return false end
+			local actName = payload.action
+			local actPayload = payload.payload
+			local envelope = if actName == "GetSnapshot"
+				then state:RefreshProgress(os.clock())
+				else state:BeginMutation(actName, actPayload, os.clock())
+			if envelope then
+				if (actName == "PublishOrganic" or actName == "PublishPost") and phoneEquip ~= nil then
+					phoneEquip:PlayUse()
+				end
+				sendCommand(envelope)
+				return true
+			end
+			return false
 		end
 		return nil
 	end
@@ -427,6 +442,16 @@ local function bindCharacter(character: Model)
 			hud:SetDashboardOpen(false, isReducedMotion())
 		end)
 	end
+	character.AncestryChanged:Connect(function(_child, parent)
+		if parent == nil then
+			state:OnCharacterLost()
+			if preCameraState.captured then
+				restoreCameraAndControls()
+				desktop:SetVisible(false, isReducedMotion())
+				hud:SetDashboardOpen(false, isReducedMotion())
+			end
+		end
+	end)
 end
 
 if player.Character ~= nil then
@@ -467,7 +492,12 @@ local function setupNetworking()
 			elseif event.kind == "OpenComputer" then
 				state:ApplyOpenComputer(event, os.clock())
 			elseif event.kind == "OpenComputerDenied" then
-				state:ApplyOpenComputerDenied(event.code)
+				local applied = state:ApplyOpenComputerDenied(event.code)
+				if applied and preCameraState.captured and state:GetStatus() == "Closed" then
+					restoreCameraAndControls()
+					desktop:SetVisible(false, isReducedMotion())
+					hud:SetDashboardOpen(false, isReducedMotion())
+				end
 			elseif event.kind == "ComputerSessionExpired" then
 				state:ApplySessionExpired(event.dashboardSessionId, event.reason)
 			end

@@ -370,6 +370,15 @@ end
 
 -- 3. Apply OpenComputerDenied (Snapshot.kind == "OpenComputerDenied")
 function ClientState:ApplyOpenComputerDenied(code: string): boolean
+	-- OpenComputerDenied carries no sessionId. If an active dashboard session is
+	-- already accepted (status is "Open" or "Opening"), this denial is an
+	-- unrelated late packet (e.g. from an earlier failed prompt attempt,
+	-- duplicate trigger, or packet reordering). It must not invalidate the
+	-- active session or disrupt the user.
+	if self._data.status == "Open" or self._data.status == "Opening" then
+		return false
+	end
+
 	self._data.activeDenial = code
 	self:_notify()
 	return true
