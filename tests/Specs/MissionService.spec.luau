@@ -81,13 +81,17 @@ local function withCatalogFixture(
 	shippedMissionIds: { string },
 	fn: () -> ()
 )
+	local targetTable = Catalog.Shipped or Catalog.V0Shipped
 	local realMissions = Catalog.Missions
-	local realShipped = Catalog.V0Shipped.missionIds
+	local realShipped = targetTable.missionIds
+	local realV0Shipped = Catalog.V0Shipped.missionIds
 	Catalog.Missions = missions
+	targetTable.missionIds = shippedMissionIds
 	Catalog.V0Shipped.missionIds = shippedMissionIds
 	local ok, err = pcall(fn)
 	Catalog.Missions = realMissions
-	Catalog.V0Shipped.missionIds = realShipped
+	targetTable.missionIds = realShipped
+	Catalog.V0Shipped.missionIds = realV0Shipped
 	if not ok then
 		error(err, 0)
 	end
@@ -98,10 +102,14 @@ end
 -- derives eligibility (accept's tier gate) inherits the wrong cap and the
 -- reported failure names the wrong cause.
 local function withShippedTierCap(cap: number, fn: () -> ())
-	local realCap = Catalog.V0Shipped.maxShippedTier
+	local targetTable = Catalog.Shipped or Catalog.V0Shipped
+	local realCap = targetTable.maxShippedTier
+	local realV0Cap = Catalog.V0Shipped.maxShippedTier
+	targetTable.maxShippedTier = cap
 	Catalog.V0Shipped.maxShippedTier = cap
 	local ok, err = pcall(fn)
-	Catalog.V0Shipped.maxShippedTier = realCap
+	targetTable.maxShippedTier = realCap
+	Catalog.V0Shipped.maxShippedTier = realV0Cap
 	if not ok then
 		error(err, 0)
 	end
@@ -342,32 +350,34 @@ end)
 -- profile persists no tier field, so accept() derives eligibility from
 -- lifetimeEarned + completedMissions clamped to the shipped tier cap.
 test("A tier-0 player is rejected from a tier-1 mission", function()
-	withCatalogFixture(
-		{
+	withShippedTierCap(0, function()
+		withCatalogFixture(
 			{
-				missionId = "tier1_mission",
-				requiredImpact = 100,
-				reward = 80,
-				minTier = 1,
-				unlockClaims = 0,
-				templates = { "meal_meme", "queue_thread", "late_night_quip" },
-				contexts = { "meal_time" },
+				{
+					missionId = "tier1_mission",
+					requiredImpact = 100,
+					reward = 80,
+					minTier = 1,
+					unlockClaims = 0,
+					templates = { "meal_meme", "queue_thread", "late_night_quip" },
+					contexts = { "meal_time" },
+				},
 			},
-		},
-		{ "tier1_mission" },
-		function()
-			local p = freshProfile()
-			-- A profile that satisfies every OTHER gate: claims, mission
-			-- content, context, no active mission. Only the tier is short.
-			p.lifetimeEarned = 500
-			p.completedMissions = 5
-			assertCode(
-				MissionService.accept(p, "tier1_mission", "run-1", 1000),
-				"NOT_READY",
-				"tier 0 cannot accept a tier-1 mission"
-			)
-		end
-	)
+			{ "tier1_mission" },
+			function()
+				local p = freshProfile()
+				-- A profile that satisfies every OTHER gate: claims, mission
+				-- content, context, no active mission. Only the tier is short.
+				p.lifetimeEarned = 500
+				p.completedMissions = 5
+				assertCode(
+					MissionService.accept(p, "tier1_mission", "run-1", 1000),
+					"NOT_READY",
+					"tier 0 cannot accept a tier-1 mission"
+				)
+			end
+		)
+	end)
 end)
 test("A tier-1 mission requires BOTH lifetime and claim thresholds", function()
 	-- The shipped tier cap must also permit tier 1 for this test, otherwise the
@@ -422,30 +432,32 @@ end)
 test("The shipped tier cap blocks a tier above the shipped cap", function()
 	-- V0 ships maxShippedTier = 0, so even a profile that would clear tier 1's
 	-- authored thresholds stays at tier 0 while the cap is 0.
-	withCatalogFixture(
-		{
+	withShippedTierCap(0, function()
+		withCatalogFixture(
 			{
-				missionId = "tier1_mission",
-				requiredImpact = 100,
-				reward = 80,
-				minTier = 1,
-				unlockClaims = 0,
-				templates = { "meal_meme", "queue_thread", "late_night_quip" },
-				contexts = { "meal_time" },
+				{
+					missionId = "tier1_mission",
+					requiredImpact = 100,
+					reward = 80,
+					minTier = 1,
+					unlockClaims = 0,
+					templates = { "meal_meme", "queue_thread", "late_night_quip" },
+					contexts = { "meal_time" },
+				},
 			},
-		},
-		{ "tier1_mission" },
-		function()
-			local p = freshProfile()
-			p.lifetimeEarned = 9999
-			p.completedMissions = 99
-			assertCode(
-				MissionService.accept(p, "tier1_mission", "run-1", 1000),
-				"NOT_READY",
-				"shipped tier cap holds"
-			)
-		end
-	)
+			{ "tier1_mission" },
+			function()
+				local p = freshProfile()
+				p.lifetimeEarned = 9999
+				p.completedMissions = 99
+				assertCode(
+					MissionService.accept(p, "tier1_mission", "run-1", 1000),
+					"NOT_READY",
+					"shipped tier cap holds"
+				)
+			end
+		)
+	end)
 end)
 test("The V0 food mission remains available at tier 0", function()
 	-- The shipped intro mission has minTier = 0, so a fresh profile accepts it.
@@ -842,7 +854,10 @@ end)
 test("Own post history is capped at ten", function()
 	local p = freshProfile()
 	for i = 1, 12 do
-		local published = assertOk(MissionService.publishOrganic(p, "snack_meme", 1000), `publish {i}`)
+		local ctx, err = MissionService.nextOrganicContext(p)
+		expectTrue(ctx ~= nil, `next ctx {i}: {tostring(err)}`)
+		local template = (ctx :: any).templates[1]
+		local published = assertOk(MissionService.publishOrganic(p, template, 1000), `publish {i}`)
 		p = assertOk(MissionService.settle(published, 1018), `settle {i}`)
 	end
 	expectEqual(#p.ownPosts, 10, "own posts capped at 10")
@@ -1077,8 +1092,9 @@ test("A new eligible mission can be accepted after a claim", function()
 	local reaccepted = assertOk(MissionService.accept(claimed, "food_stall_launch", "run-2", 2000), "accept 2")
 	expectEqual(reaccepted.activeMission.runId, "run-2", "new run accepted")
 	expectEqual(reaccepted.activeMission.postCount, 0, "fresh postCount")
-	-- The counter rotated, but V0 has one context so it is still meal_time.
-	expectEqual(reaccepted.activeMission.contextId, "meal_time", "context still meal_time")
+	-- The counter rotated: in M1 with multiple contexts, it rotates to the next context.
+	local expectedContext = if #Catalog.Missions[1].contexts > 1 then Catalog.Missions[1].contexts[2] else "meal_time"
+	expectEqual(reaccepted.activeMission.contextId, expectedContext, "context rotated")
 end)
 
 test("Settlement does not auto-claim the mission", function()
@@ -1467,10 +1483,11 @@ test("A failing tier-cap fixture restores the exact original cap", function()
 	-- The shipped tier cap is shared module state that accept() reads on every
 	-- call. A test that raises it must restore the EXACT original value even
 	-- when the body errors, otherwise the next tier test inherits a wrong cap.
-	local realCap = Catalog.V0Shipped.maxShippedTier
+	local targetTable = Catalog.Shipped or Catalog.V0Shipped
+	local realCap = targetTable.maxShippedTier
 	local fixtureFailed = false
 	pcall(function()
-		withShippedTierCap(1, function()
+		withShippedTierCap(realCap + 1, function()
 			-- Force a failure inside the fixture body.
 			error("intentional tier-cap fixture failure", 0)
 		end)
@@ -1478,33 +1495,33 @@ test("A failing tier-cap fixture restores the exact original cap", function()
 	fixtureFailed = true
 	expectEqual(fixtureFailed, true, "fixture body ran")
 	expectEqual(
-		Catalog.V0Shipped.maxShippedTier,
+		targetTable.maxShippedTier,
 		realCap,
 		"maxShippedTier restored to the exact original value"
 	)
-	-- The restored cap must still gate eligibility: with the real V0 cap of 0,
-	-- a tier-1 fixture mission is refused.
+	-- The restored cap must still gate eligibility: with the restored cap,
+	-- a fixture mission above the cap is refused.
 	withCatalogFixture(
 		{
 			{
-				missionId = "tier1_mission",
+				missionId = "above_cap_mission",
 				requiredImpact = 100,
 				reward = 80,
-				minTier = 1,
+				minTier = realCap + 1,
 				unlockClaims = 0,
 				templates = { "meal_meme", "queue_thread", "late_night_quip" },
 				contexts = { "meal_time" },
 			},
 		},
-		{ "tier1_mission" },
+		{ "above_cap_mission" },
 		function()
 			local p = freshProfile()
 			p.lifetimeEarned = 9999
 			p.completedMissions = 99
 			assertCode(
-				MissionService.accept(p, "tier1_mission", "run-1", 1000),
+				MissionService.accept(p, "above_cap_mission", "run-1", 1000),
 				"NOT_READY",
-				"restored cap still gates tier 1"
+				"restored cap still gates higher tier"
 			)
 		end
 	)

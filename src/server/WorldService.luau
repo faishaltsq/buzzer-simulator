@@ -19,6 +19,8 @@
 --     writable-session and lease checks on top of ValidateDashboardPrompt.
 local Workspace = game:GetService("Workspace")
 local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Catalog = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Catalog"))
 
 local WorldService = {}
 
@@ -43,6 +45,7 @@ local PREFAB_BEDROOM = "Bedroom"
 local PREFAB_CRT = "OldCRT"
 local PREFAB_PHONE_CHEAP = "PhoneCheap"
 local PREFAB_PHONE_FAST = "PhoneFast"
+local PREFAB_PC_RUMAH = "PCRumah"
 
 -- The productive phone model shown for each equipped device. The CRT is
 -- deliberately absent: it is dashboard-only and never a productive device.
@@ -50,6 +53,11 @@ local PHONE_PREFAB_BY_DEVICE: { [string]: string } = {
 	phone_cheap = PREFAB_PHONE_CHEAP,
 	phone_fast = PREFAB_PHONE_FAST,
 }
+
+local function isShippedDevice(deviceId: string): boolean
+	local shipped = Catalog.Shipped or Catalog.V0Shipped
+	return table.find(shipped.deviceIds, deviceId) ~= nil
+end
 
 -- docs/03: the player must be within 12 studs of the prompt.
 local MAX_PROMPT_DISTANCE = 12
@@ -73,6 +81,10 @@ local PLACEMENT_CONFIG = {
 	},
 	PhoneFast = {
 		yOffset = 1.1, -- half-height of PhoneFast (2.2 studs tall)
+		rotation = CFrame.Angles(0, math.pi, 0),
+	},
+	PCRumah = {
+		yOffset = 0.5, -- center of MonitorStand
 		rotation = CFrame.Angles(0, math.pi, 0),
 	},
 }
@@ -182,17 +194,19 @@ function WorldService.Spawn(player: Player, profile: any): (boolean, string?)
 		end
 	end
 
-	-- Place exactly one OldCRT at TerminalSlot with explicit world placement.
+	-- Place terminal at TerminalSlot: PCRumah if profile owns pc_rumah and it is shipped, otherwise OldCRT.
+	local deviceId = if typeof(profile) == "table" then profile.deviceId else nil
 	local terminalSlot = findNamedDescendant(room, "TerminalSlot")
-	local crt = findPrefab(PREFAB_CRT)
-	if terminalSlot == nil or crt == nil then
+	local terminalPrefabName = if deviceId == "pc_rumah" and isShippedDevice("pc_rumah") then PREFAB_PC_RUMAH else PREFAB_CRT
+	local terminalPrefab = findPrefab(terminalPrefabName)
+	if terminalSlot == nil or terminalPrefab == nil then
 		folder:Destroy()
-		return false, `prefab {PREFAB_CRT} is missing or TerminalSlot is absent`
+		return false, `prefab {terminalPrefabName} is missing or TerminalSlot is absent`
 	end
-	local crtInstance = crt:Clone()
-	crtInstance.Name = "OldCRT"
-	crtInstance.Parent = terminalSlot
-	placeModel(crtInstance, terminalSlot :: BasePart, PLACEMENT_CONFIG.OldCRT)
+	local terminalInstance = terminalPrefab:Clone()
+	terminalInstance.Name = terminalPrefabName
+	terminalInstance.Parent = terminalSlot
+	placeModel(terminalInstance, terminalSlot :: BasePart, (PLACEMENT_CONFIG :: any)[terminalPrefabName])
 
 	-- Ensure the stable DashboardPromptAnchor carries exactly one ProximityPrompt.
 	local promptAnchor = findNamedDescendant(room, "DashboardPromptAnchor")
@@ -227,16 +241,48 @@ function WorldService.SyncDevice(player: Player, deviceId: string): (boolean, st
 	if not isNonEmptyString(deviceId) then
 		return false, "deviceId is required"
 	end
-	local prefabName = PHONE_PREFAB_BY_DEVICE[deviceId]
-	if prefabName == nil then
-		-- An unknown or not-yet-shipped device (for example pc_rumah before
-		-- BS-11) has no V0 phone presentation. This is not an error: BS-11 adds
-		-- the PC replacement at TerminalSlot.
-		return false, `no V0 phone presentation for device {deviceId}`
-	end
 	local folder = Workspace:FindFirstChild(worldFolderName(player.UserId))
 	if folder == nil then
 		return false, "player has no spawned room; call Spawn first"
+	end
+
+	if deviceId == "pc_rumah" then
+		if not isShippedDevice("pc_rumah") then
+			return false, `no V0 phone presentation for device {deviceId}`
+		end
+		local terminalSlot = findNamedDescendant(folder, "TerminalSlot")
+		if terminalSlot == nil then
+			return false, "TerminalSlot anchor is missing from the room"
+		end
+		local pcPrefab = findPrefab(PREFAB_PC_RUMAH)
+		if pcPrefab == nil then
+			return false, `prefab {PREFAB_PC_RUMAH} is missing from ServerStorage.WorldPrefabs`
+		end
+		for _, child: any in ipairs(terminalSlot:GetChildren()) do
+			child:Destroy()
+		end
+		local pcInstance = pcPrefab:Clone()
+		pcInstance.Name = PREFAB_PC_RUMAH
+		pcInstance.Parent = terminalSlot
+		placeModel(pcInstance, terminalSlot :: BasePart, PLACEMENT_CONFIG.PCRumah)
+
+		-- Ensure PhoneSlot retains an inert owned phone prop (PhoneFast) if empty.
+		local phoneSlot = findNamedDescendant(folder, "PhoneSlot")
+		if phoneSlot ~= nil and #phoneSlot:GetChildren() == 0 then
+			local fastPrefab = findPrefab(PREFAB_PHONE_FAST)
+			if fastPrefab ~= nil then
+				local phone = fastPrefab:Clone()
+				phone.Name = PREFAB_PHONE_FAST
+				phone.Parent = phoneSlot
+				placeModel(phone, phoneSlot :: BasePart, PLACEMENT_CONFIG.PhoneFast)
+			end
+		end
+		return true, nil
+	end
+
+	local prefabName = PHONE_PREFAB_BY_DEVICE[deviceId]
+	if prefabName == nil then
+		return false, `no V0 phone presentation for device {deviceId}`
 	end
 	local phoneSlot = findNamedDescendant(folder, "PhoneSlot")
 	if phoneSlot == nil then
@@ -245,6 +291,21 @@ function WorldService.SyncDevice(player: Player, deviceId: string): (boolean, st
 	local prefab = findPrefab(prefabName)
 	if prefab == nil then
 		return false, `prefab {prefabName} is missing from ServerStorage.WorldPrefabs`
+	end
+
+	-- If terminal slot holds PCRumah and device is a phone, restore OldCRT
+	local terminalSlot = findNamedDescendant(folder, "TerminalSlot")
+	if terminalSlot ~= nil and terminalSlot:FindFirstChild(PREFAB_PC_RUMAH) ~= nil then
+		for _, child: any in ipairs(terminalSlot:GetChildren()) do
+			child:Destroy()
+		end
+		local crt = findPrefab(PREFAB_CRT)
+		if crt ~= nil then
+			local crtInstance = crt:Clone()
+			crtInstance.Name = PREFAB_CRT
+			crtInstance.Parent = terminalSlot
+			placeModel(crtInstance, terminalSlot :: BasePart, PLACEMENT_CONFIG.OldCRT)
+		end
 	end
 
 	-- Remove any previously presented phone so the slot never holds two models.

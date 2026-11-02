@@ -257,8 +257,11 @@ test("An invalid device is refused without touching the slot", function()
 		model = child.Name
 	end
 	expectEqual(model, "PhoneCheap", "the slot is untouched")
-	-- pc_rumah is authored catalog data but has no V0 phone presentation.
+	-- pc_rumah is authored catalog data but has no V0 phone presentation when unshipped.
+	local prevShipped = Catalog.Shipped
+	Catalog.Shipped = Catalog.V0Shipped
 	local okPc, errPc = WorldService.SyncDevice(player, "pc_rumah")
+	Catalog.Shipped = prevShipped
 	expectEqual(okPc, false, "unshipped PC has no V0 phone presentation")
 	expectTrue(errPc ~= nil and errPc:find("pc_rumah") ~= nil, "the error names the device")
 	WorldService.Remove(player)

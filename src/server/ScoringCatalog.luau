@@ -25,17 +25,27 @@ export type Affinity = {
 }
 
 -- Authored private affinities. A template's relevance to a context comes from
--- how its trend and audience tags line up with the context's own tags. V0
--- ships exactly one organic context and one mission context; M1 content is
--- added here when BS-11 owns its release.
-local ORGANIC_AFFINITIES: { [string]: Affinity } = {
-	-- organic_snack: trend snack_trend, audience students.
-	-- snack_meme matches BOTH -> 2*1 + 1 = 3 (unique strong).
-	snack_meme = { trendId = "snack_trend", audienceId = "students" },
-	-- snack_thread matches trend only -> 2.
-	snack_thread = { trendId = "snack_trend", audienceId = "office_workers" },
-	-- snack_honest matches audience only -> 1.
-	snack_honest = { trendId = "late_night_trend", audienceId = "students" },
+-- how its trend and audience tags line up with the context's own tags.
+-- V0 shipped organic_snack only; M1 ships three distinct organic contexts (BS-11).
+local ORGANIC_CONTEXT_AFFINITIES: { [string]: { [string]: Affinity } } = {
+	organic_snack = {
+		-- Context: trend snack_trend, audience students.
+		snack_meme = { trendId = "snack_trend", audienceId = "students" }, -- 3 (WINNER)
+		snack_thread = { trendId = "snack_trend", audienceId = "office_workers" }, -- 2
+		snack_honest = { trendId = "late_night_trend", audienceId = "students" }, -- 1
+	},
+	organic_gadget = {
+		-- Context: trend gadget_trend, audience tech_geeks.
+		demo_bit = { trendId = "gadget_trend", audienceId = "tech_geeks" }, -- 3 (WINNER)
+		specs_breakdown = { trendId = "gadget_trend", audienceId = "students" }, -- 2
+		daily_driver = { trendId = "lifestyle_trend", audienceId = "tech_geeks" }, -- 1
+	},
+	organic_weekend = {
+		-- Context: trend weekend_trend, audience explorers.
+		local_roundup = { trendId = "weekend_trend", audienceId = "explorers" }, -- 3 (WINNER)
+		chill_spot_recs = { trendId = "weekend_trend", audienceId = "students" }, -- 2
+		weekend_vlog_text = { trendId = "lifestyle_trend", audienceId = "explorers" }, -- 1
+	},
 }
 
 -- Server-owned mission context -> (trendId, audienceId) mapping.
@@ -46,30 +56,103 @@ local ORGANIC_AFFINITIES: { [string]: Affinity } = {
 -- authoritative source for mission-context tags, and it is looked up
 -- explicitly: an unknown context is an error, never a silent fallback to V0
 -- identifiers, which would let M1 content score against the wrong tags.
---
--- V0's meal_time shares the snack context's authored tags. M1 contexts are
--- added here by BS-11 alongside their affinities, and are not reachable until
--- they are shipped.
 local MISSION_CONTEXT_TAGS: { [string]: { trendId: string, audienceId: string } } = {
+	-- food_stall_launch (Warung Mie Orbit)
 	meal_time = { trendId = "snack_trend", audienceId = "students" },
+	office_lunch = { trendId = "snack_trend", audienceId = "office_workers" },
+	late_snack = { trendId = "late_night_trend", audienceId = "night_owls" },
+
+	-- fictional_gadget (PipPod desk toy)
+	demo_curious = { trendId = "gadget_demo_trend", audienceId = "curious_students" },
+	collectors = { trendId = "gadget_demo_trend", audienceId = "collectors" },
+	desk_setup = { trendId = "desk_trend", audienceId = "enthusiasts" },
+
+	-- neon_market (Pasar Neon)
+	weekend_plans = { trendId = "market_event_trend", audienceId = "planners" },
+	bargain_hunters = { trendId = "market_event_trend", audienceId = "bargain_hunters" },
+	food_walk = { trendId = "food_walk_trend", audienceId = "snackers" },
+
+	-- brand_remix (KokoPop launch)
+	before_after = { trendId = "remix_trend", audienceId = "comparison_seekers" },
+	nostalgia_wave = { trendId = "remix_trend", audienceId = "retro_fans" },
+	honest_review = { trendId = "review_trend", audienceId = "skeptics" },
 }
 
-local MISSION_AFFINITIES: { [string]: Affinity } = {
-	-- meal_time: trend snack_trend, audience students (same tags as the V0
-	-- organic context, so the authored winners differ by template set).
-	-- meal_meme matches BOTH -> 3 (unique strong).
-	meal_meme = { trendId = "snack_trend", audienceId = "students" },
-	-- queue_thread matches trend only -> 2.
-	queue_thread = { trendId = "snack_trend", audienceId = "office_workers" },
-	-- late_night_quip matches audience only -> 1.
-	late_night_quip = { trendId = "late_night_trend", audienceId = "students" },
+local MISSION_CONTEXT_AFFINITIES: { [string]: { [string]: Affinity } } = {
+	-- food_stall_launch (templates: meal_meme, queue_thread, late_night_quip)
+	meal_time = {
+		meal_meme = { trendId = "snack_trend", audienceId = "students" }, -- 3 (WINNER)
+		queue_thread = { trendId = "snack_trend", audienceId = "office_workers" }, -- 2
+		late_night_quip = { trendId = "late_night_trend", audienceId = "students" }, -- 1
+	},
+	office_lunch = {
+		meal_meme = { trendId = "snack_trend", audienceId = "students" }, -- 2
+		queue_thread = { trendId = "snack_trend", audienceId = "office_workers" }, -- 3 (WINNER)
+		late_night_quip = { trendId = "late_night_trend", audienceId = "students" }, -- 0
+	},
+	late_snack = {
+		meal_meme = { trendId = "snack_trend", audienceId = "students" }, -- 0
+		queue_thread = { trendId = "snack_trend", audienceId = "office_workers" }, -- 0
+		late_night_quip = { trendId = "late_night_trend", audienceId = "night_owls" }, -- 3 (WINNER)
+	},
+
+	-- fictional_gadget (templates: demo_joke, collector_thread, setup_thread)
+	demo_curious = {
+		demo_joke = { trendId = "gadget_demo_trend", audienceId = "curious_students" }, -- 3 (WINNER)
+		collector_thread = { trendId = "gadget_demo_trend", audienceId = "collectors" }, -- 2
+		setup_thread = { trendId = "desk_trend", audienceId = "curious_students" }, -- 1
+	},
+	collectors = {
+		demo_joke = { trendId = "gadget_demo_trend", audienceId = "curious_students" }, -- 2
+		collector_thread = { trendId = "gadget_demo_trend", audienceId = "collectors" }, -- 3 (WINNER)
+		setup_thread = { trendId = "desk_trend", audienceId = "collectors" }, -- 1
+	},
+	desk_setup = {
+		demo_joke = { trendId = "gadget_demo_trend", audienceId = "curious_students" }, -- 0
+		collector_thread = { trendId = "gadget_demo_trend", audienceId = "collectors" }, -- 0
+		setup_thread = { trendId = "desk_trend", audienceId = "enthusiasts" }, -- 3 (WINNER)
+	},
+
+	-- neon_market (templates: event_thread, price_list, food_map)
+	weekend_plans = {
+		event_thread = { trendId = "market_event_trend", audienceId = "planners" }, -- 3 (WINNER)
+		price_list = { trendId = "market_event_trend", audienceId = "bargain_hunters" }, -- 2
+		food_map = { trendId = "food_walk_trend", audienceId = "planners" }, -- 1
+	},
+	bargain_hunters = {
+		event_thread = { trendId = "market_event_trend", audienceId = "planners" }, -- 2
+		price_list = { trendId = "market_event_trend", audienceId = "bargain_hunters" }, -- 3 (WINNER)
+		food_map = { trendId = "food_walk_trend", audienceId = "bargain_hunters" }, -- 1
+	},
+	food_walk = {
+		event_thread = { trendId = "market_event_trend", audienceId = "planners" }, -- 0
+		price_list = { trendId = "market_event_trend", audienceId = "bargain_hunters" }, -- 0
+		food_map = { trendId = "food_walk_trend", audienceId = "snackers" }, -- 3 (WINNER)
+	},
+
+	-- brand_remix (templates: comparison_thread, nostalgia_story, review_thread)
+	before_after = {
+		comparison_thread = { trendId = "remix_trend", audienceId = "comparison_seekers" }, -- 3 (WINNER)
+		nostalgia_story = { trendId = "remix_trend", audienceId = "retro_fans" }, -- 2
+		review_thread = { trendId = "review_trend", audienceId = "comparison_seekers" }, -- 1
+	},
+	nostalgia_wave = {
+		comparison_thread = { trendId = "remix_trend", audienceId = "comparison_seekers" }, -- 2
+		nostalgia_story = { trendId = "remix_trend", audienceId = "retro_fans" }, -- 3 (WINNER)
+		review_thread = { trendId = "review_trend", audienceId = "retro_fans" }, -- 1
+	},
+	honest_review = {
+		comparison_thread = { trendId = "remix_trend", audienceId = "comparison_seekers" }, -- 0
+		nostalgia_story = { trendId = "remix_trend", audienceId = "retro_fans" }, -- 0
+		review_thread = { trendId = "review_trend", audienceId = "skeptics" }, -- 3 (WINNER)
+	},
 }
 
 -- M1-style fixtures used only by tests, to prove context rotation picks a
 -- different winner per context without shipping M1 content.
 ScoringCatalog.TestFixtures = {
 	organic = {
-		organic_snack = ORGANIC_AFFINITIES,
+		organic_snack = ORGANIC_CONTEXT_AFFINITIES.organic_snack,
 		-- A second organic context whose tags make a DIFFERENT template win.
 		organic_gadget = {
 			demo_curious = { trendId = "gadget_trend", audienceId = "students" },
@@ -78,7 +161,7 @@ ScoringCatalog.TestFixtures = {
 		},
 	},
 	mission = {
-		meal_time = MISSION_AFFINITIES,
+		meal_time = MISSION_CONTEXT_AFFINITIES.meal_time,
 		neon_market = {
 			weekend_plans = { trendId = "market_trend", audienceId = "students" },
 			event_thread = { trendId = "market_trend", audienceId = "office_workers" },
@@ -248,18 +331,13 @@ function ScoringCatalog.validateContent(
 	return #problems == 0, problems
 end
 
--- V0 shipped content, resolved against the private affinities. Used by
--- MissionService and by tests.
+-- Authored affinities by context. Used by MissionService and by tests.
 function ScoringCatalog.organicAffinities(): { [string]: { [string]: Affinity } }
-	return {
-		organic_snack = ORGANIC_AFFINITIES,
-	}
+	return ORGANIC_CONTEXT_AFFINITIES
 end
 
 function ScoringCatalog.missionAffinities(): { [string]: { [string]: Affinity } }
-	return {
-		meal_time = MISSION_AFFINITIES,
-	}
+	return MISSION_CONTEXT_AFFINITIES
 end
 
 -- Explicit mission-context tag lookup. Returns (trendId, audienceId, nil) for a

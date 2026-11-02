@@ -132,10 +132,14 @@ local function publish(session: any, id: string?): any
 	return session:Mutate({ requestId = id or "publish-0001", action = "PublishOrganic", payload = { templateId = "snack_meme" } })
 end
 local function withTierTwo(fn: () -> ())
-	local previous = Catalog.V0Shipped.maxShippedTier
+	local targetTable = Catalog.Shipped or Catalog.V0Shipped
+	local realCap = targetTable.maxShippedTier
+	local realV0Cap = Catalog.V0Shipped.maxShippedTier
+	targetTable.maxShippedTier = 2
 	Catalog.V0Shipped.maxShippedTier = 2
 	local ok, err = pcall(fn)
-	Catalog.V0Shipped.maxShippedTier = previous
+	targetTable.maxShippedTier = realCap
+	Catalog.V0Shipped.maxShippedTier = realV0Cap
 	if not ok then error(err, 0) end
 end
 local function resume(thread: thread)

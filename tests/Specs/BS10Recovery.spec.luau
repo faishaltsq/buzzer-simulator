@@ -24,6 +24,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local SessionService = require(ServerStorage:WaitForChild("SessionService"))
 local ProfileStore = require(ServerStorage:WaitForChild("ProfileStore"))
+local Catalog = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Catalog"))
 
 local spScripts = StarterPlayer:WaitForChild("StarterPlayerScripts", 10) :: any
 local ClientState = require(spScripts:WaitForChild("ClientState", 10)) :: any
@@ -428,7 +429,15 @@ test("B1: An organic post survives a rejoin and settles exactly once", function(
 	expectEqual(rejoined:GetConfirmedProfile().pendingPost, nil, "pending slot cleared")
 	expectEqual(#rejoined:GetConfirmedProfile().ownPosts, 1, "one own-post summary")
 
-	local second = rejoined:Mutate({ requestId = "org-2", action = "PublishOrganic", payload = { templateId = "snack_meme" } })
+	local nextContextId = rejoined:Snapshot().snapshot.nextOrganicContextId
+	local nextTemplate = "snack_meme"
+	for _, ctx in ipairs(Catalog.OrganicContexts) do
+		if ctx.contextId == nextContextId then
+			nextTemplate = ctx.templates[1]
+			break
+		end
+	end
+	local second = rejoined:Mutate({ requestId = "org-2", action = "PublishOrganic", payload = { templateId = nextTemplate } })
 	expectEqual(second.ok, true, "a fresh post still publishes")
 	expectEqual(rejoined:GetConfirmedProfile().balance, frozenCuan, "no double credit from the first post")
 end)
@@ -1106,7 +1115,15 @@ test("G1: Multi-step player journey across three server rejoins conserves Cuan e
 	local s4 = startSession(store, clock, "srv-4")
 	expectEqual(s4:GetConfirmedProfile().deviceId, "phone_fast", "rejoin 3 owns fast phone")
 	expectEqual(s4:GetConfirmedProfile().balance, 60, "balance is 60")
-	s4:Mutate({ requestId = "j-org-2", action = "PublishOrganic", payload = { templateId = "snack_meme" } })
+	local nextContextId = s4:Snapshot().snapshot.nextOrganicContextId
+	local nextTemplate = "snack_meme"
+	for _, ctx in ipairs(Catalog.OrganicContexts) do
+		if ctx.contextId == nextContextId then
+			nextTemplate = ctx.templates[1]
+			break
+		end
+	end
+	s4:Mutate({ requestId = "j-org-2", action = "PublishOrganic", payload = { templateId = nextTemplate } })
 	advance(16)
 	s4:Snapshot()
 	expectEqual(s4:GetConfirmedProfile().balance, 84, "60 + 24 = 84")

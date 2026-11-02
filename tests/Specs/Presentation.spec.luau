@@ -28,37 +28,52 @@ local function summary(id: string, time: number, impact: number?): any
 end
 
 -- Literal compatibility fixtures protect the extraction, including existing authored wording.
-test("Shared authored cards preserve all six existing public projections", function()
+test("Shared authored cards preserve all twelve public projections", function()
 	local expected = {
-		{ "npc-snack-1", "Bagas Wibowo", "@bagasfoodie", "organic_snack", "snack_meme", "Snack siang hari ini benar-benar menyelamatkan deadline.", 1000, 16, 4 },
-		{ "npc-snack-2", "Nadia Puspita", "@nadia.p", "organic_snack", "snack_thread", "Thread singkat: tiga jajaran yang wajib dicoba bulan ini.", 1100, 11, 2 },
-		{ "npc-snack-3", "Laras Ayu", "@laras.ayu", "organic_snack", "snack_honest", "Jujur saja, aku beli karena kemasannya lucu.", 1200, 13, 3 },
-		{ "npc-meal-1", "Rina Padukan", "@rina.codes", "meal_time", "meal_meme", "Waktu makan siang tiba dan semuanya berhenti sejenak.", 1300, 15, 3 },
-		{ "npc-meal-2", "Dimas Anggara", "@dimas.gadget", "meal_time", "queue_thread", "Catatan dari meja depan: antrian terpanjang ada jam 12.15.", 1400, 10, 2 },
-		{ "npc-meal-3", "Fajar Ramadhan", "@fajar.late", "meal_time", "late_night_quip", "Makan malam larut dengan satu porsi dan banyak cerita.", 1500, 12, 3 },
+		{ "npc-snack-1", "Bagas Wibowo", "@bagasfoodie", "organic_snack", "snack_meme", "Snack siang hari ini benar-benar menyelamatkan deadline.", 1000, 16, 4, "organic_snack_clue" },
+		{ "npc-snack-2", "Nadia Puspita", "@nadia.p", "organic_snack", "snack_thread", "Thread singkat: tiga jajaran yang wajib dicoba bulan ini.", 1100, 11, 2, "organic_snack_clue" },
+		{ "npc-snack-3", "Laras Ayu", "@laras.ayu", "organic_snack", "snack_honest", "Jujur saja, aku beli karena kemasannya lucu.", 1200, 13, 3, "organic_snack_clue" },
+		{ "npc-meal-1", "Rina Padukan", "@rina.codes", "meal_time", "meal_meme", "Waktu makan siang tiba dan semuanya berhenti sejenak.", 1300, 15, 3, "meal_time_clue" },
+		{ "npc-meal-2", "Dimas Anggara", "@dimas.gadget", "meal_time", "queue_thread", "Catatan dari meja depan: antrian terpanjang ada jam 12.15.", 1400, 10, 2, "meal_time_clue" },
+		{ "npc-meal-3", "Fajar Ramadhan", "@fajar.late", "meal_time", "late_night_quip", "Makan malam larut dengan satu porsi dan banyak cerita.", 1500, 12, 3, "meal_time_clue" },
+		{ "npc-gadget-1", "Yoga Pratama", "@yoga.builds", "organic_gadget", "demo_bit", "Setup meja kerja minimalis tapi produktivitas maksimal.", 1600, 14, 3, "organic_gadget_clue" },
+		{ "npc-weekend-1", "Sari Melati", "@sari.melati", "organic_weekend", "local_roundup", "Rekomendasi tempat santai akhir pekan ini yang jarang orang tahu.", 1700, 16, 4, "organic_weekend_clue" },
+		{ "npc-pip-1", "Kevin Sanjaya", "@kevin.gadgeteer", "demo_curious", "demo_joke", "Mainan meja kecil ini ternyata bikin fokus seharian.", 1800, 11, 2, "demo_curious_clue" },
+		{ "npc-market-1", "Maya Indah", "@maya.market", "weekend_plans", "event_thread", "Pasar Neon buka malam ini, ada banyak jajanan dan lampu estetik.", 1900, 13, 3, "weekend_plans_clue" },
+		{ "npc-remix-1", "Reza Kurnia", "@reza.remix", "before_after", "comparison_thread", "Kemasan baru atau lama? Menurutku versi terbaru jauh lebih segar.", 2000, 15, 3, "before_after_clue" },
+		{ "npc-walk-1", "Tari Lestari", "@tari.culinary", "food_walk", "food_map", "Peta kuliner malam: mulai dari ujung barat sampai gerbang timur.", 2100, 10, 2, "food_walk_clue" },
 	}
 	local cards = Presentation.authoredCards()
-	equal(#cards, 6, "authored count")
+	equal(#cards, 12, "authored count")
 	local names = {}
 	for index, fixture in ipairs(expected) do
 		local context = fixture[4]
+		local expectedClueKey = fixture[10]
 		equal(cards[index], {
 			cardId = fixture[1], kind = "authored", npcName = fixture[2], npcHandle = fixture[3],
 			contextId = context, templateId = fixture[5], body = fixture[6], publishedAt = fixture[7],
 			likes = fixture[8], replies = fixture[9],
-			clueKey = if context == "organic_snack" then "organic_snack_clue" else "meal_time_clue",
+			clueKey = expectedClueKey,
 			clueText = (Presentation.Contexts :: any)[context].clue,
 		}, `authored {index}`)
 		assert(not names[cards[index].npcName], "each card has a distinct fictional NPC")
 		names[cards[index].npcName] = true
 	end
-	equal(Presentation.AUTHORED_NPC_CARDS, 6, "authored bound")
-	equal(Presentation.NPC_IDENTITY_LABELS, 8, "identity bound")
-	equal(#Presentation.npcIdentities(), 8, "identity inventory")
+	equal(Presentation.AUTHORED_NPC_CARDS, 12, "authored bound")
+	equal(Presentation.NPC_IDENTITY_LABELS, 12, "identity bound")
+	equal(#Presentation.npcIdentities(), 12, "identity inventory")
 end)
 
 test("Every shipped context, template, mission and device has only public display copy", function()
-	local expectedContexts = { organic_snack = true, meal_time = true }
+	local expectedContexts = {}
+	for _, context in ipairs(Catalog.OrganicContexts) do
+		expectedContexts[context.contextId] = true
+	end
+	for _, mission in ipairs(Catalog.Missions) do
+		for _, contextId in ipairs(mission.contexts) do
+			expectedContexts[contextId] = true
+		end
+	end
 	local expectedTemplates = {}
 	for _, context in ipairs(Catalog.OrganicContexts) do
 		for _, id in ipairs(context.templates) do
@@ -139,7 +154,7 @@ test("Missing post history is empty and own-card bounds preserve saved order", f
 	equal(Presentation.MAX_OWN_CARDS, 10, "declared history bound")
 	equal(cards[1].cardId, "own-p1", "first saved result")
 	equal(cards[10].cardId, "own-p10", "tenth saved result")
-	equal(#Presentation.build({ ownPosts = ownPosts }), 16, "authored clues survive a full history")
+	equal(#Presentation.build({ ownPosts = ownPosts }), 22, "authored clues survive a full history")
 end)
 
 test("Combined feed ordering stays deterministic including same-time own and authored cards", function()
@@ -149,7 +164,11 @@ test("Combined feed ordering stays deterministic including same-time own and aut
 	for _, data in ipairs(cards) do
 		table.insert(ids, data.cardId)
 	end
-	equal(ids, { "own-newest", "npc-meal-3", "npc-meal-2", "npc-meal-1", "npc-snack-3", "npc-snack-2", "own-a", "own-b", "npc-snack-1" }, "stable sorted IDs")
+	equal(ids, {
+		"npc-walk-1", "own-newest", "npc-remix-1", "npc-market-1", "npc-pip-1",
+		"npc-weekend-1", "npc-gadget-1", "npc-meal-3", "npc-meal-2", "npc-meal-1",
+		"npc-snack-3", "npc-snack-2", "own-a", "own-b", "npc-snack-1",
+	}, "stable sorted IDs")
 	equal(Presentation.build(input), cards, "repeatable build")
 	equal(input.ownPosts[1].postId, "b", "saved order is not sorted in place")
 end)
@@ -171,11 +190,11 @@ test("Static display data is deeply frozen and returned projection arrays are is
 	cards[1].body = "Changed local projection"
 	table.remove(cards)
 	local rebuilt = Presentation.authoredCards()
-	equal(#rebuilt, 6, "authored array not shared")
+	equal(#rebuilt, 12, "authored array not shared")
 	equal(rebuilt[1].body, "Snack siang hari ini benar-benar menyelamatkan deadline.", "authored source not changed")
 	local identities = Presentation.npcIdentities()
 	table.remove(identities)
-	equal(#Presentation.npcIdentities(), 8, "identity array not shared")
+	equal(#Presentation.npcIdentities(), 12, "identity array not shared")
 	assert(table.isfrozen(Presentation.npcIdentities()[1]), "identity records are immutable")
 end)
 

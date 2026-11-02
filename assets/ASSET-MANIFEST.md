@@ -13,6 +13,7 @@ used; there are no external asset dependencies.
 | `OldCRT.rbxmx` | Dashboard-only terminal, tube housing, bezel, keyboard | 52 |
 | `PhoneCheap.rbxmx` | Chunky keypad phone with small muted display | 25 |
 | `PhoneFast.rbxmx` | Slim rounded touchscreen phone with rear dual cameras | 23 |
+| `PCRumah.rbxmx` | High-productivity PC workstation: monitor, keyboard, tower, mouse, desk mat | 32 |
 
 A furnished room contains 232 BaseParts with the cheap phone or 230 with the
 fast phone, including invisible markers. Both stay under the initial 250-part
