@@ -84,8 +84,9 @@ local Tiers: { TierDef } = {
 }
 Catalog.Tiers = Tiers
 
--- V0 mission inventory: `food_stall_launch` only. Contexts list order is the
--- rotation order (counter % n); first run always uses contexts[1] = "meal_time".
+-- V0 mission inventory: `food_stall_launch` only. M1 expands to 4 playable
+-- missions, each with 3 authored contexts (docs/02, docs/04, BS-11). Contexts
+-- list order is the rotation order (counter % n).
 local Missions: { MissionDef } = {
 	{
 		missionId = "food_stall_launch",
@@ -94,16 +95,41 @@ local Missions: { MissionDef } = {
 		minTier = 0,
 		unlockClaims = 0,
 		templates = { "meal_meme", "queue_thread", "late_night_quip" },
-		contexts = { "meal_time" },
+		contexts = { "meal_time", "office_lunch", "late_snack" },
+	},
+	{
+		missionId = "fictional_gadget",
+		requiredImpact = 130,
+		reward = 100,
+		minTier = 0,
+		unlockClaims = 1,
+		templates = { "demo_joke", "collector_thread", "setup_thread" },
+		contexts = { "demo_curious", "collectors", "desk_setup" },
+	},
+	{
+		missionId = "neon_market",
+		requiredImpact = 160,
+		reward = 120,
+		minTier = 0,
+		unlockClaims = 2,
+		templates = { "event_thread", "price_list", "food_map" },
+		contexts = { "weekend_plans", "bargain_hunters", "food_walk" },
+	},
+	{
+		missionId = "brand_remix",
+		requiredImpact = 220,
+		reward = 160,
+		minTier = 1,
+		unlockClaims = 3,
+		templates = { "comparison_thread", "nostalgia_story", "review_thread" },
+		contexts = { "before_after", "nostalgia_wave", "honest_review" },
 	},
 }
 
--- M1 planned missions live in docs/02; they are added to this table by BS-11
--- with their own three contexts and reviewed affinities in ScoringCatalog.
 Catalog.Missions = Missions
 
--- V0 organic context: `organic_snack` only. Sequence selects by
--- nextOrganicSequence % #OrganicContexts (V0: constant "organic_snack").
+-- Organic contexts. Sequence selects by nextOrganicSequence % #OrganicContexts.
+-- V0 shipped organic_snack only; M1 ships three distinct contexts (docs/02, BS-11).
 local OrganicContexts: { OrganicContextDef } = {
 	{
 		contextId = "organic_snack",
@@ -112,16 +138,41 @@ local OrganicContexts: { OrganicContextDef } = {
 		clueKey = "organic_snack_clue",
 		templates = { "snack_meme", "snack_thread", "snack_honest" },
 	},
+	{
+		contextId = "organic_gadget",
+		trendId = "gadget_trend",
+		audienceId = "tech_geeks",
+		clueKey = "organic_gadget_clue",
+		templates = { "demo_bit", "specs_breakdown", "daily_driver" },
+	},
+	{
+		contextId = "organic_weekend",
+		trendId = "weekend_trend",
+		audienceId = "explorers",
+		clueKey = "organic_weekend_clue",
+		templates = { "weekend_vlog_text", "chill_spot_recs", "local_roundup" },
+	},
 }
 Catalog.OrganicContexts = OrganicContexts
 
--- in this file stay gated behind BS-11 content release):
+-- V0 shipped table preserved for V0 regression tests:
 Catalog.V0Shipped = {
 	missionIds = { "food_stall_launch" },
 	organicContextIds = { "organic_snack" },
 	deviceIds = { "phone_cheap", "phone_fast" },
 	maxShippedTier = 0,
 }
+
+-- M1 shipped table (BS-11):
+Catalog.M1Shipped = {
+	missionIds = { "food_stall_launch", "fictional_gadget", "neon_market", "brand_remix" },
+	organicContextIds = { "organic_snack", "organic_gadget", "organic_weekend" },
+	deviceIds = { "phone_cheap", "phone_fast", "pc_rumah" },
+	maxShippedTier = 1,
+}
+
+-- Active live shipped gate defaults to M1 for BS-11 release:
+Catalog.Shipped = Catalog.M1Shipped
 
 -- Validate structural invariants (BS-01 acceptance): IDs unique, order exact,
 -- counts exact, tier gates consistent. Pure; no affinities touched.

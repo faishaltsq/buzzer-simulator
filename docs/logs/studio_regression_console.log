@@ -1,0 +1,312 @@
+[TRUNCATED DUE TO LENGTH LIMIT]
+[PASS] Save status SAVE_UNAVAILABLE blocks all mutation modes but permits refresh
+[PASS] Save status BUSY blocks all mutation modes but permits refresh
+[PASS] Open without a confirmed writable snapshot cannot mutate
+[PASS] Pending organic post blocks PublishOrganic across modes
+[PASS] Pending organic post blocks PublishPost across modes
+[PASS] Pending mission post blocks PublishOrganic across modes
+[PASS] Pending mission post blocks PublishPost across modes
+[PASS] Pending organic post does not block accepting a mission
+[PASS] Active mission or pending campaign post blocks another acceptance
+[PASS] Campaign publish cap is two and ready mission only accepts claim
+[PASS] All tracked economic actions share the posting lock
+[PASS] Six second timeout looks up original ID with a tracked fresh query without changing camera lifecycle
+[PASS] PENDING lookup preserves reservation until an explicit later resolution
+[PASS] UNKNOWN lookup preserves reservation until an explicit later resolution
+[PASS] An arbitrary or mismatched lookup cannot release a mutation reservation
+[PASS] A plain snapshot query cannot reconcile an unrelated payload lookup
+[PASS] Late original rejection resolves UNKNOWN without reopening a closed dashboard
+[PASS] Timeout after local close cannot reopen and a new dashboard retains the reservation
+[PASS] Expired and character-lost dashboards stay closed through timeout and delayed original success
+[PASS] Stale original SESSION_EXPIRED resolves old reservation without expiring the newer generation
+[PASS] Replacing a generation invalidates its old OpenComputer event without recapturing camera
+[PASS] Ordinary OK waits for its actual revision snapshot without fabricating confirmed state
+[PASS] Snapshot arriving before success Reply satisfies the confirmation barrier
+[PASS] APPLIED lookup waits for original success revision and later query snapshot confirms it
+[PASS] Late original success after timeout retains barrier until authoritative State arrives
+[PASS] Duplicate Reply cannot clear a newer mutation and older snapshots cannot regress confirmation
+[PASS] Untracked Reply or action-shaped snapshot data cannot fabricate authoritative state
+[PASS] Ordinary SAVE_UNAVAILABLE Reply cannot release a possibly persisted action
+[PASS] Ordinary BUSY Reply cannot release a possibly persisted action
+[PASS] BeginMutation expires a passed local watchdog before returning any envelope
+[PASS] Uncertain dashboard remains navigable and closable and its watchdog still runs
+[PASS] Replacement generation admits new actions only after the old original identity resolves
+[PASS] Read query may resolve the original while its Reply is still in flight
+[PASS] Legacy ConnectionUncertain resolution restores only its existing generation
+PostingState spec: 57/57 passed, 0 failed
+[PASS] Shared authored cards preserve all twelve public projections
+[PASS] Every shipped context, template, mission and device has only public display copy
+[PASS] Public clues keep their existing readable wording
+[PASS] Own profile and snapshot projections keep confirmed results without inventing text or pending history
+[PASS] Missing post history is empty and own-card bounds preserve saved order
+[PASS] Combined feed ordering stays deterministic including same-time own and authored cards
+[PASS] Static display data is deeply frozen and returned projection arrays are isolated
+[PASS] Authored reply pools preserve exact public copy and cannot be changed by a caller
+[PASS] FeedService remains compatible with the shared public API for all projection exports
+Presentation spec: 9/9 passed, 0 failed
+BS08_PRESENTATION_TESTS_PASSED
+[PASS] Load on a fresh key acquires a 240s lease and no profile
+[PASS] Load validates the v1 envelope before handing it out
+[PASS] Load preserves an unsupported future schema without migrating
+[PASS] A failed read yields no starter profile and no key
+[PASS] A live foreign lease is LOCKED; an expired one is acquirable
+[PASS] A competing token cannot overwrite the live token
+[PASS] Save bumps the revision once and stores the operation ID
+[PASS] An identical operation ID is idempotent: no duplicate durable state
+[PASS] An ambiguous write resolves through the same operation ID
+[PASS] A stale snapshot revision aborts instead of overwriting
+[PASS] Save is denied after the lease is lost
+[PASS] Persistent write failure yields SAVE_UNAVAILABLE, never a fake success
+[PASS] Invalid profiles are rejected before any store write
+[PASS] A fully populated v1 profile round-trips unchanged
+[PASS] Save rejects a missing operation ID
+[PASS] Release clears the lease without bumping the revision; rejoin works
+[PASS] Release is idempotent under a repeated operation ID
+[PASS] Release is denied without a lease
+[PASS] Confirmed envelopes are deep copies; mutation cannot alias the store
+[PASS] _deepCopy does not alias nested tables
+[PASS] _validateEnvelope accepts a well-formed envelope and rejects tampering
+[PASS] Ambiguous-write reconciliation bypasses the local cache
+[PASS] A stale cached read never drives reconciliation decisions
+[PASS] Release reconciliation also bypasses the local cache
+[PASS] The local cache expires after four seconds
+[PASS] An idle lease expires after 240s and is acquirable without data loss
+[PASS] A renewal extends the lease without an unnecessary profile mutation
+[PASS] Renewal preserves the pending post and mission state exactly
+[PASS] Idle renewal cannot hand ownership to a competing server
+[PASS] Legitimate recoverable states are accepted, not rejected
+[PASS] Invalid cross-field states are rejected
+[PASS] First in-flight campaign post (postCount=1) is a legal state
+[PASS] Second in-flight campaign post (postCount=2) is a legal state
+[PASS] A third campaign post (postCount>2) is rejected
+[PASS] postCount of 0 with a mission post in flight contradicts the atomic publish
+[PASS] Malformed postCount never raises; it fails validation structurally
+[PASS] A readyToClaim mission holds no pending post and its count is final
+[PASS] The same operationId with a different payload is INVALID_PROFILE
+[PASS] The same operationId with an identical payload still replays
+[PASS] A different operationId with a different payload is a normal save
+[PASS] Transient write failures retry with a bounded exponential backoff
+[PASS] A single transient failure recovers after one backoff
+[PASS] Retrying a transient failure never violates lease safety
+[PASS] A retry cannot resurrect a lease lost mid-retry
+[PASS] Equal-value tables in separate allocations fingerprint identically
+[PASS] A reused requestId with a different intent is rejected after a reconnect
+[PASS] An identical retry with the same intent is idempotent after a reconnect
+[PASS] Equivalent tables with different key insertion order fingerprint identically
+[PASS] A save without an intent keeps per-session transaction identity only
+[PASS] A fresh operationId still saves normally after a reconnect
+[PASS] The in-memory guard still applies within a single session
+[PASS] Mission journey: accept, weak publish, short settle, weak publish, claim-ready
+[PASS] Mission journey: a strong first post reaches readyToClaim in one publish
+[PASS] Mission journey: a pending organic post may coexist with an accepted mission
+[PASS] Mission journey: an organic pending post may NOT coexist with resolvingPost
+[PASS] An evicted requestId is not treated as applied after a reconnect
+[PASS] A full 32-entry ring is accepted and a 33rd entry is rejected
+[PASS] Server-owned settlement IDs are distinct from client request IDs
+[PASS] Lease constants match the docs/03 contract
+==============================================
+ProfileStore spec: 59/59 passed, 0 failed
+BS02_PROFILE_STORE_TESTS_PASSED
+[PASS] Catalog validates structurally
+[PASS] Catalog V0 content: mission, context, templates
+[PASS] Catalog devices: order, yield, reveal, price
+[PASS] Catalog tiers: planned thresholds 300/3 and 1600/3; V0 cap tier 0
+[PASS] Catalog carries no affinity tags / answer keys
+[PASS] postImpact strong/weak at B=100 yield=1: 120 / 75
+[PASS] postImpact weak at PC yield 2.5 is 94 and remains < 100
+[PASS] two weak starter posts always reach required impact 100
+[PASS] postImpact strong food post reaches requiredImpact 100
+[PASS] postImpact floors and stays integral for fractional yields
+[PASS] postImpact rejects nonfinite/negative/garbage input
+[PASS] organicCuan cheap 15/9, fast 24/14, PC 37/22
+[PASS] organicCuan rejects invalid input
+[PASS] eligibleTier: tier0 start, both thresholds, max shipped clamp
+[PASS] eligibleTier rejects invalid input
+[PASS] GameTypes loads as ModuleScript with type contract intact
+==============================================
+Rules spec: 16/16 passed, 0 failed
+BS01_RULES_TESTS_PASSED
+[PASS] Initialization requires an explicitly acquired empty lease
+[PASS] Reads and initialization remain unavailable during a yielding Start
+[PASS] Fresh join conditionally writes the exact frozen v1 starter
+[PASS] Repeated initialization never overwrites confirmed progress
+[PASS] A second Start cannot reacquire the empty session's lease
+[PASS] Failed initial reads cannot seed or acquire a profile
+[PASS] Failed lease acquisition cannot authorize starter initialization
+[PASS] Corrupt saved data is preserved byte-for-byte
+[PASS] Unsupported schema is preserved without migration or starter data
+[PASS] A competing lease cannot initialize an existing profile
+[PASS] A competing lease cannot initialize an empty transitional envelope
+[PASS] Failed initialization retries its exact proposal and stable identity
+[PASS] Lost initialization responses remain unconfirmed until exact reconciliation
+[PASS] Leaving after failed initialization reconciles before releasing
+[PASS] Leaving an unused empty lease permits a later clean initialization
+[PASS] Rejoin preserves durable progress without starter replacement
+[PASS] Local lease expiry denies writes without consulting the backend
+[PASS] A local token mismatch is not a writable lease
+[PASS] ReadSnapshot cannot settle a due post or write
+[PASS] Snapshot cannot settle a due post after local lease expiry
+[PASS] Snapshot cannot launch another settlement while a save is unhealthy
+[PASS] A yielding mutation stays PENDING and reads never wait for its lane
+[PASS] Conflicting held request identities are rejected before a second Save
+[PASS] A cached domain rejection cannot replay under a conflicting intent
+[PASS] Live results and their identities have a finite eviction bound
+[PASS] Durable success outranks a stale live rejection during lookup
+[PASS] Unresolved writes prevent scheduler settlement and unrelated operations
+[PASS] Unknown lookup and empty reconciliation never execute domain operations
+[PASS] Production clock admission freezes on save failure and resumes without catch-up
+[PASS] Production clock stops accrual at local lease loss
+[PASS] Held first hire cannot retroactively pay zero-worker save latency
+[PASS] Held second hire tags sampled and unsampled latency at the old rate
+[PASS] Zero-worker clock samples never accumulate interval records
+[PASS] Rate-tagged pending intervals remain bounded without losing connected income
+[PASS] A retained proposal cannot overwrite an unexpectedly replaced confirmed base
+[PASS] Stopping during a held write freezes admission but permits admitted completion
+[PASS] Fractional worker banks retain the exact proposal across failed renewal
+[PASS] A released lease is cleared for the next generation without a prior save
+[PASS] Server transaction fingerprints remain bounded while recent payload conflicts are rejected
+[PASS] Remediation: applied recovery never acquires a successor's lease
+[PASS] Remediation: real HttpService recovers an applied publish after lost response and read failures
+[PASS] Remediation: profile identity preserves nested numeric arrays across insertion orders
+[PASS] Remediation: unrepresentable profile identities fail closed before any write
+[PASS] Remediation: Advance reports failed settlement and recovers the same payout once
+[PASS] Remediation: Advance reports failed worker bank without losing its accrued interval
+SessionIntegration spec: 45/45 passed, 0 failed
+[PASS] Fresh profile load yields a confirmed snapshot
+[PASS] A lease conflict is reported explicitly with no starter profile
+[PASS] A failed load yields no starter profile
+[PASS] A leased key with no profile yet is NOT_READY, not a blank profile
+[PASS] The snapshot never exposes lease tokens or private affinities
+[PASS] Organic publication and durable settlement credit 15 exactly once
+[PASS] A duplicate settlement does not pay again
+[PASS] A failed settlement save never publishes speculative Cuan
+[PASS] Strong-first campaign lifecycle: 15 organic then 80 bonus
+[PASS] Two-weak campaign lifecycle reaches the bonus on the second post
+[PASS] A duplicate claim does not pay again
+guided runId= run-2
+[PASS] The guided journey totals 110 and the phone leaves 60
+[PASS] After the fast phone, a strong organic post earns 24
+[PASS] The same requestId with a different intent is rejected
+[PASS] The same requestId replays during the active session without a second write
+[PASS] The same requestId replays after a reconnect from the durable ring
+[PASS] Critical regression: Save A, Save B, late replay of A
+[PASS] Save A, Save B, late replay of A after a reconnect
+[PASS] An ambiguous committed write resolves through the same operationId
+[PASS] An uncertain UNKNOWN mutation is blocked, never auto-retried
+[PASS] A known APPLIED mutation replays its result without another write
+[PASS] An evicted or absent outcome is UNKNOWN, not evidence of non-application
+[PASS] A concurrent command and worker tick do not race
+[PASS] Worker banking is piggybacked onto a purchase, not written twice
+[PASS] Worker banking happens exactly once across a claim
+[PASS] A failed worker bank leaves the confirmed balance unchanged
+[PASS] A 75-second connected interval banks all 75 seconds
+[PASS] No offline earnings after a reconnect
+[PASS] An ordinary snapshot performs no durable write
+[PASS] A definite rejection performs no durable write
+[PASS] A malformed payload is rejected before the lane
+[PASS] Bounded queued command handling
+[PASS] An idle lease renewal banks pending worker income in one write
+[PASS] Stop performs the final bank then releases the lease
+[PASS] Stop called twice does not double-save or double-release
+[PASS] A failed final bank retains the lease and reports explicitly
+[PASS] All proposed profile objects stay isolated from confirmed state
+[PASS] Pre-hire connected time is not credited at the new worker rate
+[PASS] A second hire does not re-rate the first interval
+[PASS] A lost response resolves to APPLIED on an identical retry
+[PASS] A stale cached rejection never shadows a durable APPLIED outcome
+[PASS] Repeated identical retries stay idempotent
+B next after 40 claims= run-41
+[PASS] Run IDs stay unique across 40 claims and window eviction
+[PASS] A fresh profile still generates run-1
+B accepted runId= run-41
+[PASS] Accept then claim succeeds after window eviction
+[PASS] A forged matching intent cannot turn a conflict into a replay
+[PASS] A legitimate identical retry still replays with the canonical intent
+[PASS] A busy lane makes Snapshot return promptly without waiting
+F stop.ok= false code= BUSY waits= 0
+[PASS] A busy lane bounds Stop instead of spinning forever
+[PASS] The lane serializes concurrent mutations
+[PASS] A failed bank followed by recovery credits exactly once
+[PASS] A failed bank preserves the fractional residual exactly
+[PASS] A failed bank restores the interval even if the worker count changes
+E ambiguous balance= 45 pending= 0
+[PASS] An ambiguous bank response resolves without double credit
+[PASS] A reconnect preserves confirmed worker income and drops no pending accrual
+T1 buy.ok= false code= NOT_READY
+[PASS] A rejected command preserves pending worker income exactly
+[PASS] An ambiguous save credits worker income exactly once
+[PASS] A rejected mission command preserves the fractional residual
+[PASS] A rejected hire preserves pending accrual for a later valid hire
+[PASS] An ambiguous settlement does not double-credit worker income
+[PASS] An ambiguous standalone bank does not double-credit
+[PASS] A repeated in-flight retry never pays twice
+[PASS] New connected time after an ambiguous response is preserved separately
+[PASS] Advance reports BUSY when the lane is held and loses no accrual
+[PASS] RenewLease reports BUSY when the lane is held
+[PASS] Mutate reports BUSY and keeps the reservation when the lane is held
+[PASS] A held lane never executes two writes concurrently
+[PASS] A sub-integer accrual survives a rejected mutation
+[PASS] A failed renewal preserves pending worker accrual
+[PASS] A sub-integer interval survives a failed commit
+[PASS] A zero-credit partial interval is never discarded
+[PASS] An ambiguous renewal success never restores a committed interval
+[PASS] A failed renewal keeps a stable operation identity for reconciliation
+==============================================
+SessionService spec: 73/73 passed, 0 failed
+[PASS] Every required prefab exists under WorldPrefabs
+[PASS] The bedroom prefab carries every required anchor
+[PASS] No exported prefab contains a script or remote
+[PASS] Spawn clones the room and places exactly one CRT
+[PASS] Spawn presents exactly one equipped productive phone
+[PASS] Spawn is idempotent and never duplicates the room
+[PASS] Spawn fails cleanly when the Bedroom prefab is missing
+[PASS] Cheap-to-fast phone synchronization swaps the model
+[PASS] Repeated SyncDevice is idempotent
+[PASS] A saved device restores correctly on rejoin
+[PASS] An invalid device is refused without touching the slot
+[PASS] SyncDevice fails cleanly when a phone prefab is missing
+[PASS] A valid player-owned prompt is accepted
+[PASS] A non-anchor prompt is rejected
+[PASS] A prompt belonging to another player is rejected
+[PASS] A dead character is rejected
+[PASS] A distant character is rejected
+[PASS] A character-less player is rejected
+[PASS] Prompt identity is unchanged during device sync
+[PASS] Remove cleans up player-owned instances
+[PASS] The room contains no scripts after spawn
+[PASS] WorldService never mutates the economy or the profile
+[PASS] The terminal is never a productive device
+[PASS] The initial room contains no free productive PC
+[PASS] CRT world position near TerminalSlot with desk and floor clearances
+[PASS] Cheap and fast phone positions near PhoneSlot replacing model cleanly
+[PASS] One terminal prompt across repeated Spawn and SyncDevice with stable identity
+[PASS] Prompt accessibility, action text and living player validation
+[PASS] Correct scale, orientation facing player (+Z), and physical clearance between CRT and phone
+[PASS] Prompt cannot be spoofed from another player's room via ProximityPrompt instance
+==============================================
+WorldService spec: 30/30 passed, 0 failed
+BS-11 spec: 12/12 passed, 0 failed
+[SUITE PASS] AppClientIntegration.spec: AppClientIntegration: 9/9 passed
+[SUITE PASS] BS09FastPhone.spec: BS-09: 36/36 passed
+[SUITE PASS] BS10Recovery.spec: BS-10: 41/41 passed
+[SUITE PASS] Bootstrap.spec: Bootstrap: 17/17 passed
+[SUITE PASS] ClientState.spec: ClientState: 30/30 passed
+[SUITE PASS] ComposerIntegration.spec: 14/14 passed
+[SUITE PASS] EconomyService.spec: EconomyService: 39/39 passed
+[SUITE PASS] FeedService.spec: FeedService: 18/18 passed
+[SUITE PASS] MissionService.spec: MissionService: 85/85 passed
+[SUITE PASS] NetRouter.spec: NetRouter: 89/89 passed
+[SUITE PASS] PostingState.spec: PostingState: 57/57 passed
+[SUITE PASS] Presentation.spec: Presentation: 9/9 passed
+[SUITE PASS] ProfileStore.spec: ProfileStore: 59/59 passed
+[SUITE PASS] Rules.spec: Rules: 16/16 passed
+[SUITE PASS] SessionIntegration.spec: SessionIntegration: 45/45 passed
+[SUITE PASS] SessionService.spec: SessionService: 73/73 passed
+[SUITE PASS] WorldService.spec: WorldService: 30/30 passed
+[SUITE PASS] BS11M1Content.spec: BS-11: 12/12 passed
+==============================================
+BS-01 suites: 18/18 passed, 0 failed
+BS01_TESTS_PASSED
+ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type
+ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type
+ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type

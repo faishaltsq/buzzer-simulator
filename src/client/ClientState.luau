@@ -149,8 +149,12 @@ local function errorText(code: string): string
 	return `{code}: {REPLY_MESSAGES[code] or "The action was rejected. Refresh progress."}`
 end
 
+local function getShipped()
+	return Catalog.Shipped or Catalog.V0Shipped
+end
+
 local function missionDefinition(id: any): any?
-	if table.find(Catalog.V0Shipped.missionIds, id) == nil then return nil end
+	if table.find(getShipped().missionIds, id) == nil then return nil end
 	for _, mission in ipairs(Catalog.Missions) do
 		if mission.missionId == id then return mission end
 	end
@@ -222,7 +226,7 @@ function ClientState:BeginMutation(action: string, payload: any, localNow: numbe
 		local eligible = false
 		for _, context in ipairs(Catalog.OrganicContexts) do
 			if context.contextId == snapshot.nextOrganicContextId
-				and table.find(Catalog.V0Shipped.organicContextIds, context.contextId) ~= nil
+				and table.find(getShipped().organicContextIds, context.contextId) ~= nil
 				and table.find(context.templates, payload.templateId) ~= nil then
 				eligible = true
 				break
@@ -233,7 +237,7 @@ function ClientState:BeginMutation(action: string, payload: any, localNow: numbe
 		-- Purchases carry an ID only. Price, balance, ownership and yield are
 		-- resolved here from Catalog and the confirmed snapshot, never from the
 		-- caller; the server re-checks all of it authoritatively.
-		if table.find(Catalog.V0Shipped.deviceIds, payload.deviceId) == nil then
+		if table.find(getShipped().deviceIds, payload.deviceId) == nil then
 			return self:_rejectMutation(errorText("NOT_READY"))
 		end
 		local target = nil

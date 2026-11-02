@@ -127,10 +127,13 @@ local function findMission(missionId: any): any?
 	return nil
 end
 
--- Shipped-content gate. V0 must not expose M1 content early (docs/03:
--- "Respect Catalog.V0Shipped: unshipped M1 content cannot become available").
+-- Shipped-content gate.
+local function getShipped()
+	return Catalog.Shipped or Catalog.V0Shipped
+end
+
 local function isShippedMission(missionId: string): boolean
-	for _, id in ipairs(Catalog.V0Shipped.missionIds) do
+	for _, id in ipairs(getShipped().missionIds) do
 		if id == missionId then
 			return true
 		end
@@ -139,7 +142,7 @@ local function isShippedMission(missionId: string): boolean
 end
 
 local function isShippedOrganicContext(contextId: string): boolean
-	for _, id in ipairs(Catalog.V0Shipped.organicContextIds) do
+	for _, id in ipairs(getShipped().organicContextIds) do
 		if id == contextId then
 			return true
 		end
@@ -288,7 +291,7 @@ function MissionService.accept(profile: any, missionId: string, runId: string, n
 	local eligibleTier = Rules.eligibleTier(
 		profile.lifetimeEarned,
 		profile.completedMissions,
-		Catalog.V0Shipped.maxShippedTier
+		getShipped().maxShippedTier
 	)
 	if eligibleTier < (mission :: any).minTier then
 		return fail(
@@ -612,5 +615,9 @@ end
 MissionService.MAX_OWN_POSTS = MAX_OWN_POSTS
 MissionService.MAX_CLAIMED_RUNS = MAX_CLAIMED_RUNS
 MissionService.MAX_CAMPAIGN_POSTS = MAX_CAMPAIGN_POSTS
+
+function MissionService.nextOrganicContext(profile: any): (any?, string?)
+	return nextOrganicContext(profile)
+end
 
 return MissionService

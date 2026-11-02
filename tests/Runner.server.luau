@@ -5,6 +5,15 @@
 
 local runnerRoot = script.Parent
 
+-- In Play Solo, ensure StarterPlayer has fully mounted its children before specs run
+local StarterPlayer = game:GetService("StarterPlayer")
+local sp = StarterPlayer:WaitForChild("StarterPlayerScripts", 10)
+if sp then
+	sp:WaitForChild("ClientState", 10)
+	sp:WaitForChild("PhoneEquipController", 10)
+end
+task.wait(0.5)
+
 -- Require every spec module in this folder. Each spec registers its own tests
 -- via Aggregator and runs them immediately; failures propagate as errors.
 local specsFolder = runnerRoot:WaitForChild("Specs")

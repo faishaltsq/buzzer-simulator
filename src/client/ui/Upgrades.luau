@@ -15,8 +15,8 @@ local Theme = require(script.Parent:WaitForChild("Theme"))
 local Upgrades = {}
 Upgrades.__index = Upgrades
 
--- V0 ships exactly one purchasable device upgrade (BS-09). PC Rumah belongs to
--- BS-11 and must never appear as a purchasable option here.
+-- V0 ships exactly one purchasable device upgrade (phone_fast).
+-- M1 adds PC Rumah (BS-11).
 local TARGET_DEVICE = "phone_fast"
 
 local function deviceById(deviceId: any): any?
@@ -54,8 +54,29 @@ export type ShopState = {
 -- assert the same function the UI renders from.
 function Upgrades.shopState(stateData: any): ShopState
 	local snapshot = if typeof(stateData) == "table" then stateData.snapshot else nil
-	local target = deviceById(TARGET_DEVICE)
+	local shipped = Catalog.Shipped or Catalog.V0Shipped
 	local current = if snapshot ~= nil then deviceById(snapshot.deviceId) else nil
+
+	-- Determine target device based on current device and shipped availability
+	local target: any? = nil
+	if current == nil or (current :: any).id == "phone_cheap" then
+		target = deviceById("phone_fast")
+	elseif (current :: any).id == "phone_fast" then
+		local hasPc = table.find(shipped.deviceIds, "pc_rumah") ~= nil
+		local maxTier = if snapshot ~= nil and typeof(snapshot.maxShippedTier) == "number"
+			then snapshot.maxShippedTier
+			else (shipped.maxShippedTier or 0)
+		if hasPc and maxTier >= 1 then
+			target = deviceById("pc_rumah")
+		else
+			target = deviceById("phone_fast")
+		end
+	elseif (current :: any).id == "pc_rumah" then
+		target = deviceById("pc_rumah")
+	else
+		target = deviceById("phone_fast")
+	end
+
 	local price = if target ~= nil then (target :: any).price else 0
 	local balance = if snapshot ~= nil and typeof(snapshot.balance) == "number" then snapshot.balance else 0
 	local state: ShopState = {
@@ -70,7 +91,7 @@ function Upgrades.shopState(stateData: any): ShopState
 	if snapshot == nil then
 		return state
 	end
-	if snapshot.deviceId == TARGET_DEVICE then
+	if current ~= nil and target ~= nil and (current :: any).id == (target :: any).id then
 		state.phase = "owned"
 		return state
 	end
@@ -199,11 +220,11 @@ function Upgrades:Purchase()
 		return
 	end
 	local shop = self._shop
-	if shop == nil or shop.phase ~= "affordable" then
+	if shop == nil or shop.phase ~= "affordable" or shop.target == nil then
 		return
 	end
 	-- IDs only: price, balance, ownership and yield are never sent.
-	self._onAction("BuyDevice", { deviceId = TARGET_DEVICE })
+	self._onAction("BuyDevice", { deviceId = (shop.target :: any).id })
 end
 
 function Upgrades:_renderComparison(current: any?, target: any?)
@@ -237,12 +258,13 @@ function Upgrades:Update(stateData: any)
 	self:_renderComparison(shop.current, shop.target)
 
 	if shop.target == nil then
-		self._status.Text = "Fast Phone is not available in this build."
+		self._status.Text = "Hardware is not available in this build."
 		Composer.setEnabled(self._purchase, false)
 		return
 	end
 
-	local targetName = Presentation.Devices[TARGET_DEVICE] or TARGET_DEVICE
+	local targetId = (shop.target :: any).id
+	local targetName = Presentation.Devices[targetId] or targetId
 	local targetStrong, targetWeak = payoutOf(shop.target)
 	local reveal = (shop.target :: any).revealSeconds
 	self._offerName.Text = targetName
@@ -260,10 +282,15 @@ function Upgrades:Update(stateData: any)
 	local enabled = false
 	local notice = blockReason or stateData.activeError or "Your confirmed balance is never reduced before the server confirms a purchase."
 
+	local equippedLabel = if targetId == "pc_rumah" then "Equipped — PC Rumah" else "Equipped — Fast Phone"
+	local ownedNotice = if targetId == "pc_rumah"
+		then "You already own the PC Rumah. A second purchase is not offered."
+		else "You already own the Fast Phone. A second purchase is not offered."
+
 	if shop.phase == "owned" then
-		self._status.Text = "Equipped — Fast Phone"
+		self._status.Text = equippedLabel
 		self._offerTag.Text = "OWNED · EQUIPPED"
-		notice = "You already own the Fast Phone. A second purchase is not offered."
+		notice = ownedNotice
 	elseif shop.phase == "purchasing" then
 		self._status.Text = "Saving purchase... waiting for server confirmation."
 		self._offerTag.Text = "PROCESSING"
@@ -289,11 +316,15 @@ function Upgrades:Update(stateData: any)
 		self._offerTag.Text = "LOADING"
 	end
 
+	local purchaseText = if targetId == "pc_rumah"
+		then `Purchase PC Rumah · {Theme.formatNumber(shop.price)} Cuan`
+		else `Purchase Fast Phone · {Theme.formatNumber(shop.price)} Cuan`
+
 	Composer.setEnabled(self._purchase, enabled and blockReason == nil)
 	self._purchase.Text = if shop.phase == "owned"
-		then "Equipped — Fast Phone"
+		then equippedLabel
 		elseif shop.phase == "purchasing" then "Saving purchase..."
-		else `Purchase Fast Phone · {Theme.formatNumber(shop.price)} Cuan`
+		else purchaseText
 	self._notice.Text = notice
 	self:_animateConfirmation(shop.phase)
 end

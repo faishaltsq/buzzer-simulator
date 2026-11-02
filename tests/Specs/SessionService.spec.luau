@@ -225,10 +225,14 @@ end
 -- protected fixture that restores the EXACT original value even when the body
 -- throws, so one failure cannot contaminate the rest of the place.
 local function withShippedTierCap(cap: number, fn: () -> ())
-	local realCap = Catalog.V0Shipped.maxShippedTier
+	local targetTable = Catalog.Shipped or Catalog.V0Shipped
+	local realCap = targetTable.maxShippedTier
+	local realV0Cap = Catalog.V0Shipped.maxShippedTier
+	targetTable.maxShippedTier = cap
 	Catalog.V0Shipped.maxShippedTier = cap
 	local ok, err = pcall(fn)
-	Catalog.V0Shipped.maxShippedTier = realCap
+	targetTable.maxShippedTier = realCap
+	Catalog.V0Shipped.maxShippedTier = realV0Cap
 	if not ok then
 		error(err, 0)
 	end
@@ -374,11 +378,19 @@ test("A duplicate settlement does not pay again", function()
 	-- A second snapshot after the settlement must not credit again.
 	session:Snapshot()
 	expectEqual(session:GetConfirmedProfile().balance, 15, "still 15")
-	-- And a second organic publish is refused while nothing is pending.
+	-- And a second organic publish is allowed once nothing is pending.
+	local nextContextId = session:Snapshot().snapshot.nextOrganicContextId
+	local nextTemplate = "snack_meme"
+	for _, ctx in ipairs(Catalog.OrganicContexts) do
+		if ctx.contextId == nextContextId then
+			nextTemplate = ctx.templates[1]
+			break
+		end
+	end
 	local second = session:Mutate({
 		requestId = "mut-org-2",
 		action = "PublishOrganic",
-		payload = { templateId = "snack_meme" },
+		payload = { templateId = nextTemplate },
 	})
 	expectEqual(second.ok, true, "a new post is allowed once the slot is free")
 	expectEqual(session:GetConfirmedProfile().balance, 15, "publish alone credits nothing")

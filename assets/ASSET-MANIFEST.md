@@ -13,6 +13,7 @@ used; there are no external asset dependencies.
 | `OldCRT.rbxmx` | Dashboard-only terminal, tube housing, bezel, keyboard | 52 |
 | `PhoneCheap.rbxmx` | Chunky keypad phone with small muted display | 25 |
 | `PhoneFast.rbxmx` | Slim rounded touchscreen phone with rear dual cameras | 23 |
+| `PCRumah.rbxmx` | High-productivity PC workstation: monitor, keyboard, tower, mouse, desk mat | 32 |
 
 A furnished room contains 232 BaseParts with the cheap phone or 230 with the
 fast phone, including invisible markers. Both stay under the initial 250-part
@@ -160,3 +161,15 @@ Generation uses the Python standard library only and emits deterministic XML wit
 one Properties block per Item. Explicit Rojo mappings are unchanged; review
 images are not imported into the game. Existing untracked preview files are not
 part of this rebuild.
+
+## Design system documentation & detailed specs
+
+- Master Design System: [`docs/DESIGN.md`](../docs/DESIGN.md)
+- World Prefab Guidelines: [`assets/world/DESIGN.md`](world/DESIGN.md)
+- UI Guidelines & Evidence Index: [`assets/ui/DESIGN.md`](ui/DESIGN.md)
+- Per-Asset Detailed Specifications:
+  - Bedroom: [`assets/design/specs/Bedroom.md`](design/specs/Bedroom.md)
+  - OldCRT: [`assets/design/specs/OldCRT.md`](design/specs/OldCRT.md)
+  - PhoneCheap: [`assets/design/specs/PhoneCheap.md`](design/specs/PhoneCheap.md)
+  - PhoneFast: [`assets/design/specs/PhoneFast.md`](design/specs/PhoneFast.md)
+

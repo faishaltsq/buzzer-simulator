@@ -497,9 +497,9 @@ function SessionService:_buildSnapshot(): any
 		tier = Rules.eligibleTier(
 			profile.lifetimeEarned,
 			profile.completedMissions,
-			Catalog.V0Shipped.maxShippedTier
+			(Catalog.Shipped or Catalog.V0Shipped).maxShippedTier
 		),
-		maxShippedTier = Catalog.V0Shipped.maxShippedTier,
+		maxShippedTier = (Catalog.Shipped or Catalog.V0Shipped).maxShippedTier,
 		deviceId = profile.deviceId,
 		ownedDesks = self._store._deepCopy(profile.ownedDesks),
 		workers = self._store._deepCopy(profile.workers),
@@ -517,7 +517,13 @@ function SessionService:_nextOrganicContextId(): string
 	if profile == nil then
 		return ""
 	end
-	local contexts = Catalog.OrganicContexts
+	local shipped = Catalog.Shipped or Catalog.V0Shipped
+	local contexts = {}
+	for _, ctx in ipairs(Catalog.OrganicContexts) do
+		if table.find(shipped.organicContextIds, ctx.contextId) ~= nil then
+			table.insert(contexts, ctx)
+		end
+	end
 	if #contexts == 0 then
 		return ""
 	end

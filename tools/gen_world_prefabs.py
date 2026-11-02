@@ -342,6 +342,50 @@ def build_phone_fast():
     return model("PhoneFast", c, "Body")
 
 
+def build_pc_rumah():
+    # PrimaryPart MonitorStand at (0, .5, .25), local height center .5 (pivot yOffset = .5 on desk surface)
+    c = [
+        part("MonitorStand", (.3, 1.0, .2), (0, .5, .25), "metal"),
+        part("StandBase", (1.2, .06, .8), (0, .03, .1), "metal"),
+        part("MonitorPanel", (2.7, 1.6, .1), (0, 1.35, .05), "ink"),
+        part("ScreenRecess", (2.58, 1.48, .04), (0, 1.35, -.01), "ink"),
+        part("Screen", (2.5, 1.4, .02), (0, 1.35, -.03), "screen"),
+        part("PowerLED", (.04, .04, .02), (1.15, .6, -.04), "amber"),
+        part("CaseBody", (.65, 1.4, 1.4), (-1.0, .7, .2), "ink"),
+        part("CaseFront", (.63, 1.38, .04), (-1.0, .7, -.52), "navy"),
+        part("IntakeVent", (.45, .35, .02), (-1.0, .35, -.55), "metal"),
+        part("PowerButton", (.06, .06, .02), (-1.0, 1.25, -.55), "amber"),
+        part("InternalLED", (.02, .8, .02), (-.7, .7, .2), "amber", material="Neon"),
+        part("DeskMat", (2.4, .02, .85), (0, .01, -.75), "sage_dark", material="Fabric"),
+        part("KeyboardBase", (1.4, .05, .45), (.1, .045, -.75), "ink"),
+        part("Spacebar", (.55, .04, .08), (.1, .085, -.6), "cream"),
+    ]
+    for row in range(2):
+        for col in range(6):
+            c.append(part("Keycap", (.14, .035, .09), (-.35 + col * .16, .085, -.85 + row * .13), "navy"))
+    c.extend([
+        part("MouseBody", (.22, .07, .36), (.95, .055, -.75), "ink"),
+        part("ScrollWheel", (.035, .03, .07), (.95, .095, -.82), "metal"),
+        part("ScreenRule", (1.6, .02, .01), (-.1, 1.6, -.045), "sage"),
+        part("ScreenLine", (1.2, .04, .01), (-.3, 1.45, -.045), "sage"),
+        part("ScreenLine", (1.4, .04, .01), (-.2, 1.35, -.045), "sage"),
+        part("ScreenCursor", (.08, .12, .01), (-.8, 1.15, -.045), "phosphor"),
+    ])
+    screen = next(p for p in c if p.find("Properties/string[@name='Name']").text == "Screen")
+    gui = item("SurfaceGui", "BuzzerOSScreen", {
+        "Face": ("token", 5), "CanvasSize": vector("CanvasSize", (512, 320), "Vector2", ("X", "Y")),
+        "AlwaysOnTop": ("bool", "false"), "LightInfluence": ("float", 1),
+    })
+    gui.append(item("TextLabel", "Title", {
+        "Size": vector("Size", (1, 0, .3, 0), "UDim2", ("XS", "XO", "YS", "YO")),
+        "BackgroundTransparency": ("float", 1), "Text": ("string", "BuzzerOS"),
+        "TextColor3": color("TextColor3", "phosphor"), "TextSize": ("float", 42),
+        "Font": ("token", 3),
+    }))
+    screen.append(gui)
+    return model("PCRumah", c, "MonitorStand")
+
+
 def write_model(path, root):
     roblox = ET.Element("roblox", {"version": "4"})
     roblox.append(root)
@@ -355,7 +399,8 @@ def main():
     output = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "world")
     os.makedirs(output, exist_ok=True)
     for name, builder in (("Bedroom", build_bedroom), ("OldCRT", build_old_crt),
-                          ("PhoneCheap", build_phone_cheap), ("PhoneFast", build_phone_fast)):
+                          ("PhoneCheap", build_phone_cheap), ("PhoneFast", build_phone_fast),
+                          ("PCRumah", build_pc_rumah)):
         write_model(os.path.join(output, name + ".rbxmx"), builder())
 
 

@@ -66,13 +66,20 @@ local function withCatalogFixture(
 	maxShippedTier: number,
 	fn: () -> ()
 )
-	local realDevices = Catalog.V0Shipped.deviceIds
-	local realCap = Catalog.V0Shipped.maxShippedTier
+	local targetTable = Catalog.Shipped or Catalog.V0Shipped
+	local realDevices = targetTable.deviceIds
+	local realCap = targetTable.maxShippedTier
+	local realV0Devices = Catalog.V0Shipped.deviceIds
+	local realV0Cap = Catalog.V0Shipped.maxShippedTier
+	targetTable.deviceIds = deviceIds
+	targetTable.maxShippedTier = maxShippedTier
 	Catalog.V0Shipped.deviceIds = deviceIds
 	Catalog.V0Shipped.maxShippedTier = maxShippedTier
 	local ok, err = pcall(fn)
-	Catalog.V0Shipped.deviceIds = realDevices
-	Catalog.V0Shipped.maxShippedTier = realCap
+	targetTable.deviceIds = realDevices
+	targetTable.maxShippedTier = realCap
+	Catalog.V0Shipped.deviceIds = realV0Devices
+	Catalog.V0Shipped.maxShippedTier = realV0Cap
 	if not ok then
 		error(err, 0)
 	end
@@ -120,10 +127,12 @@ end)
 
 test("Unshipped PC purchase is refused in V0", function()
 	-- pc_rumah exists in the catalog but is not in V0Shipped.deviceIds.
-	local p = freshProfile()
-	p.balance = 1000
-	p.deviceId = "phone_fast"
-	expectCode(EconomyService.buyDevice(p, "pc_rumah"), "NOT_READY", "PC is not shipped in V0")
+	withCatalogFixture({ "phone_cheap", "phone_fast" }, 0, function()
+		local p = freshProfile()
+		p.balance = 1000
+		p.deviceId = "phone_fast"
+		expectCode(EconomyService.buyDevice(p, "pc_rumah"), "NOT_READY", "PC is not shipped in V0")
+	end)
 end)
 
 test("An unknown device is refused", function()

@@ -134,13 +134,16 @@ local function findDevice(deviceId: any): any?
 	return nil
 end
 
--- V0 ships cheap + fast phone only (Catalog.V0Shipped.deviceIds). PC Rumah is
--- authored catalog data but is NOT purchasable until BS-11 releases M1 content.
+local function getShipped()
+	return Catalog.Shipped or Catalog.V0Shipped
+end
+
+-- Shipped devices check.
 local function isShippedDevice(deviceId: any): boolean
 	if not isNonEmptyString(deviceId) then
 		return false
 	end
-	for _, id in ipairs(Catalog.V0Shipped.deviceIds) do
+	for _, id in ipairs(getShipped().deviceIds) do
 		if id == deviceId then
 			return true
 		end
@@ -202,7 +205,7 @@ local function eligibleTier(profile: any): number
 	return Rules.eligibleTier(
 		profile.lifetimeEarned,
 		profile.completedMissions,
-		Catalog.V0Shipped.maxShippedTier
+		getShipped().maxShippedTier
 	)
 end
 

@@ -45,9 +45,9 @@ local function freshProfile(): any
 end
 
 -- ===== authored cards =====
-test("Authored feed has exactly six NPC cards", function()
+test("Authored feed has exactly twelve NPC cards", function()
 	local cards = FeedService.authoredCards()
-	expectEqual(#cards, 6, "six authored cards")
+	expectEqual(#cards, 12, "twelve authored cards")
 	expectEqual(#cards, FeedService.AUTHORED_NPC_CARDS, "matches the declared bound")
 end)
 
@@ -61,9 +61,9 @@ test("Every authored card carries an NPC identity and authored body", function()
 	end
 end)
 
-test("Authored cards use only the eight bounded NPC identities", function()
+test("Authored cards use only the twelve bounded NPC identities", function()
 	local identities = FeedService.npcIdentities()
-	expectEqual(#identities, 8, "eight NPC identities")
+	expectEqual(#identities, 12, "twelve NPC identities")
 	expectEqual(#identities, FeedService.NPC_IDENTITY_LABELS, "matches the declared bound")
 	local allowed: { [string]: boolean } = {}
 	for _, identity in ipairs(identities) do
@@ -97,7 +97,11 @@ test("Authored cards carry clues for their supported contexts", function()
 	for _, ctx in ipairs(Catalog.OrganicContexts) do
 		validClues[(ctx :: any).clueKey] = true
 	end
-	validClues["meal_time_clue"] = true
+	for _, mission in ipairs(Catalog.Missions) do
+		for _, ctxId in ipairs(mission.contexts) do
+			validClues[`{ctxId}_clue`] = true
+		end
+	end
 	for _, card in ipairs(FeedService.authoredCards()) do
 		local clueKey = (card :: any).clueKey
 		if clueKey ~= nil then
@@ -280,7 +284,7 @@ test("The combined feed is bounded and deterministic", function()
 		})
 	end
 	local feed = FeedService.build(p)
-	expectEqual(#feed, 11, "six authored plus five own")
+	expectEqual(#feed, 17, "twelve authored plus five own")
 	-- Newest first.
 	for i = 2, #feed do
 		expectTrue(feed[i - 1].publishedAt >= feed[i].publishedAt, "combined feed sorted newest first")
@@ -335,7 +339,7 @@ test("The feed never grows without bound", function()
 		})
 	end
 	local feed = FeedService.build(p)
-	expectEqual(#feed, 16, "six authored plus at most ten own")
+	expectEqual(#feed, 22, "twelve authored plus at most ten own")
 end)
 
 -- ===== reply pools =====
