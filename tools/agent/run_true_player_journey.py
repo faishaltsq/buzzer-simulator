@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
 """Simulated Player-Driven Gameplay Journey Verification in Roblox Studio.
 
-VERIFICATION ARCHITECTURE & METHODOLOGY NOTE:
-This script runs in Server context using a simulated player table and direct service
-calls (SessionService:Mutate, WorldService, ProfileStore). It does NOT drive client-side
-PlayerGui elements, button clicks, or UserInputService inputs. Client UI layout and
-responsiveness are tested via client specs and visual inspection.
-
-Verifies:
-1. Physical dashboard prompt presence and configuration (ProximityPrompt at TerminalSlot)
-2. Camera transition CFrame mathematical calculation for Scriptable focus
-3. Server-authoritative publishing of organic and mission posts via SessionService:Mutate
-4. Fast Phone (50 Cuan) and PC Rumah (220 Cuan) purchase mutations and balance updates
-5. Physical room changes: PCRumah mounts at TerminalSlot, OldCRT removed, PhoneFast at PhoneSlot
-6. Camera and control restoration contract upon closing BuzzerOS
-7. Real Roblox DataStoreService API connectivity probe and durable rejoin verification
+VERIFICATION MATRIX & ARCHITECTURAL BOUNDARIES:
+1. Server-domain integration: VERIFIED (SessionService, EconomyService, WorldService, ProfileStore)
+2. Simulated player & FakeStore: VERIFIED (Memory adapter with deep-copy roundtrip)
+3. Client UI interaction & Camera/Controls: NOT VERIFIED here (Server execution context does not
+   exercise client PlayerGui, Roact/Fusion/Studio widgets, UserInputService, or Camera scriptable mode)
+4. Published staging DataStore (G2 Gate): CONDITIONALLY PROBED (Offline Studio PlaceId: 0 falls back
+   to memory adapter; genuine published staging DataStore gate remains OPEN until tested online)
 """
 
 import sys
@@ -239,13 +232,11 @@ log("     * PhoneFast inert prop at PhoneSlot: YES")
 -- ====================================================================
 -- Step 8: Simulated Dashboard Close Lifecycle (Camera Math & Control Restoration)
 -- ====================================================================
-log("\n=== Step 8: Verifying Dashboard Close Contract (Camera Math & Control Restoration) ===")
--- In App.client.luau, closing restores Camera.CameraType to Custom and enables controls
-log("  -> Simulated dashboard close contract verification:")
-log("     * Camera.CameraType restored to Custom: YES")
-log("     * Controls re-enabled: YES")
-log("     * HUD visibility restored: YES")
-
+log("\n=== Step 8: Dashboard Close Contract Inspection (Client UI Not Exercised) ===")
+log("  -> Client-side contract requirements (App.client.luau):")
+log("     * Camera.CameraType restored to Custom: NOT VERIFIED (client-side only, not executed in server context)")
+log("     * Controls re-enabled: NOT VERIFIED (client-side UserInputService, not executed in server context)")
+log("     * HUD visibility restored: NOT VERIFIED (PlayerGui hierarchy, not executed in server context)")
 -- ====================================================================
 -- Step 9: Rejoin Verification Across Sessions
 -- ====================================================================
@@ -269,21 +260,30 @@ assert(snap2.balance == 108, "Rejoined balance must be 108 Cuan")
 assert(snap2.completedMissions == 3, "Rejoined claims must be 3")
 assert(snap2.lifetimeEarned == 378, "Rejoined lifetime must be 378 Cuan")
 
-log("  -> Durable profile restore VERIFIED across session disconnect/rejoin:")
+if realDataStoreAvailable then
+    log("  -> Durable profile restore VERIFIED via Live Roblox DataStoreService:")
+else
+    log("  -> Profile restore VERIFIED via In-Memory Fallback Adapter ONLY:")
+    log("     [GATE_OPEN] Published staging DataStore verification (G2) is NOT VERIFIED in offline Studio.")
+end
 log("     * Restored deviceId   : " .. snap2.deviceId)
 log("     * Restored balance    : " .. snap2.balance .. " Cuan")
 log("     * Restored claims     : " .. snap2.completedMissions)
 log("     * Restored lifetime   : " .. snap2.lifetimeEarned .. " Cuan")
 
 WorldService.Remove(fakePlayer)
-log("\\nPLAYER_JOURNEY_ALL_PASSED")
+log("\n[SIMULATED_JOURNEY_SUMMARY]")
+log("  1. Server-domain integration     : VERIFIED")
+log("  2. Simulated player & memory store: VERIFIED")
+log("  3. Actual client UI & camera     : NOT VERIFIED (Client PlayerGui / input not run)")
+log("  4. Published staging DataStore   : " .. (if realDataStoreAvailable then "VERIFIED" else "NOT VERIFIED (G2 OPEN)"))
 return table.concat(logs, "\\n")
 """
 
 studio.call("start_stop_play", {"is_start": True})
 time.sleep(2.0)
 try:
-    print("=== [PLAYER-DRIVEN GAMEPLAY JOURNEY & DATASTORE STATUS] ===")
+    print("=== [SIMULATED PLAYER JOURNEY (SERVER INTEGRATION & DATASTORE PROBE)] ===")
     res = studio.call("execute_luau", {"code": code, "datamodel_type": "Server"})
     print(res)
 finally:
