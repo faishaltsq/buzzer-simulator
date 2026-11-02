@@ -2,9 +2,23 @@
 """Event-driven deterministic economy simulation validating M1 balance targets.
 
 Authoritative source: docs/04-INCREMENTAL-ECONOMY.md and src/shared/Catalog.luau.
-Independently calculates milestones, worker banking, fractional carry, disconnect
-losses, and 10-minute post-hire earnings distributions via discrete event stepping,
+Simulates milestones, worker banking, fractional carry, disconnect losses,
+and 10-minute post-hire earnings distributions via discrete event stepping,
 then verifies computed values against approved acceptance criteria.
+
+TRACKED POLICY-SPECIFIC ASSUMPTIONS & SHORTCUTS:
+NOTE: While this script validates target criteria deterministically, it currently relies
+on several policy-specific shortcuts rather than being a fully independent simulation:
+1. Passive-focused idle milestone timing: Desk 2 and Trainee 2 in Passive-focused policy
+   are triggered at hardcoded timestamps (t=1100.0s for Desk 2, t=1340.0s for Trainee 2)
+   derived from manual calculation of Lifetime >= 1600 Cuan and balance accumulation,
+   rather than purely autonomous state evaluation during idle ticks.
+2. Balanced policy Trainee 2 gate: Trainee 2 purchase in Balanced policy explicitly
+   requires action_kind == 'brand_remix' to anchor its purchase to the remix completion.
+3. Post-hire window worker banking: The 10-minute window calculation branches by policy
+   and uses hardcoded Trainee 2 hire times (t2_t = 705.0s for Active, t2_t = 841.0s for
+   Balanced) rather than dynamically reading the simulated hire timestamp.
+Do not claim fully independent simulations until these assumptions are independently computed.
 """
 
 import sys
@@ -257,7 +271,7 @@ class SimulationEngine:
                 and self.balance >= TRAINEE_2_COST
                 and "Trainee 2" not in self.milestones
             ):
-                # In Balanced policy, Trainee 2 purchase checkpoint follows the remix mission completion
+                # [POLICY-SPECIFIC ASSUMPTION 2]: In Balanced policy, Trainee 2 purchase checkpoint follows remix completion
                 if self.policy != "Balanced" or action_kind == "brand_remix":
                     self.balance -= TRAINEE_2_COST
                     self.workers = 2
@@ -280,6 +294,7 @@ class SimulationEngine:
             # 2. Check idle milestone eligibility
             if self.cur_action is None:
                 if self.policy == "Passive-focused":
+                    # [POLICY-SPECIFIC ASSUMPTION 1]: Passive-focused milestones anchored to predetermined timestamps:
                     # Desk 2 requires Lifetime >= 1600 (reached at 650s + 450s = 1100s = 18:20)
                     if self.desks == 1 and self.workers == 1 and self.t >= 1100.0 and "Desk 2" not in self.milestones:
                         self.desks = 2
@@ -343,6 +358,7 @@ class SimulationEngine:
         # Per docs/04 line 68: unconfirmed worker earnings in trailing partial 30s bank are unbanked
         window_duration = 600.0
         if self.policy == "Active":
+            # [POLICY-SPECIFIC ASSUMPTION 3a]: Hardcoded Trainee 2 hire time (t2_t = 705.0)
             # Trainee 1 hired at 445s, Trainee 2 at 705s.
             # Total worker production in window [445, 1045]:
             # 260s * 1.5 = 390; 340s * 3.0 = 1020. Total = 1410.
@@ -355,6 +371,7 @@ class SimulationEngine:
             unconfirmed_trailing = (self.window_end_t % 30.0) * 3.0
             worker_window_banked = int(round(total_prod - unconfirmed_trailing))
         elif self.policy == "Balanced":
+            # [POLICY-SPECIFIC ASSUMPTION 3b]: Hardcoded Trainee 2 hire time (t2_t = 841.0)
             # Trainee 1 hired at 571s, Trainee 2 at 841s.
             # Total worker production in window [571, 1171]:
             # 270s * 1.5 = 405; 330s * 3.0 = 990. Total = 1395.
@@ -367,6 +384,7 @@ class SimulationEngine:
             unconfirmed_trailing = (self.window_end_t % 30.0) * 3.0
             worker_window_banked = int(round(total_prod - unconfirmed_trailing))
         elif self.policy == "Passive-focused":
+            # [POLICY-SPECIFIC ASSUMPTION 3c]: Hardcoded window duration calculation
             # Trainee 1 hired at 650s, Trainee 2 at 1340s (after window).
             # Total worker production in window [650, 1250]: 600s * 1.5 = 900.
             # Trailing partial 30s bank is 1250 - 1230 = 20s * 1.5 = 30 Cuan unbanked.
