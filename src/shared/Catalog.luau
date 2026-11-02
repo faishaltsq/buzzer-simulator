@@ -83,6 +83,10 @@ local Tiers: { TierDef } = {
 	{ tier = 2, name = "Studio Rumahan", lifetimeRequired = 1600, claimsRequired = 3 },
 }
 Catalog.Tiers = Tiers
+Catalog.DeskPrices = { [1] = 180, [2] = 250 }
+Catalog.HirePrices = { [1] = 500, [2] = 750 }
+Catalog.WorkerRatePerWorker = 1.5
+
 
 -- V0 mission inventory: `food_stall_launch` only. M1 expands to 4 playable
 -- missions, each with 3 authored contexts (docs/02, docs/04, BS-11). Contexts
@@ -161,19 +165,22 @@ Catalog.V0Shipped = {
 	organicContextIds = { "organic_snack" },
 	deviceIds = { "phone_cheap", "phone_fast" },
 	maxShippedTier = 0,
+	maxShippedDeskSlot = 0,
+	maxShippedWorkerSlot = 0,
 }
 
--- M1 shipped table (BS-11):
+-- M1 shipped table (BS-11 / BS-12):
 Catalog.M1Shipped = {
 	missionIds = { "food_stall_launch", "fictional_gadget", "neon_market", "brand_remix" },
 	organicContextIds = { "organic_snack", "organic_gadget", "organic_weekend" },
 	deviceIds = { "phone_cheap", "phone_fast", "pc_rumah" },
 	maxShippedTier = 1,
+	maxShippedDeskSlot = 1,
+	maxShippedWorkerSlot = 1,
 }
 
--- Active live shipped gate defaults to M1 for BS-11 release:
+-- Active live shipped gate defaults to M1 for BS-12 release:
 Catalog.Shipped = Catalog.M1Shipped
-
 -- Validate structural invariants (BS-01 acceptance): IDs unique, order exact,
 -- counts exact, tier gates consistent. Pure; no affinities touched.
 function Catalog.validate(): (boolean, { string })

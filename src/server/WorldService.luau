@@ -46,7 +46,8 @@ local PREFAB_CRT = "OldCRT"
 local PREFAB_PHONE_CHEAP = "PhoneCheap"
 local PREFAB_PHONE_FAST = "PhoneFast"
 local PREFAB_PC_RUMAH = "PCRumah"
-
+local PREFAB_WORKER_DESK_1 = "WorkerDesk1"
+local PREFAB_TRAINEE_1 = "Trainee1"
 -- The productive phone model shown for each equipped device. The CRT is
 -- deliberately absent: it is dashboard-only and never a productive device.
 local PHONE_PREFAB_BY_DEVICE: { [string]: string } = {
@@ -86,6 +87,14 @@ local PLACEMENT_CONFIG = {
 	PCRumah = {
 		yOffset = 0.5, -- center of MonitorStand
 		rotation = CFrame.Angles(0, math.pi, 0),
+	},
+	WorkerDesk1 = {
+		yOffset = 0,
+		rotation = CFrame.identity,
+	},
+	Trainee1 = {
+		yOffset = 0,
+		rotation = CFrame.identity,
 	},
 }
 
@@ -230,6 +239,15 @@ function WorldService.Spawn(player: Player, profile: any): (boolean, string?)
 		end
 	end
 
+	-- Present workstation desks and trainees from confirmed profile.
+	local ownedDesks = if typeof(profile) == "table" then profile.ownedDesks else nil
+	local workers = if typeof(profile) == "table" then profile.workers else nil
+	local okWorkers, errWorkers = WorldService.SyncWorkers(player, ownedDesks, workers)
+	if not okWorkers then
+		folder:Destroy()
+		return false, errWorkers
+	end
+
 	return true, nil
 end
 
@@ -320,6 +338,88 @@ function WorldService.SyncDevice(player: Player, deviceId: string): (boolean, st
 	if config ~= nil then
 		placeModel(phone, phoneSlot :: BasePart, config)
 	end
+	return true, nil
+end
+
+-- ===== SyncWorkers =====
+-- Present workstation desks and trainee rigs from confirmed profile state.
+-- Idempotent: existing instances are preserved, missing instances are mounted,
+-- and revoked/unowned instances are destroyed cleanly without leaking parts.
+function WorldService.SyncWorkers(player: Player, ownedDesks: { number }?, workers: { any }?): (boolean, string?)
+	local folder = Workspace:FindFirstChild(worldFolderName(player.UserId))
+	if folder == nil then
+		return false, "player has no spawned room; call Spawn first"
+	end
+
+	local desksList = ownedDesks or {}
+	local workersList = workers or {}
+
+	for slot = 1, 2 do
+		local deskSlot = findNamedDescendant(folder, `WorkerDeskSlot{slot}`)
+		local deskPrefabName = if slot == 1 then PREFAB_WORKER_DESK_1 else `WorkerDesk{slot}`
+		if deskSlot ~= nil then
+			local ownsDesk = table.find(desksList, slot) ~= nil
+			local existingDesk = deskSlot:FindFirstChild(deskPrefabName)
+			if ownsDesk then
+				if existingDesk == nil then
+					local prefab = findPrefab(deskPrefabName)
+					if prefab == nil then
+						return false, `prefab {deskPrefabName} is missing from ServerStorage.WorldPrefabs`
+					end
+					for _, child in ipairs(deskSlot:GetChildren()) do
+						child:Destroy()
+					end
+					local desk = prefab:Clone()
+					desk.Name = deskPrefabName
+					desk.Parent = deskSlot
+					local cfg = (PLACEMENT_CONFIG :: any)[deskPrefabName] or { yOffset = 0, rotation = CFrame.identity }
+					placeModel(desk, deskSlot :: BasePart, cfg)
+				end
+			else
+				if existingDesk ~= nil then
+					for _, child in ipairs(deskSlot:GetChildren()) do
+						child:Destroy()
+					end
+				end
+			end
+		end
+
+		local seatSlot = findNamedDescendant(folder, `WorkerSeat{slot}`)
+		local traineePrefabName = if slot == 1 then PREFAB_TRAINEE_1 else `Trainee{slot}`
+		if seatSlot ~= nil then
+			local hasWorker = false
+			for _, w in ipairs(workersList) do
+				if (w :: any).slotIndex == slot then
+					hasWorker = true
+					break
+				end
+			end
+			local existingTrainee = seatSlot:FindFirstChild(traineePrefabName)
+			if hasWorker then
+				if existingTrainee == nil then
+					local prefab = findPrefab(traineePrefabName)
+					if prefab == nil then
+						return false, `prefab {traineePrefabName} is missing from ServerStorage.WorldPrefabs`
+					end
+					for _, child in ipairs(seatSlot:GetChildren()) do
+						child:Destroy()
+					end
+					local trainee = prefab:Clone()
+					trainee.Name = traineePrefabName
+					trainee.Parent = seatSlot
+					local cfg = (PLACEMENT_CONFIG :: any)[traineePrefabName] or { yOffset = 0, rotation = CFrame.identity }
+					placeModel(trainee, seatSlot :: BasePart, cfg)
+				end
+			else
+				if existingTrainee ~= nil then
+					for _, child in ipairs(seatSlot:GetChildren()) do
+						child:Destroy()
+					end
+				end
+			end
+		end
+	end
+
 	return true, nil
 end
 -- ===== ValidateDashboardPrompt =====
@@ -455,5 +555,8 @@ WorldService.PREFAB_BEDROOM = PREFAB_BEDROOM
 WorldService.PREFAB_CRT = PREFAB_CRT
 WorldService.PREFAB_PHONE_CHEAP = PREFAB_PHONE_CHEAP
 WorldService.PREFAB_PHONE_FAST = PREFAB_PHONE_FAST
+WorldService.PREFAB_WORKER_DESK_1 = PREFAB_WORKER_DESK_1
+WorldService.PREFAB_TRAINEE_1 = PREFAB_TRAINEE_1
+WorldService.SyncWorkers = WorldService.SyncWorkers
 
 return WorldService

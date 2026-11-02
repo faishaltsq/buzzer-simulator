@@ -385,6 +385,65 @@ def build_pc_rumah():
     screen.append(gui)
     return model("PCRumah", c, "MonitorStand")
 
+def build_worker_desk_1():
+    # PrimaryPart DeskTop at (0, 0, 0), matching anchor WorkerDeskSlot1 at (-8, 3.2, -8)
+    c = [
+        part("DeskTop", (4, .3, 2.4), (0, 0, 0), "wood_light", "Wood", collide=True),
+        part("DeskApronFront", (3.6, .35, .15), (0, -.25, 1.05), "wood", "Wood"),
+        part("DeskApronBack", (3.6, .35, .15), (0, -.25, -1.05), "wood", "Wood"),
+        part("DeskApronLeft", (.15, .35, 2.1), (-1.8, -.25, 0), "wood", "Wood"),
+        part("DeskApronRight", (.15, .35, 2.1), (1.8, -.25, 0), "wood", "Wood"),
+        part("DeskLegFL", (.25, 3.05, .25), (-1.8, -1.65, 1.0), "wood_dark", "Wood", collide=True),
+        part("DeskLegFR", (.25, 3.05, .25), (1.8, -1.65, 1.0), "wood_dark", "Wood", collide=True),
+        part("DeskLegBL", (.25, 3.05, .25), (-1.8, -1.65, -1.0), "wood_dark", "Wood", collide=True),
+        part("DeskLegBR", (.25, 3.05, .25), (1.8, -1.65, -1.0), "wood_dark", "Wood", collide=True),
+        part("DeskFootCrossbar", (3.6, .15, .15), (0, -2.8, -.9), "wood_dark", "Wood"),
+        part("DeskMat", (1.8, .02, .8), (0, .16, .15), "sage_dark", "Fabric"),
+        part("MonitorStand", (.4, .05, .4), (0, .175, -.7), "metal", "Metal"),
+        part("MonitorStem", (.12, .8, .12), (0, .6, -.7), "metal", "Metal"),
+        part("MonitorPanel", (2.2, 1.3, .1), (0, 1.15, -.7), "ink"),
+        part("MonitorBezel", (2.1, 1.2, .03), (0, 1.15, -.64), "navy"),
+        part("MonitorScreen", (2.0, 1.1, .02), (0, 1.15, -.62), "screen"),
+        part("ScreenLine1", (1.2, .04, .01), (-.2, 1.25, -.605), "phosphor"),
+        part("ScreenLine2", (1.4, .04, .01), (-.1, 1.1, -.605), "phosphor"),
+        part("ScreenLine3", (.8, .04, .01), (-.4, .95, -.605), "sage"),
+        part("KeyboardBase", (1.2, .04, .4), (0, .18, .15), "ink"),
+        part("KeyboardKeys", (1.1, .03, .32), (0, .21, .15), "cream"),
+        part("Mouse", (.18, .06, .28), (.8, .19, .15), "ink"),
+        part("ChairSeat", (1.6, .2, 1.6), (0, -1.6, 1.8), "wood", "Wood", collide=True),
+        part("ChairCushion", (1.4, .1, 1.4), (0, -1.45, 1.8), "sage", "Fabric"),
+        part("ChairBackSupport", (.15, 1.4, .15), (0, -.8, 2.55), "metal", "Metal"),
+        part("ChairBack", (1.5, 1.2, .18), (0, -.6, 2.5), "wood_dark", "Wood"),
+        part("ChairStem", (.2, 1.3, .2), (0, -2.3, 1.8), "metal", "Metal"),
+        part("ChairBase1", (1.5, .12, .2), (0, -2.95, 1.8), "metal", "Metal"),
+        part("ChairBase2", (.2, .12, 1.5), (0, -2.95, 1.8), "metal", "Metal"),
+    ]
+    return model("WorkerDesk1", c, "DeskTop")
+
+
+def build_trainee_1():
+    # PrimaryPart HumanoidRootPart at (0, 0, 0), placed at WorkerSeat1 (-8, 1.6, -6.2)
+    c = [
+        part("HumanoidRootPart", (2, 2, 1), (0, .5, 0), "cream", transparency=1),
+        part("LowerTorso", (1.4, .6, 1.0), (0, .2, 0), "navy"),
+        part("UpperTorso", (1.6, 1.0, 1.0), (0, .9, 0), "cream"),
+        part("Head", (1.2, 1.2, 1.2), (0, 1.7, 0), "plaster"),
+        part("Hair", (1.25, .5, 1.25), (0, 2.05, -.05), "ink"),
+        part("LeftUpperLeg", (.6, .8, .6), (-.4, .1, -.4), "navy", rotation=(-90, 0, 0)),
+        part("LeftLowerLeg", (.5, .8, .5), (-.4, -.5, -.7), "navy"),
+        part("LeftFoot", (.55, .3, .7), (-.4, -.9, -.7), "ink"),
+        part("RightUpperLeg", (.6, .8, .6), (.4, .1, -.4), "navy", rotation=(-90, 0, 0)),
+        part("RightLowerLeg", (.5, .8, .5), (.4, -.5, -.7), "navy"),
+        part("RightFoot", (.55, .3, .7), (.4, -.9, -.7), "ink"),
+        part("LeftUpperArm", (.5, .8, .5), (-.95, .8, -.2), "cream", rotation=(-45, 15, 0)),
+        part("LeftLowerArm", (.45, .7, .45), (-.85, .5, -.6), "plaster", rotation=(-75, 20, 0)),
+        part("LeftHand", (.4, .35, .4), (-.75, .45, -.9), "plaster"),
+        part("RightUpperArm", (.5, .8, .5), (.95, .8, -.2), "cream", rotation=(-45, -15, 0)),
+        part("RightLowerArm", (.45, .7, .45), (.85, .5, -.6), "plaster", rotation=(-75, -20, 0)),
+        part("RightHand", (.4, .35, .4), (.75, .45, -.9), "plaster"),
+    ]
+    return model("Trainee1", c, "HumanoidRootPart")
+
 
 def write_model(path, root):
     roblox = ET.Element("roblox", {"version": "4"})
@@ -400,7 +459,8 @@ def main():
     os.makedirs(output, exist_ok=True)
     for name, builder in (("Bedroom", build_bedroom), ("OldCRT", build_old_crt),
                           ("PhoneCheap", build_phone_cheap), ("PhoneFast", build_phone_fast),
-                          ("PCRumah", build_pc_rumah)):
+                          ("PCRumah", build_pc_rumah), ("WorkerDesk1", build_worker_desk_1),
+                          ("Trainee1", build_trainee_1)):
         write_model(os.path.join(output, name + ".rbxmx"), builder())
 
 

@@ -24,6 +24,7 @@ EXPECTED_SUITES = [
     "BS09FastPhone",
     "BS10Recovery",
     "BS11M1Content",
+    "BS12WorkerEconomy",
     "Bootstrap",
     "ClientState",
     "ComposerIntegration",
