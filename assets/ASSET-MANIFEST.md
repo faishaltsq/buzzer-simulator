@@ -122,7 +122,7 @@ and `WorkerSeat1` at (-8, 1.6, -6.2) receives client-side cosmetic `Trainee1` wh
 
 - **BS-12 Studio Regression Execution:** Full 19-suite regression run executed in active
   Roblox Studio session `88e80499-7239-4859-b457-dc63cf3b00f6`. All 701 tests passed
-  (0 failures, 0 skipped, run ID `5227b550-d76c-4b56-b112-de88203097e7`).
+  (0 failures, 0 skipped, run ID `2cef3e24-90c5-4d66-bf4e-8816ba966341`).
   Complete raw log preserved at [`docs/evidence/bs12/regression-final.txt`](../docs/evidence/bs12/regression-final.txt).
 - Both production (`build/BuzzerSimulator.rbxlx`) and test (`build/BuzzerTests.rbxlx`)
   Rojo project builds verify with exit 0.
