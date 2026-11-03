@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"viewport\":\"1510, 642\",\"snapshot\":{\"pendingWorkerCuan\":24,\"saveStatus\":\"healthy\",\"feedVersion\":3,\"workers\":[{\"slotIndex\":1,\"roleId\":\"trainee\",\"hireId\":\"trainee-slot-1\"}],\"completedMissions\":3,\"ownedDesks\":[1],\"lifetimeEarned\":2000,\"deviceId\":\"pc_rumah\",\"ownPosts\":[],\"balance\":320,\"incomePerSecond\":1.5,\"tier\":1,\"nextOrganicContextId\":\"organic_snack\",\"maxShippedTier\":1,\"serverTime\":1793668263.345697,\"revision\":3},\"stats\":\"Online rate: +1.5 Cuan/s \u00b7 Unbanked accrual: 24 Cuan\\nSpendable confirmed balance: 320 Cuan. Pending is not spendable.\"}"
+    }
+  ],
+  "isError": false
+}

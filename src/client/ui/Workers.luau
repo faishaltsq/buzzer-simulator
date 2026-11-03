@@ -13,9 +13,9 @@ local Theme = require(script.Parent:WaitForChild("Theme"))
 local Workers = {}
 Workers.__index = Workers
 
-local DESK_1_PRICE = 180
-local TRAINEE_1_PRICE = 500
-local WORKER_1_RATE = 1.5
+local DESK_1_PRICE = Catalog.DeskPrices[1]
+local TRAINEE_1_PRICE = Catalog.HirePrices[1]
+local WORKER_1_RATE = Catalog.WorkerRatePerWorker
 
 export type WorkersState = {
 	balance: number,
@@ -150,6 +150,11 @@ local function card(parent: Instance, name: string, height: number): Frame
 	frame.Name = name
 	frame.BackgroundColor3 = Theme.Colors.CharcoalDark
 	frame.Size = UDim2.new(1, 0, 0, height)
+	frame.AutomaticSize = Enum.AutomaticSize.Y
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = frame
 	frame.Parent = parent
 	Theme.applyCorner(frame, Theme.Radii.Medium)
 	Theme.applyStroke(frame, Theme.Colors.Border, 1)
@@ -175,8 +180,9 @@ local function body(parent: Instance, name: string, text: string, offset: number
 	local label = Instance.new("TextLabel")
 	label.Name = name
 	label.BackgroundTransparency = 1
-	label.Position = UDim2.new(0, 0, 0, offset)
+	label.LayoutOrder = offset
 	label.Size = UDim2.new(1, 0, 0, height)
+	label.AutomaticSize = Enum.AutomaticSize.Y
 	label.Font = Theme.Fonts.Regular
 	label.Text = text
 	label.TextColor3 = Theme.Colors.Cream
@@ -312,7 +318,7 @@ function Workers:Update(stateData: any)
 
 	-- Overview stats
 	self._overviewStats.Text = string.format(
-		"Active rate: +%.1f Cuan/s · Pending worker Cuan: %s Cuan\nConfirmed balance: %s Cuan · Banked durably every 30s.",
+		"Online rate: +%.1f Cuan/s · Unbanked accrual: %s Cuan\nSpendable confirmed balance: %s Cuan. Pending is not spendable.",
 		proj.incomePerSecond,
 		Theme.formatNumber(proj.pendingWorkerCuan),
 		Theme.formatNumber(proj.balance)
@@ -401,7 +407,7 @@ function Workers:Update(stateData: any)
 	self._hireWorkerButton.Text = traineeBtnText
 
 	-- Notice
-	self._notice.Text = blockReason or (stateData and stateData.activeError) or "Pending worker income is banked to durable storage every 30 connected seconds."
+	self._notice.Text = blockReason or (stateData and stateData.activeError) or "Server-reported pending accrual is not spendable. Banking is attempted every 30 connected seconds (or with a saved action); only confirmed saves increase balance."
 
 	-- Subtle confirmation styling
 	self:_animateConfirmations(proj.desk1Phase, proj.trainee1Phase)

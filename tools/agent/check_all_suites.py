@@ -4,7 +4,7 @@
 Authoritative contract:
 - Runs Play Solo via StudioMCP
 - Polls console until explicit completion marker or timeout
-- Parses all 18 test suites and validates 0 failures
+- Parses all 19 test suites and validates 0 failures
 - Analyzes source-defined tests, runtime executions, and assertions
 - Exits nonzero on any failure, timeout, or missing suite
 - Saves full raw console output to docs/logs/studio_regression_console.log
@@ -14,6 +14,7 @@ import sys
 import os
 import re
 import time
+import json
 from typing import Dict, List, Tuple
 
 sys.path.append(os.path.abspath("tools/agent"))
@@ -58,22 +59,28 @@ def count_source_metrics() -> Tuple[int, int]:
             path = os.path.join(specs_dir, f)
             with open(path, "r", encoding="utf-8") as file:
                 content = file.read()
-            tests = re.findall(r'(?:^|\s)test\s*\(\s*["\']', content)
-            asserts = re.findall(r'expect(?:Equal|True|False|NotNil|Nil|WithinTolerance|Error|Match)\s*\(', content)
+            tests = re.findall(r'(?m)^\s*test\s*\(', content)
+            asserts = re.findall(r'\b(?:expect\w*|assert\w*|equal|check|truth)\s*\(', content)
             total_tests += len(tests)
             total_asserts += len(asserts)
 
     return total_tests, total_asserts
 
 
-def run_regression_suite(timeout_sec: float = 30.0) -> bool:
+def run_regression_suite(timeout_sec: float = 30.0, studio_id: str = None, log_file: str = LOG_FILE) -> bool:
+    def call(name, args):
+        return studio.call(name, {**args, **({"studio_id": studio_id} if studio_id else {})})
+
     print(f"=== Starting Studio Regression Runner (Timeout: {timeout_sec}s) ===")
     source_tests, source_asserts = count_source_metrics()
     print(f"Static Analysis: {len(EXPECTED_SUITES)} spec files, {source_tests} source-defined tests, ~{source_asserts} assertion calls.")
 
+    marker_pattern = re.compile(r"BS01_TESTS_(PASSED|FAILED):([a-fA-F0-9-]+)")
+    previous_runs = {run_id for _, run_id in marker_pattern.findall(call("get_console_output", {}))}
+
     # Start Play Solo
     print("Initiating Play Solo session...")
-    studio.call("start_stop_play", {"is_start": True})
+    call("start_stop_play", {"is_start": True})
 
     start_time = time.time()
     raw_console = ""
@@ -84,29 +91,47 @@ def run_regression_suite(timeout_sec: float = 30.0) -> bool:
     try:
         while time.time() - start_time < timeout_sec:
             time.sleep(1.0)
-            raw_console = studio.call("get_console_output", {})
+            raw_console = call("get_console_output", {})
 
-            if "BS01_TESTS_PASSED" in raw_console:
+            fresh_markers = [(status, run_id) for status, run_id in marker_pattern.findall(raw_console) if run_id not in previous_runs]
+            if fresh_markers:
+                status, run_id = fresh_markers[-1]
                 completed = True
-                passed_marker = True
-                break
-            elif "BS01_TESTS_FAILED" in raw_console:
-                completed = True
-                failed_marker = True
+                passed_marker = status == "PASSED"
+                failed_marker = status == "FAILED"
+                print(f"Verified fresh completion: {status}:{run_id}")
+                try:
+                    # Capture complete server LogService history before stopping Play Solo
+                    history = []
+                    offset = 1
+                    while True:
+                        code = f'local h=game:GetService("LogService"):GetLogHistory(); local page={{}}; for i={offset},math.min({offset+99},#h) do table.insert(page,{{message=h[i].message,timestamp=h[i].timestamp}}) end; return game:GetService("HttpService"):JSONEncode({{total=#h,messages=page}})'
+                        page_res = studio.get_client().call_tool("execute_luau", {"code": code, "datamodel_type": "Server", "studio_id": studio_id})
+                        page_text = page_res["content"][0]["text"]
+                        page = json.loads(page_text)
+                        history.extend(page["messages"])
+                        offset += len(page["messages"])
+                        if offset > page["total"] or not page["messages"]:
+                            break
+                    full_server_log = "\n".join(item["message"] for item in history)
+                    if len(full_server_log) > len(raw_console):
+                        raw_console = full_server_log
+                except Exception as log_err:
+                    print(f"Note: LogService page fetch: {log_err}")
                 break
     finally:
         # Always terminate Play Solo session back to Edit
         print("Stopping Play Solo session...")
-        studio.call("start_stop_play", {"is_start": False})
+        call("start_stop_play", {"is_start": False})
 
     elapsed = time.time() - start_time
     print(f"Execution finished in {elapsed:.2f} seconds.")
 
     # Save raw console output to evidence log
-    os.makedirs(os.path.dirname(os.path.abspath(LOG_FILE)), exist_ok=True)
-    with open(LOG_FILE, "w", encoding="utf-8") as f:
+    os.makedirs(os.path.dirname(os.path.abspath(log_file)), exist_ok=True)
+    with open(log_file, "w", encoding="utf-8") as f:
         f.write(raw_console)
-    print(f"Saved full raw console output ({len(raw_console)} chars) to: {LOG_FILE}")
+    print(f"Saved full raw console output ({len(raw_console)} chars) to: {log_file}")
 
     if not completed:
         print(f"\n[FATAL ERROR] Test suite execution timed out after {timeout_sec}s without completion marker!")
@@ -126,11 +151,6 @@ def run_regression_suite(timeout_sec: float = 30.0) -> bool:
                 "status": "PASS" if status_str == "SUITE PASS" else "FAIL",
                 "detail": detail.strip(),
             }
-            # Attempt to extract test counts e.g. "X/Y passed" or "X/X passed"
-            cnt_match = re.search(r"(\d+)/(\d+)\s+passed", detail)
-            if cnt_match:
-                runtime_tests_executed += int(cnt_match.group(2))
-
     print(f"\n=== Parsed Suite Summary ({len(parsed_suites)}/{len(EXPECTED_SUITES)} found) ===")
     all_ok = True
 
@@ -139,13 +159,15 @@ def run_regression_suite(timeout_sec: float = 30.0) -> bool:
             info = parsed_suites[name]
             st = info["status"]
             det = info["detail"]
-            if st != "PASS":
+            counts = re.search(r"(\d+)/(\d+)\s+passed", det)
+            if st != "PASS" or counts is None or counts.group(1) != counts.group(2):
                 all_ok = False
             print(f"  [{st}] {name:<24} : {det}")
         else:
             print(f"  [MISSING] {name:<24} : NOT FOUND in console output!")
             all_ok = False
 
+    runtime_tests_executed = sum(int(m.group(1)) for info in parsed_suites.values() if (m := re.search(r"(\d+)/(\d+)\s+passed", info["detail"])))
     print("\n=== Test Metrics Breakdown ===")
     print(f"  - Source-defined test cases : {source_tests}")
     print(f"  - Runtime test executions   : {runtime_tests_executed}")
@@ -168,5 +190,11 @@ def run_regression_suite(timeout_sec: float = 30.0) -> bool:
 
 
 if __name__ == "__main__":
-    success = run_regression_suite(timeout_sec=30.0)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--studio-id", required=True, help="Explicit isolated test Studio target")
+    parser.add_argument("--timeout", type=float, default=60.0)
+    parser.add_argument("--log-file", default=LOG_FILE)
+    args = parser.parse_args()
+    success = run_regression_suite(timeout_sec=args.timeout, studio_id=args.studio_id, log_file=args.log_file)
     sys.exit(0 if success else 1)

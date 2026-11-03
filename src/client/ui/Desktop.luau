@@ -913,14 +913,14 @@ function Desktop:Update(stateData: any)
 		local strong, weak = Upgrades.payoutOf(device)
 		local nextDevice = nil
 		for _, candidate in ipairs(Catalog.Devices) do
-			if candidate.order == device.order + 1 and table.find(Catalog.V0Shipped.deviceIds, candidate.id) ~= nil then
+			if candidate.order == device.order + 1 and table.find(Catalog.Shipped.deviceIds, candidate.id) ~= nil then
 				nextDevice = candidate
 				break
 			end
 		end
 		self._homeDeviceName.Text = `{deviceLabel} (Equipped)`
 		self._homeDeviceNote.Text = string.format(
-			"%.2fx yield · strong %d Cuan · weak %d Cuan · reveal %ds. This phone produces your posts; the CRT is a dashboard terminal only.",
+			"%.2fx yield · strong %d Cuan · weak %d Cuan · reveal %ds. " .. (if device.isPhone then "This phone produces your posts; the CRT is dashboard-only." else "PC Rumah produces your posts; the docked phone is cosmetic."),
 			device.deviceYield,
 			strong,
 			weak,
@@ -938,7 +938,7 @@ function Desktop:Update(stateData: any)
 				nextDevice.revealSeconds
 			)
 		else
-			self._homeUpgradeDesc.Text = "Fast Phone is equipped. PC Rumah belongs to a later milestone and is not purchasable in this build."
+			self._homeUpgradeDesc.Text = "All shipped production hardware is equipped. Visit Workers to manage your first workstation."
 		end
 	else
 		self._homeDeviceName.Text = "Unknown device"

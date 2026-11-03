@@ -182,9 +182,10 @@ function WorldService.Spawn(player: Player, profile: any): (boolean, string?)
 		-- Already spawned: resynchronise the device from confirmed state.
 		local deviceId = if typeof(profile) == "table" then profile.deviceId else nil
 		if isNonEmptyString(deviceId) then
-			WorldService.SyncDevice(player, deviceId)
+			local synced, detail = WorldService.SyncDevice(player, deviceId)
+			if not synced then return false, detail end
 		end
-		return true, nil
+		return WorldService.SyncWorkers(player, if typeof(profile) == "table" then profile.ownedDesks else nil, if typeof(profile) == "table" then profile.workers else nil)
 	end
 
 	local folder = Instance.new("Folder")
@@ -404,11 +405,10 @@ function WorldService.SyncWorkers(player: Player, ownedDesks: { number }?, worke
 					for _, child in ipairs(seatSlot:GetChildren()) do
 						child:Destroy()
 					end
-					local trainee = prefab:Clone()
+					local trainee = Instance.new("Folder")
 					trainee.Name = traineePrefabName
+					trainee:SetAttribute("WorkerCosmetic", true)
 					trainee.Parent = seatSlot
-					local cfg = (PLACEMENT_CONFIG :: any)[traineePrefabName] or { yOffset = 0, rotation = CFrame.identity }
-					placeModel(trainee, seatSlot :: BasePart, cfg)
 				end
 			else
 				if existingTrainee ~= nil then

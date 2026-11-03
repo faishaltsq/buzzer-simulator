@@ -263,7 +263,7 @@ end)
 
 -- 13. WorldService.SyncWorkers mounts WorkerDesk1 and Trainee1
 test("WorldService.SyncWorkers mounts WorkerDesk1 and Trainee1 at correct anchors", function()
-	local fakePlayer = { UserId = 2001 } :: any
+	local fakePlayer = { UserId = 2001, Name = "BS12World" } :: any
 	local p = pcTier1Profile()
 	p.ownedDesks = { 1 }
 	p.workers = { { slotIndex = 1, roleId = "trainee" } }
@@ -291,14 +291,14 @@ end)
 
 -- 14. WorldService physical budget: <= 350 BaseParts total
 test("Room with PCRumah, PhoneFast, WorkerDesk1, Trainee1 is strictly <= 350 BaseParts", function()
-	local fakePlayer = { UserId = 2002 } :: any
+	local fakePlayer = { UserId = 2002, Name = "BS12Budget" } :: any
 	local p = pcTier1Profile()
 	p.deviceId = "pc_rumah"
 	p.ownedDesks = { 1 }
 	p.workers = { { slotIndex = 1, roleId = "trainee" } }
 
 	WorldService.Spawn(fakePlayer, p)
-	local partCount = WorldService.CountInRoom(fakePlayer, "Part")
+	local partCount = WorldService.CountInRoom(fakePlayer, "BasePart")
 	WorldService.Remove(fakePlayer)
 
 	expectTrue(partCount <= 350, `total parts {partCount} must be <= 350`)
@@ -353,15 +353,17 @@ end)
 test("ClientState admits valid BuyDesk and HireWorker mutations and rejects invalid", function()
 	local pDesk = pcTier1Profile()
 	pDesk.balance = 1000
+	pDesk.revision = 1
+	pDesk.serverTime = 100
 	local cState = ClientState.new(pDesk)
 	cState:ApplyOpenComputer({
 		kind = "OpenComputer",
 		dashboardSessionId = "dash_test_12",
-		terminalSlotCFrame = CFrame.identity,
-		cameraSubjectCFrame = CFrame.identity,
-		fieldOfView = 70,
+		state = pDesk,
+		serverTime = 100,
 		expiresAt = 9999,
-	})
+	}, 100)
+	cState:OnCameraOpened()
 
 	-- Valid BuyDesk command
 	local cmdDesk = cState:BeginMutation("BuyDesk", { slotIndex = 1 }, 100)
@@ -372,6 +374,8 @@ test("ClientState admits valid BuyDesk and HireWorker mutations and rejects inva
 	-- Simulate confirmed Desk purchase in state
 	pDesk.ownedDesks = { 1 }
 	pDesk.balance = 820
+	pDesk.revision = 2
+	cState:ApplyReply({ requestId = cmdDesk.requestId, ok = true, code = "OK", revision = 2, serverTime = 101 }, 101)
 	cState:ApplyStateSnapshot(pDesk)
 
 	-- Valid HireWorker command
@@ -381,6 +385,11 @@ test("ClientState admits valid BuyDesk and HireWorker mutations and rejects inva
 	expectEqual(cmdHire.payload.slotIndex, 1, "slotIndex matches")
 	expectEqual(cmdHire.payload.roleId, "trainee", "roleId matches")
 
+	pDesk.revision = 3
+	pDesk.workers = { { hireId = "trainee-slot-1", roleId = "trainee", slotIndex = 1 } }
+	cState:ApplyReply({ requestId = cmdHire.requestId, ok = true, code = "OK", revision = 3, serverTime = 102 }, 102)
+	cState:ApplyStateSnapshot(pDesk)
+
 	-- Invalid slot 2 rejected
 	local cmdSlot2 = cState:BeginMutation("BuyDesk", { slotIndex = 2 }, 102)
 	expectTrue(cmdSlot2 == nil, "BuyDesk slot 2 rejected in BS-12")
@@ -388,6 +397,135 @@ test("ClientState admits valid BuyDesk and HireWorker mutations and rejects inva
 	-- Invalid role rejected
 	local cmdBoss = cState:BeginMutation("HireWorker", { slotIndex = 1, roleId = "boss" }, 103)
 	expectTrue(cmdBoss == nil, "HireWorker invalid role rejected")
+end)
+
+test("Home follows shipped cheap fast and PC progression", function()
+	local Desktop = require(uiFolder:WaitForChild("Desktop")) :: any
+	local parent = Instance.new("Folder")
+	local desktop = Desktop.new({ parent = parent, playerName = "Review", onClose = function() end, onTabSelected = function() end, getBlockReason = function() return nil end })
+	local p = pcTier1Profile()
+	p.deviceId = "phone_cheap"
+	desktop:Update({ snapshot = p })
+	expectTrue(string.find(desktop._homeUpgradeDesc.Text, "HP Cepat", 1, true) ~= nil, "cheap targets fast")
+	p.deviceId = "phone_fast"
+	desktop:Update({ snapshot = p })
+	expectTrue(string.find(desktop._homeUpgradeDesc.Text, "PC Rumah", 1, true) ~= nil, "fast targets shipped PC")
+	p.deviceId = "pc_rumah"
+	desktop:Update({ snapshot = p })
+	expectTrue(string.find(desktop._homeDeviceName.Text, "PC Rumah", 1, true) ~= nil, "PC equipped")
+	expectTrue(string.find(desktop._homeDeviceNote.Text, "PC Rumah produces", 1, true) ~= nil, "PC is productive")
+	expectEqual(string.find(desktop._homeUpgradeDesc.Text, "later milestone", 1, true), nil, "no stale future PC")
+	desktop:Destroy()
+	parent:Destroy()
+end)
+
+test("Workers pending accrual cannot fund purchases and reconciles only on snapshot", function()
+	local parent = Instance.new("Folder")
+	local view = Workers.new({ parent = parent, onAction = function() end })
+	local p = pcTier1Profile()
+	p.balance = 100
+	p.pendingWorkerCuan = 1000
+	p.incomePerSecond = 1.5
+	view:Update({ snapshot = p })
+	expectTrue(view._buyDeskButton.Size.Y.Offset >= 44 and view._hireWorkerButton.Size.Y.Offset >= 44, "worker action touch heights")
+	expectEqual(view._projected.balance, 100, "pending excluded from wallet")
+	expectEqual(view._projected.desk1Phase, "locked", "pending cannot buy desk")
+	local before = view._overviewStats.Text
+	view:Tick(100000)
+	expectEqual(view._overviewStats.Text, before, "no local income prediction")
+	expectTrue(string.find(before, "not spendable", 1, true) ~= nil, "pending distinction explicit")
+	p.balance = 190
+	p.pendingWorkerCuan = 0
+	view:Update({ snapshot = p })
+	expectEqual(view._projected.balance, 190, "confirmed bank reconciled")
+	expectEqual(view._projected.pendingWorkerCuan, 0, "pending clears from server")
+	expectEqual(view._projected.desk1Phase, "affordable", "confirmed funds buy desk")
+	view:Destroy()
+	parent:Destroy()
+end)
+
+test("Shipped slot caps reject Tier 2 eligible server requests", function()
+	local cap = Catalog.Shipped.maxShippedTier
+	Catalog.Shipped.maxShippedTier = 2
+	local ok, err = pcall(function()
+		local p = pcTier1Profile()
+		p.lifetimeEarned = 2000
+		p.completedMissions = 3
+		p.balance = 10000
+		p.ownedDesks = { 1 }
+		p.workers = { { hireId = "trainee-slot-1", roleId = "trainee", slotIndex = 1 } }
+		expectEqual(Rules.eligibleTier(p.lifetimeEarned, p.completedMissions, 2), 2, "fixture really qualifies for Tier 2")
+		expectEqual(EconomyService.buyDesk(p, 2).code, "NOT_READY", "server rejects unshipped desk independently of tier")
+		p.ownedDesks = { 1, 2 }
+		expectEqual(EconomyService.hireWorker(p, 2, "trainee").code, "NOT_READY", "server rejects unshipped worker with all prerequisites")
+		expectEqual(p.balance, 10000, "rejection cannot spend")
+		expectEqual(#p.workers, 1, "rejection cannot hire")
+	end)
+	Catalog.Shipped.maxShippedTier = cap
+	if not ok then error(err, 0) end
+end)
+
+test("Confirmed world sync preserves identities and removes revoked workers", function()
+	local player = { Name = "BS12Sync", UserId = 2003 } :: any
+	local p = pcTier1Profile()
+	expectTrue(WorldService.Spawn(player, p), "spawn empty")
+	p.ownedDesks = { 1 }
+	p.workers = { { slotIndex = 1, roleId = "trainee" } }
+	expectTrue(WorldService.Spawn(player, p), "existing room resync")
+	local desk = WorldService.GetAnchor(player, "WorkerDeskSlot1"):FindFirstChild("WorkerDesk1")
+	local seat = WorldService.GetAnchor(player, "WorkerSeat1")
+	local marker = seat:FindFirstChild("Trainee1")
+	expectTrue(desk ~= nil and marker ~= nil, "confirmed desk and worker mounted")
+	expectTrue(marker:IsA("Folder"), "server only mounts a marker, not a simulated rig")
+	expectTrue(WorldService.SyncWorkers(player, p.ownedDesks, p.workers), "sync repeated")
+	expectEqual(seat:FindFirstChild("Trainee1"), marker, "same marker reused")
+	expectEqual(WorldService.GetAnchor(player, "WorkerDeskSlot1"):FindFirstChild("WorkerDesk1"), desk, "same desk reused")
+	expectTrue(WorldService.SyncWorkers(player, {}, {}), "remove revoked state")
+	expectEqual(seat:FindFirstChild("Trainee1"), nil, "worker removed")
+	WorldService.Remove(player)
+end)
+
+test("R15 cosmetic typing and head motion clean up without orphan rigs", function()
+	local Controller = require(spScripts:WaitForChild("WorkerAnimationController")) :: any
+	local prefab = ReplicatedStorage:WaitForChild("WorkerPrefabs"):WaitForChild("Trainee1") :: Model
+	expectEqual(prefab:FindFirstChildOfClass("Humanoid").RigType, Enum.HumanoidRigType.R15, "real R15 rig")
+	local motors = 0
+	for _, child in ipairs(prefab:GetDescendants()) do if child:IsA("Motor6D") then motors += 1; expectTrue(child.Part0 ~= nil and child.Part1 ~= nil, "connected joint") end end
+	expectEqual(motors, 15, "R15 articulated topology")
+	for _, side in ipairs({ "Left", "Right" }) do
+		local upper = prefab:FindFirstChild(side .. "UpperArm") :: BasePart
+		local lower = prefab:FindFirstChild(side .. "LowerArm") :: BasePart
+		local elbowA = upper.CFrame:PointToWorldSpace(Vector3.new(0, upper.Size.Y / 2, 0))
+		local elbowB = lower.CFrame:PointToWorldSpace(Vector3.new(0, -lower.Size.Y / 2, 0))
+		expectTrue((elbowA - elbowB).Magnitude < 0.02, "arm segments meet naturally")
+	end
+	local root = Instance.new("Folder")
+	local seat = Instance.new("Part")
+	seat.Parent = root
+	local marker = Instance.new("Folder")
+	marker.Name = "Trainee1"
+	marker:SetAttribute("WorkerCosmetic", true)
+	marker.Parent = seat
+	local reduced = false
+	local controller = Controller.new(root, prefab, function() return reduced end)
+	local record = controller._records[marker]
+	expectTrue(record ~= nil, "existing markers restored on start")
+	local wrist = record.joints.RightWrist
+	local neck = record.joints.Neck
+	controller:Step(0.1)
+	expectTrue(wrist.motor.C0 ~= wrist.base, "subtle typing moves wrist")
+	controller:Step(9)
+	expectTrue(neck.motor.C0 ~= neck.base, "occasional head glance")
+	reduced = true
+	controller:Step(0.1)
+	expectEqual(wrist.motor.C0, wrist.base, "reduced motion restores pose")
+	marker:Destroy()
+	controller:Step(0)
+	expectEqual(next(controller._records), nil, "removed marker frees record")
+	controller:Destroy()
+	controller:Destroy()
+	expectEqual(#controller._connections, 0, "listeners disconnected idempotently")
+	root:Destroy()
 end)
 
 -- Execute all tests in suite

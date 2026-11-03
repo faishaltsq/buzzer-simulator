@@ -227,11 +227,15 @@ end
 local function withShippedTierCap(cap: number, fn: () -> ())
 	local targetTable = Catalog.Shipped or Catalog.V0Shipped
 	local realCap = targetTable.maxShippedTier
+	local realDeskCap, realWorkerCap = targetTable.maxShippedDeskSlot, targetTable.maxShippedWorkerSlot
+	targetTable.maxShippedDeskSlot = cap
+	targetTable.maxShippedWorkerSlot = cap
 	local realV0Cap = Catalog.V0Shipped.maxShippedTier
 	targetTable.maxShippedTier = cap
 	Catalog.V0Shipped.maxShippedTier = cap
 	local ok, err = pcall(fn)
 	targetTable.maxShippedTier = realCap
+	targetTable.maxShippedDeskSlot, targetTable.maxShippedWorkerSlot = realDeskCap, realWorkerCap
 	Catalog.V0Shipped.maxShippedTier = realV0Cap
 	if not ok then
 		error(err, 0)

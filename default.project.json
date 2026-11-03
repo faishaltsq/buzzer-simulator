@@ -6,6 +6,10 @@
       "$className": "ReplicatedStorage",
       "Shared": {
         "$path": "src/shared"
+      },
+      "WorkerPrefabs": {
+        "$className": "Folder",
+        "Trainee1": { "$path": "assets/world/Trainee1.rbxmx" }
       }
     },
     "ServerScriptService": {

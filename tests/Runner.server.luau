@@ -4,6 +4,7 @@
 -- (nonzero Studio output marker) if any test fails.
 
 local runnerRoot = script.Parent
+local runId = script:GetAttribute("VerificationRunId") or game:GetService("HttpService"):GenerateGUID(false)
 
 -- In Play Solo, ensure StarterPlayer has fully mounted its children before specs run
 local StarterPlayer = game:GetService("StarterPlayer")
@@ -42,9 +43,10 @@ end
 
 print(`==============================================`)
 print(`BS-01 suites: {total - failed}/{total} passed, {failed} failed`)
+print("BS_REGRESSION_RESULT " .. game:GetService("HttpService"):JSONEncode({ runId = runId, failed = failed, suites = results }))
 if failed > 0 then
-	print("BS01_TESTS_FAILED")
+	print("BS01_TESTS_FAILED:" .. runId)
 	error(`BS-01 runner: {failed} spec suite(s) failed`, 0)
 else
-	print("BS01_TESTS_PASSED")
+	print("BS01_TESTS_PASSED:" .. runId)
 end

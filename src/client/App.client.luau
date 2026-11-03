@@ -39,6 +39,10 @@ local function isReducedMotion(): boolean
 	return ok and (enabled == true)
 end
 
+local WorkerAnimationController = require(script.Parent:WaitForChild("WorkerAnimationController") :: any)
+local workerAnimation = WorkerAnimationController.new(Workspace, ReplicatedStorage:WaitForChild("WorkerPrefabs"):WaitForChild("Trainee1") :: Model, isReducedMotion)
+script.Destroying:Connect(function() workerAnimation:Destroy() end)
+
 -- Initialize state container
 local state = ClientState.new(nil)
 
@@ -523,7 +527,8 @@ end
 task.spawn(setupNetworking)
 
 -- Heartbeat Loop: Local Watchdog and Mutation Timeout Checker
-RunService.Heartbeat:Connect(function()
+RunService.Heartbeat:Connect(function(dt)
+	workerAnimation:Step(dt)
 	local now = os.clock()
 	local ok, serverNow = pcall(function()
 		return Workspace:GetServerTimeNow()

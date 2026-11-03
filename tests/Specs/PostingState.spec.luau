@@ -109,11 +109,12 @@ for _, case in ipairs({
 end
 
 for _, action in ipairs({ "BuyDesk", "HireWorker", "CloseComputer", "GetSnapshot", "MadeUp" }) do
-	test(`BeginMutation does not admit {action}`, function()
+	test(`BeginMutation rejects invalid or non-mutation {action}`, function()
 		local state = fixture()
 		equal(state:BeginMutation(action, {}, 1000), nil)
 		equal(next(state:Get().inFlightRequests), nil)
-		truth(string.find(state:Get().activeError, "UNKNOWN_ACTION", 1, true))
+		local expectedCode = if action == "BuyDesk" or action == "HireWorker" then "INVALID_INPUT" else "UNKNOWN_ACTION"
+		truth(string.find(state:Get().activeError, expectedCode, 1, true))
 	end)
 end
 
