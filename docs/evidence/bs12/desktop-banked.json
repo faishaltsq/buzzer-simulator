@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"pendingWorkerCuan\":38,\"saveStatus\":\"healthy\",\"feedVersion\":9,\"workers\":[{\"slotIndex\":1,\"roleId\":\"trainee\",\"hireId\":\"trainee-slot-1\"}],\"completedMissions\":3,\"ownedDesks\":[1],\"lifetimeEarned\":2272,\"deviceId\":\"pc_rumah\",\"ownPosts\":[],\"balance\":592,\"incomePerSecond\":1.5,\"tier\":1,\"nextOrganicContextId\":\"organic_snack\",\"maxShippedTier\":1,\"serverTime\":1793668453.972152,\"revision\":9}"
+    }
+  ],
+  "isError": false
+}

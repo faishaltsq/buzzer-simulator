@@ -68,6 +68,9 @@ local function withCatalogFixture(
 )
 	local targetTable = Catalog.Shipped or Catalog.V0Shipped
 	local realDevices = targetTable.deviceIds
+	local realDeskCap, realWorkerCap = targetTable.maxShippedDeskSlot, targetTable.maxShippedWorkerSlot
+	targetTable.maxShippedDeskSlot = maxShippedTier
+	targetTable.maxShippedWorkerSlot = maxShippedTier
 	local realCap = targetTable.maxShippedTier
 	local realV0Devices = Catalog.V0Shipped.deviceIds
 	local realV0Cap = Catalog.V0Shipped.maxShippedTier
@@ -77,6 +80,7 @@ local function withCatalogFixture(
 	Catalog.V0Shipped.maxShippedTier = maxShippedTier
 	local ok, err = pcall(fn)
 	targetTable.deviceIds = realDevices
+	targetTable.maxShippedDeskSlot, targetTable.maxShippedWorkerSlot = realDeskCap, realWorkerCap
 	targetTable.maxShippedTier = realCap
 	Catalog.V0Shipped.deviceIds = realV0Devices
 	Catalog.V0Shipped.maxShippedTier = realV0Cap

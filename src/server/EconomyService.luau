@@ -24,7 +24,7 @@ local EconomyService = {}
 local MAX_ECONOMIC_TOTAL = 1e12
 
 -- docs/04: worker rate is 1.5 Cuan/s per owned worker, 0..2 workers.
-local WORKER_RATE_PER_WORKER = 1.5
+local WORKER_RATE_PER_WORKER = Catalog.WorkerRatePerWorker
 local MAX_WORKERS = 2
 
 -- docs/03: connected monotonic time is processed in bounded chunks so a long
@@ -32,11 +32,9 @@ local MAX_WORKERS = 2
 -- is retained by the caller for the next lane turn.
 local MAX_TIME_CHUNK = 60
 
--- Authored M1 automation values (docs/04). These are FUTURE content: V0 ships
--- no desk or worker purchase, so they are validated only through explicit
--- injected fixtures, never through a V0 button.
-local DESK_PRICES: { [number]: number } = { [1] = 180, [2] = 250 }
-local HIRE_PRICES: { [number]: number } = { [1] = 500, [2] = 750 }
+-- Catalog owns authored automation prices; shipped slot caps control availability.
+local DESK_PRICES = Catalog.DeskPrices
+local HIRE_PRICES = Catalog.HirePrices
 
 -- The single productive device that authorizes a worker station (docs/02).
 local PC_DEVICE_ID = "pc_rumah"
@@ -259,9 +257,7 @@ function EconomyService.buyDevice(profile: any, deviceId: string): OperationResu
 end
 
 -- ===== desk purchases =====
--- M1 content (docs/04): desk 1 at 180, desk 2 at 250. Gated on PC Rumah
--- ownership, player tier, sequential slot progression and funds. V0 ships no
--- desk purchase, so this path is exercised only through explicit fixtures.
+-- Desk purchases require a shipped slot, PC Rumah, tier, sequential ownership and funds.
 function EconomyService.buyDesk(profile: any, slotIndex: number): OperationResult
 	if typeof(slotIndex) ~= "number" or slotIndex % 1 ~= 0 then
 		return fail("INVALID_INPUT", "slotIndex must be an integer")
@@ -271,6 +267,9 @@ function EconomyService.buyDesk(profile: any, slotIndex: number): OperationResul
 	end
 	if slotIndex < 1 or slotIndex > MAX_WORKERS then
 		return fail("INVALID_INPUT", `slotIndex must be 1 or {MAX_WORKERS}`)
+	end
+	if slotIndex > Catalog.Shipped.maxShippedDeskSlot then
+		return fail("NOT_READY", `desk slot {slotIndex} is not shipped`)
 	end
 	if ownsDesk(profile, slotIndex) then
 		return fail("ALREADY_DONE", `desk slot {slotIndex} is already owned`)
@@ -329,6 +328,9 @@ function EconomyService.hireWorker(profile: any, slotIndex: number, roleId: stri
 	end
 	if slotIndex < 1 or slotIndex > MAX_WORKERS then
 		return fail("INVALID_INPUT", `slotIndex must be 1 or {MAX_WORKERS}`)
+	end
+	if slotIndex > Catalog.Shipped.maxShippedWorkerSlot then
+		return fail("NOT_READY", `worker slot {slotIndex} is not shipped`)
 	end
 	if workerAtSlot(profile, slotIndex) ~= nil then
 		return fail("ALREADY_DONE", `worker slot {slotIndex} is already occupied`)

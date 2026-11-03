@@ -134,11 +134,15 @@ end
 local function withTierTwo(fn: () -> ())
 	local targetTable = Catalog.Shipped or Catalog.V0Shipped
 	local realCap = targetTable.maxShippedTier
+	local realDeskCap, realWorkerCap = targetTable.maxShippedDeskSlot, targetTable.maxShippedWorkerSlot
+	targetTable.maxShippedDeskSlot = 2
+	targetTable.maxShippedWorkerSlot = 2
 	local realV0Cap = Catalog.V0Shipped.maxShippedTier
 	targetTable.maxShippedTier = 2
 	Catalog.V0Shipped.maxShippedTier = 2
 	local ok, err = pcall(fn)
 	targetTable.maxShippedTier = realCap
+	targetTable.maxShippedDeskSlot, targetTable.maxShippedWorkerSlot = realDeskCap, realWorkerCap
 	Catalog.V0Shipped.maxShippedTier = realV0Cap
 	if not ok then error(err, 0) end
 end
@@ -867,6 +871,30 @@ test("Remediation: Advance reports failed worker bank without losing its accrued
 	local writes = store.updates
 	check(session:Advance(0).ok, "later tick is healthy")
 	equal(store.updates, writes, "no second bank")
+end)
+
+test("BS12 production clock banks at 30 seconds, never at 29", function()
+	local p = worker()
+	p.ownedDesks = { 1 }
+	local session, store, clock = loaded(p, true)
+	local writes = store.updates
+	clock.connected = 29
+	clock.wall = 1029
+	check(session:Advance(0).ok, "scheduler at 29")
+	equal(store.updates, writes, "no premature bank")
+	equal(session:ReadSnapshot().snapshot.balance, 10000, "pending is not spendable")
+	equal(session:GetPendingWorkerCuan(), 43, "whole pending accrual before threshold")
+	clock.connected = 30
+	clock.wall = 1030
+	local result = session:Advance(0)
+	check(result.ok, "30-second bank confirmed")
+	equal(result.banked, 45, "exact 30 * 1.5")
+	equal(store.updates, writes + 1, "one durable write")
+	equal(store.data.Player_1234.profile.balance, 10045, "backend has confirmed money")
+	equal(session:ReadSnapshot().snapshot.balance, 10045, "snapshot follows durable bank")
+	equal(session:GetPendingWorkerCuan(), 0, "pending drained")
+	check(session:Advance(0).ok, "same tick replay")
+	equal(store.updates, writes + 1, "no double bank")
 end)
 
 local passed, failed = 0, 0

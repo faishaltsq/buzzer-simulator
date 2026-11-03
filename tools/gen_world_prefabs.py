@@ -385,6 +385,120 @@ def build_pc_rumah():
     screen.append(gui)
     return model("PCRumah", c, "MonitorStand")
 
+def build_worker_desk_1():
+    # PrimaryPart DeskTop at (0, 0, 0), matching anchor WorkerDeskSlot1 at (-8, 3.2, -8)
+    c = [
+        part("DeskTop", (4, .3, 2.4), (0, 0, 0), "wood_light", "Wood", collide=True),
+        part("DeskApronFront", (3.6, .35, .15), (0, -.25, 1.05), "wood", "Wood"),
+        part("DeskApronBack", (3.6, .35, .15), (0, -.25, -1.05), "wood", "Wood"),
+        part("DeskApronLeft", (.15, .35, 2.1), (-1.8, -.25, 0), "wood", "Wood"),
+        part("DeskApronRight", (.15, .35, 2.1), (1.8, -.25, 0), "wood", "Wood"),
+        part("DeskLegFL", (.25, 3.05, .25), (-1.8, -1.65, 1.0), "wood_dark", "Wood", collide=True),
+        part("DeskLegFR", (.25, 3.05, .25), (1.8, -1.65, 1.0), "wood_dark", "Wood", collide=True),
+        part("DeskLegBL", (.25, 3.05, .25), (-1.8, -1.65, -1.0), "wood_dark", "Wood", collide=True),
+        part("DeskLegBR", (.25, 3.05, .25), (1.8, -1.65, -1.0), "wood_dark", "Wood", collide=True),
+        part("DeskFootCrossbar", (3.6, .15, .15), (0, -2.8, -.9), "wood_dark", "Wood"),
+        part("DeskMat", (1.8, .02, .8), (0, .16, .15), "sage_dark", "Fabric"),
+        part("MonitorStand", (.4, .05, .4), (0, .175, -.7), "metal", "Metal"),
+        part("MonitorStem", (.12, .8, .12), (0, .6, -.7), "metal", "Metal"),
+        part("MonitorPanel", (2.2, 1.3, .1), (0, 1.15, -.7), "ink"),
+        part("MonitorBezel", (2.1, 1.2, .03), (0, 1.15, -.64), "navy"),
+        part("MonitorScreen", (2.0, 1.1, .02), (0, 1.15, -.62), "screen"),
+        part("ScreenLine1", (1.2, .04, .01), (-.2, 1.25, -.605), "phosphor"),
+        part("ScreenLine2", (1.4, .04, .01), (-.1, 1.1, -.605), "phosphor"),
+        part("ScreenLine3", (.8, .04, .01), (-.4, .95, -.605), "sage"),
+        part("KeyboardBase", (1.2, .04, .4), (0, .18, .15), "ink"),
+        part("KeyboardKeys", (1.1, .03, .32), (0, .21, .15), "cream"),
+        part("Mouse", (.18, .06, .28), (.8, .19, .15), "ink"),
+        part("ChairSeat", (1.6, .2, 1.6), (0, -1.6, 1.8), "wood", "Wood", collide=True),
+        part("ChairCushion", (1.4, .1, 1.4), (0, -1.45, 1.8), "sage", "Fabric"),
+        part("ChairBackSupport", (.15, 1.4, .15), (0, -.8, 2.55), "metal", "Metal"),
+        part("ChairBack", (1.5, 1.2, .18), (0, -.6, 2.5), "wood_dark", "Wood"),
+        part("ChairStem", (.2, 1.3, .2), (0, -2.3, 1.8), "metal", "Metal"),
+        part("ChairBase1", (1.5, .12, .2), (0, -2.95, 1.8), "metal", "Metal"),
+        part("ChairBase2", (.2, .12, 1.5), (0, -2.95, 1.8), "metal", "Metal"),
+    ]
+    return model("WorkerDesk1", c, "DeskTop")
+
+
+def build_trainee_1():
+    # R15 topology, authored seated at WorkerSeat1. Only the client clones this kit.
+    c = [part("HumanoidRootPart", (.8, .8, .8), (0, 0, 0), "cream", transparency=1)]
+    specs = [
+        ("LowerTorso", (1.6, .32, .8), (0, .65, 0), "navy", (0, 0, 0)),
+        ("UpperTorso", (1.6, 1.28, .8), (0, 1.45, -.08), "cream", (6, 0, 0)),
+        ("Head", (1.6, .8, .8), (0, 2.52, -.18), "plaster", (4, 0, 0)),
+    ]
+    for side, sign in (("Left", -1), ("Right", 1)):
+        specs.extend([
+            (side + "UpperArm", (.5, .9, .5), (sign * .98, 1.35, -.27), "cream", (-25, 0, sign * 8)),
+            (side + "LowerArm", (.45, .85, .45), (sign * .72, 1.57, -.95), "plaster", (-82, 0, sign * 22)),
+            (side + "Hand", (.45, .25, .5), (sign * .37, 1.94, -1.61), "plaster", (0, 0, 0)),
+            (side + "UpperLeg", (.7, 1.0, .7), (sign * .43, .48, -.48), "navy", (-90, 0, 0)),
+            (side + "LowerLeg", (.65, 1.45, .65), (sign * .43, -.55, -.98), "navy", (0, 0, 0)),
+            (side + "Foot", (.7, .3, 1.0), (sign * .43, -1.4, -1.12), "ink", (0, 0, 0)),
+        ])
+    for name, size, pos, tint, rotation in specs:
+        p = part(name, size, pos, tint, rotation=rotation)
+        if name.endswith("UpperArm") or name.endswith("LowerArm"):
+            sign = -1 if name.startswith("Left") else 1
+            shoulder, elbow, wrist = (sign*.96, 1.9, -.1), (sign*.72, 2.1, -.85), (sign*.37, 1.94, -1.61)
+            start, end = (shoulder, elbow) if name.endswith("UpperArm") else (elbow, wrist)
+            delta = [end[i]-start[i] for i in range(3)]
+            length = math.sqrt(sum(v*v for v in delta))
+            yaxis = [v/length for v in delta]
+            xaxis = [yaxis[1], -yaxis[0], 0]
+            norm = math.sqrt(sum(v*v for v in xaxis))
+            xaxis = [v/norm for v in xaxis]
+            zaxis = [xaxis[1]*yaxis[2]-xaxis[2]*yaxis[1], xaxis[2]*yaxis[0]-xaxis[0]*yaxis[2], xaxis[0]*yaxis[1]-xaxis[1]*yaxis[0]]
+            center = [(start[i]+end[i])/2 for i in range(3)]
+            props = p.find("Properties")
+            props.remove(props.find("CoordinateFrame[@name='CFrame']"))
+            props.append(vector("CFrame", (*center, *[v for row in zip(xaxis, yaxis, zaxis) for v in row]), "CoordinateFrame", ("X","Y","Z","R00","R01","R02","R10","R11","R12","R20","R21","R22")))
+            props.remove(props.find("Vector3[@name='size']"))
+            props.append(vector("size", (size[0], length, size[2])))
+        p.find("Properties/bool[@name='Anchored']").text = "false"
+        ET.SubElement(p.find("Properties"), "bool", {"name": "Massless"}).text = "true"
+        c.append(p)
+    # C0/C1 frames are derived from the authored pose, not independent limb offsets.
+    lookup = {p.find("Properties/string[@name='Name']").text: p for p in c}
+    def joint(name, parent, child, cls="Motor6D"):
+        # Joint origin is the child center; C0 = parent^-1 * child computed below.
+        def matrix_of(p):
+            cf = p.find("Properties/CoordinateFrame[@name='CFrame']")
+            pos = [float(cf.find(k).text) for k in ("X", "Y", "Z")]
+            mat = [[float(cf.find(f"R{i}{j}").text) for j in range(3)] for i in range(3)]
+            return pos, mat
+        pp, pr = matrix_of(lookup[parent]); cp, cr = matrix_of(lookup[child])
+        delta = [cp[i]-pp[i] for i in range(3)]
+        pos = [sum(pr[k][i]*delta[k] for k in range(3)) for i in range(3)]
+        rot = [sum(pr[k][i]*cr[k][j] for k in range(3)) for i in range(3) for j in range(3)]
+        motor = item(cls, name, {
+            "Part0": ("Ref", lookup[parent].attrib["referent"]),
+            "Part1": ("Ref", lookup[child].attrib["referent"]),
+            "C0": vector("C0", (*pos, *rot), "CoordinateFrame", ("X","Y","Z","R00","R01","R02","R10","R11","R12","R20","R21","R22")),
+        })
+        lookup[parent].append(motor)
+    joint("Root", "HumanoidRootPart", "LowerTorso")
+    joint("Waist", "LowerTorso", "UpperTorso")
+    joint("Neck", "UpperTorso", "Head")
+    for side in ("Left", "Right"):
+        for name, parent, child in (("Shoulder", "UpperTorso", side+"UpperArm"), ("Elbow", side+"UpperArm", side+"LowerArm"), ("Wrist", side+"LowerArm", side+"Hand"), ("Hip", "LowerTorso", side+"UpperLeg"), ("Knee", side+"UpperLeg", side+"LowerLeg"), ("Ankle", side+"LowerLeg", side+"Foot")):
+            joint(side+name, parent, child)
+    hair = part("Hair", (1.62, .25, .84), (0, 2.89, -.18), "ink")
+    hair.find("Properties/bool[@name='Anchored']").text = "false"
+    c.append(hair)
+    lookup["Hair"] = hair
+    joint("HairWeld", "Head", "Hair", "Weld")
+    for name, size, pos in (("EyeL", (.07, .09, .025), (-.25, 2.55, -.59)), ("EyeR", (.07, .09, .025), (.25, 2.55, -.59)), ("Smile", (.2, .035, .025), (0, 2.36, -.6))):
+        face = part(name, size, pos, "ink")
+        face.find("Properties/bool[@name='Anchored']").text = "false"
+        lookup[name] = face
+        joint(name+"Weld", "Head", name, "Weld")
+        c.append(face)
+    c.append(item("Humanoid", "Humanoid", {"RigType": ("token", 1), "DisplayDistanceType": ("token", 2), "AutoRotate": ("bool", "false"), "RequiresNeck": ("bool", "false")}))
+    return model("Trainee1", c, "HumanoidRootPart")
+
 
 def write_model(path, root):
     roblox = ET.Element("roblox", {"version": "4"})
@@ -400,7 +514,8 @@ def main():
     os.makedirs(output, exist_ok=True)
     for name, builder in (("Bedroom", build_bedroom), ("OldCRT", build_old_crt),
                           ("PhoneCheap", build_phone_cheap), ("PhoneFast", build_phone_fast),
-                          ("PCRumah", build_pc_rumah)):
+                          ("PCRumah", build_pc_rumah), ("WorkerDesk1", build_worker_desk_1),
+                          ("Trainee1", build_trainee_1)):
         write_model(os.path.join(output, name + ".rbxmx"), builder())
 
 

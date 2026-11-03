@@ -124,12 +124,14 @@ function ClientState.GenerateRequestId(prefix: string?): string
 	return `{p}_{guid}`
 end
 
-local MUTATION_FIELDS: { [string]: { [string]: boolean } } = {
-	AcceptMission = { missionId = true },
-	PublishOrganic = { templateId = true },
-	PublishPost = { runId = true, templateId = true },
-	ClaimMission = { runId = true },
-	BuyDevice = { deviceId = true },
+local MUTATION_FIELDS: { [string]: { [string]: string } } = {
+	AcceptMission = { missionId = "string" },
+	PublishOrganic = { templateId = "string" },
+	PublishPost = { runId = "string", templateId = "string" },
+	ClaimMission = { runId = "string" },
+	BuyDevice = { deviceId = "string" },
+	BuyDesk = { slotIndex = "number" },
+	HireWorker = { slotIndex = "number", roleId = "string" },
 }
 local REPLY_MESSAGES: { [string]: string } = {
 	INVALID_INPUT = "This selection is no longer valid. Refresh progress and choose again.",
@@ -199,12 +201,23 @@ function ClientState:BeginMutation(action: string, payload: any, localNow: numbe
 	end
 	local fieldCount = 0
 	for key, value in pairs(payload) do
-		if not fields[key] or typeof(value) ~= "string" or #value == 0 or #value > 64 then
+		local expectedType = fields[key]
+		if expectedType == nil or typeof(value) ~= expectedType then
 			return self:_rejectMutation(errorText("INVALID_INPUT"))
+		end
+		if expectedType == "string" then
+			if #value == 0 or #value > 64 then
+				return self:_rejectMutation(errorText("INVALID_INPUT"))
+			end
+		elseif expectedType == "number" then
+			if value ~= value or value == math.huge or value == -math.huge or value % 1 ~= 0 then
+				return self:_rejectMutation(errorText("INVALID_INPUT"))
+			end
 		end
 		fieldCount += 1
 	end
-	if fieldCount ~= (if action == "PublishPost" then 2 else 1) then
+	local expectedCount = if action == "PublishPost" or action == "HireWorker" then 2 else 1
+	if fieldCount ~= expectedCount then
 		return self:_rejectMutation(errorText("INVALID_INPUT"))
 	end
 
@@ -262,6 +275,91 @@ function ClientState:BeginMutation(action: string, payload: any, localNow: numbe
 		end
 		if not isNext then return self:_rejectMutation(errorText("NOT_READY")) end
 		if typeof(snapshot.balance) ~= "number" or snapshot.balance < target.price then
+			return self:_rejectMutation(errorText("INSUFFICIENT_FUNDS"))
+		end
+	elseif action == "BuyDesk" then
+		local slotIndex = payload.slotIndex
+		local shipped = getShipped()
+		local maxSlot = shipped.maxShippedDeskSlot or 1
+		if slotIndex < 1 or slotIndex > maxSlot then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		if snapshot.deviceId ~= "pc_rumah" then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		if snapshot.tier < slotIndex then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		for _, owned in ipairs(snapshot.ownedDesks or {}) do
+			if owned == slotIndex then
+				return self:_rejectMutation(errorText("ALREADY_DONE"))
+			end
+		end
+		if slotIndex > 1 then
+			local hasPrior = false
+			for _, owned in ipairs(snapshot.ownedDesks or {}) do
+				if owned == slotIndex - 1 then
+					hasPrior = true
+					break
+				end
+			end
+			if not hasPrior then
+				return self:_rejectMutation(errorText("NOT_READY"))
+			end
+		end
+		local price = Catalog.DeskPrices and Catalog.DeskPrices[slotIndex] or 0
+		if price <= 0 or typeof(snapshot.balance) ~= "number" or snapshot.balance < price then
+			return self:_rejectMutation(errorText("INSUFFICIENT_FUNDS"))
+		end
+	elseif action == "HireWorker" then
+		local slotIndex = payload.slotIndex
+		local roleId = payload.roleId
+		if roleId ~= "trainee" then
+			return self:_rejectMutation(errorText("INVALID_INPUT"))
+		end
+		local shipped = getShipped()
+		local maxSlot = shipped.maxShippedWorkerSlot or 1
+		if slotIndex < 1 or slotIndex > maxSlot then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		if snapshot.deviceId ~= "pc_rumah" then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		if snapshot.tier < slotIndex then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		local hasDesk = false
+		for _, owned in ipairs(snapshot.ownedDesks or {}) do
+			if owned == slotIndex then
+				hasDesk = true
+				break
+			end
+		end
+		if not hasDesk then
+			return self:_rejectMutation(errorText("NOT_READY"))
+		end
+		for _, w in ipairs(snapshot.workers or {}) do
+			if w.slotIndex == slotIndex then
+				return self:_rejectMutation(errorText("ALREADY_DONE"))
+			end
+		end
+		if #(snapshot.workers or {}) >= 2 then
+			return self:_rejectMutation(errorText("LIMIT_REACHED"))
+		end
+		if slotIndex > 1 then
+			local hasPriorWorker = false
+			for _, w in ipairs(snapshot.workers or {}) do
+				if w.slotIndex == slotIndex - 1 then
+					hasPriorWorker = true
+					break
+				end
+			end
+			if not hasPriorWorker then
+				return self:_rejectMutation(errorText("NOT_READY"))
+			end
+		end
+		local price = Catalog.HirePrices and Catalog.HirePrices[slotIndex] or 0
+		if price <= 0 or typeof(snapshot.balance) ~= "number" or snapshot.balance < price then
 			return self:_rejectMutation(errorText("INSUFFICIENT_FUNDS"))
 		end
 	else

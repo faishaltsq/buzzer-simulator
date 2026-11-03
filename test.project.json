@@ -1,1 +1,85 @@
-{"name":"BuzzerSimulatorTests","tree":{"$className":"DataModel","ReplicatedStorage":{"$className":"ReplicatedStorage","Shared":{"$path":"src/shared"}},"ServerScriptService":{"$className":"ServerScriptService","Runner":{"$path":"tests/Runner.server.luau"},"Specs":{"$path":"tests/Specs"}},"ServerStorage":{"$className":"ServerStorage","WorldPrefabs":{"$className":"Folder","Bedroom":{"$path":"assets/world/Bedroom.rbxmx"},"OldCRT":{"$path":"assets/world/OldCRT.rbxmx"},"PhoneCheap":{"$path":"assets/world/PhoneCheap.rbxmx"},"PhoneFast":{"$path":"assets/world/PhoneFast.rbxmx"},"PCRumah":{"$path":"assets/world/PCRumah.rbxmx"}},"ProfileStore":{"$path":"src/server/ProfileStore.luau"},"ScoringCatalog":{"$path":"src/server/ScoringCatalog.luau"},"MissionService":{"$path":"src/server/MissionService.luau"},"FeedService":{"$path":"src/server/FeedService.luau"},"EconomyService":{"$path":"src/server/EconomyService.luau"},"SessionService":{"$path":"src/server/SessionService.luau"},"WorldService":{"$path":"src/server/WorldService.luau"},"NetRouter":{"$path":"src/server/NetRouter.luau"},"BootstrapRuntime":{"$path":"src/server/BootstrapRuntime.luau"}},"StarterPlayer":{"$className":"StarterPlayer","StarterPlayerScripts":{"$path":"src/client"}}}}
+{
+  "name": "BuzzerSimulatorTests",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "WorkerPrefabs": {
+        "$className": "Folder",
+        "Trainee1": { "$path": "assets/world/Trainee1.rbxmx" }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Runner": {
+        "$path": "tests/Runner.server.luau"
+      },
+      "Specs": {
+        "$path": "tests/Specs"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "WorldPrefabs": {
+        "$className": "Folder",
+        "Bedroom": {
+          "$path": "assets/world/Bedroom.rbxmx"
+        },
+        "OldCRT": {
+          "$path": "assets/world/OldCRT.rbxmx"
+        },
+        "PhoneCheap": {
+          "$path": "assets/world/PhoneCheap.rbxmx"
+        },
+        "PhoneFast": {
+          "$path": "assets/world/PhoneFast.rbxmx"
+        },
+        "PCRumah": {
+          "$path": "assets/world/PCRumah.rbxmx"
+        },
+        "WorkerDesk1": {
+          "$path": "assets/world/WorkerDesk1.rbxmx"
+        },
+        "Trainee1": {
+          "$path": "assets/world/Trainee1.rbxmx"
+        }
+      },
+      "ProfileStore": {
+        "$path": "src/server/ProfileStore.luau"
+      },
+      "ScoringCatalog": {
+        "$path": "src/server/ScoringCatalog.luau"
+      },
+      "MissionService": {
+        "$path": "src/server/MissionService.luau"
+      },
+      "FeedService": {
+        "$path": "src/server/FeedService.luau"
+      },
+      "EconomyService": {
+        "$path": "src/server/EconomyService.luau"
+      },
+      "SessionService": {
+        "$path": "src/server/SessionService.luau"
+      },
+      "WorldService": {
+        "$path": "src/server/WorldService.luau"
+      },
+      "NetRouter": {
+        "$path": "src/server/NetRouter.luau"
+      },
+      "BootstrapRuntime": {
+        "$path": "src/server/BootstrapRuntime.luau"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$path": "src/client"
+      }
+    }
+  }
+}

@@ -1,4 +1,205 @@
-[TRUNCATED DUE TO LENGTH LIMIT]
+[PASS] Scoring formula is exactly 2*trendMatch + audienceMatch
+[PASS] fitForTemplate classifies strong and weak correctly
+[PASS] A tie is rejected, never resolved randomly
+[PASS] A missing affinity is rejected
+[PASS] A context with no templates is rejected
+[PASS] An unknown template is rejected by fitForTemplate
+[PASS] V0 shipped content validates with unique winners
+[PASS] M1-style fixtures rotate winners per context without shipping M1
+[PASS] Private affinities are not present in the public Catalog
+[PASS] First V0 mission uses meal_time and freezes the run
+[PASS] Accept increments the variant counter only in the proposed state
+[PASS] A second active mission is rejected
+[PASS] An unknown mission ID is rejected
+[PASS] Accept requires a nonempty runId
+[PASS] A tier-0 player is rejected from a tier-1 mission
+[PASS] A tier-1 mission requires BOTH lifetime and claim thresholds
+[PASS] The shipped tier cap blocks a tier above the shipped cap
+[PASS] The V0 food mission remains available at tier 0
+[PASS] The tier gate does not advance the variant counter
+[PASS] Accept is rejected while a mission is already active
+[PASS] Accept is allowed while an organic post is resolving
+[PASS] Accepting a mission does not disturb the pending organic settlement
+[PASS] An organic settlement does not advance a newly accepted campaign
+[PASS] Accept is still rejected while a mission post is resolving
+[PASS] Rejoin preserves the frozen context and does not reroll
+[PASS] Counter rotation works with a multi-context fixture
+[PASS] A strong organic post publishes with frozen values and no reward
+[PASS] A weak organic post publishes with weak frozen values
+[PASS] An invalid organic template is rejected
+[PASS] A second organic post is refused while one is resolving
+[PASS] An organic post is allowed alongside an accepted mission
+[PASS] An organic post never advances mission impact
+[PASS] A strong campaign post publishes and reaches readyToClaim on settle
+[PASS] The two-weak-post journey works end to end
+[PASS] A third campaign post is rejected
+[PASS] An incorrect run ID is rejected for campaign publish
+[PASS] An invalid campaign template is rejected
+[PASS] Campaign publish is refused with no active mission
+[PASS] Cross-mode pending-post conflict is refused
+[PASS] A frozen campaign result survives a serialized profile reconstruction
+[PASS] Settlement before settleAt is rejected
+[PASS] Settlement exactly at settleAt succeeds
+[PASS] Settlement after settleAt succeeds
+[PASS] Duplicate settlement does not pay again
+[PASS] Settlement with no pending post is rejected
+[PASS] Own post history is capped at ten
+[PASS] The input profile is never mutated on success or failure
+[PASS] Mission impact is credited exactly once
+[PASS] Settlement does not alias own-post summaries with the input profile
+[PASS] Settlement refuses a credit that reaches the economy limit
+[PASS] A credit just below the economy limit still succeeds
+[PASS] Claim refuses a bonus that reaches the economy limit
+[PASS] Publish rejects NaN, infinities and negative timestamps
+[PASS] Settle rejects NaN, infinities and negative timestamps
+[PASS] Accept rejects NaN, infinities and negative timestamps
+[PASS] A successful claim awards the fixed 80 Cuan exactly once
+[PASS] A claim before readyToClaim is rejected
+[PASS] A duplicate claim is rejected
+[PASS] A claim with an incorrect run ID is rejected
+[PASS] A claimed run stays claimable-proof within the 32-entry bound
+[PASS] A new eligible mission can be accepted after a claim
+[PASS] Settlement does not auto-claim the mission
+[PASS] Recovery: state reconstructs without reroll or double-pay at each step
+[PASS] Recovery: a restored accepted mission keeps its frozen context
+[PASS] V0 mission posts score 120 strong / 75 weak (B=100)
+[PASS] A B=130 mission scores 156 strong / 97 weak
+[PASS] A B=160 mission scores 192 strong / 120 weak
+[PASS] A B=220 mission scores 264 strong / 165 weak
+[PASS] Organic posts still use B=100 regardless of the active mission
+[PASS] A known mission context resolves its authored tags
+[PASS] An unknown mission context fails instead of falling back to V0 tags
+[PASS] Publishing against an unknown mission context is refused
+[PASS] Shipped V0 content passes the validation gate
+[PASS] The validation gate rejects a shipped context with no affinities
+[PASS] The validation gate rejects a shipped mission context with no tags
+[PASS] The validation gate ignores unshipped M1 content
+[PASS] The validation gate rejects a shipped mission missing from the catalog
+[PASS] assertShippedContentValid raises on a missing shipped mission
+[PASS] validateContent rejects an unknown mission context instead of defaulting tags
+[PASS] validateContent rejects mission entries when no tag lookup is supplied
+[PASS] A failing catalog fixture restores the exact original references
+[PASS] A failing tier-cap fixture restores the exact original cap
+[PASS] assertShippedContentValid raises on invalid content
+==============================================
+MissionService spec: 85/85 passed, 0 failed
+BS03_MISSION_TESTS_PASSED
+[PASS] EnsureRemotes rejects folder class
+[PASS] EnsureRemotes rejects duplicate folder
+[PASS] EnsureRemotes rejects remote class
+[PASS] EnsureRemotes rejects duplicate remote
+[PASS] EnsureRemotes rejects extra child
+[PASS] EnsureRemotes creates exactly three private RemoteEvents idempotently
+[PASS] Rejects forged shape: extra userId
+[PASS] Rejects forged shape: extra intent
+[PASS] Rejects forged shape: money
+[PASS] Rejects forged shape: price
+[PASS] Rejects forged shape: score
+[PASS] Rejects forged shape: context
+[PASS] Rejects forged shape: timestamp
+[PASS] Rejects forged shape: rate
+[PASS] Rejects forged shape: unknown template
+[PASS] Rejects forged shape: nested scalar
+[PASS] Rejects forged shape: cyclic payload
+[PASS] Rejects forged shape: cyclic envelope
+[PASS] Rejects forged shape: array envelope
+[PASS] Rejects forged shape: array payload
+[PASS] Rejects forged shape: metatable
+[PASS] Rejects forged shape: missing payload
+[PASS] Rejects forged shape: non-table payload
+[PASS] Rejects forged shape: missing dashboard
+[PASS] Rejects forged shape: nested dashboard
+[PASS] Drops uncorrelatable request ID length 5
+[PASS] Drops uncorrelatable request ID length 65
+[PASS] Drops uncorrelatable request ID length 11
+[PASS] Rejects invalid numeric slot 0
+[PASS] Rejects invalid numeric slot 3
+[PASS] Rejects invalid numeric slot 1.5
+[PASS] Rejects invalid numeric slot inf
+[PASS] Rejects invalid numeric slot -inf
+[PASS] Rejects invalid numeric slot nan
+[PASS] Rejects invalid numeric slot 1
+[PASS] Rejects action-specific invalid AcceptMission payload
+[PASS] Rejects action-specific invalid BuyDevice payload
+[PASS] Rejects action-specific invalid HireWorker payload
+[PASS] Rejects action-specific invalid PublishPost payload
+[PASS] Rejects action-specific invalid ClaimMission payload
+[PASS] Rejects action-specific invalid CloseComputer payload
+[PASS] Client cannot command OpenComputer
+[PASS] Snapshot union forbids dashboard IDs and query equaling original lookup ID
+[PASS] Snapshot is available with dashboard closed and never writes ordinary reads
+[PASS] Prompt opens sanitized state only and always replaces generation
+[PASS] Old generation cannot mutate or close a reopened dashboard
+[PASS] Economic admission extends deadline even when domain refuses funds
+[PASS] Queries and close never extend deadline or enter accounting hook
+[PASS] Idle expiry emits once, without scheduler, and cannot reopen on command
+[PASS] Monotonic deadline does not follow epoch clock rollback
+[PASS] Character validity rejects commands without scheduler: death
+[PASS] Character validity rejects commands without scheduler: missing root
+[PASS] Character validity rejects commands without scheduler: removed character
+[PASS] Character validity rejects commands without scheduler: replaced character
+[PASS] Commands use actual registered Player identity, never equal user IDs
+[PASS] Eight commands per second are bounded and independent per registered actor
+[PASS] Malformed traffic consumes limiter without economic admission
+[PASS] Duplicate successful publish recovers before cooldown and does not republish
+[PASS] Same request ID with different live intent never reaches domain
+[PASS] Lookup query ID is distinct and private; absent ID is UNKNOWN without retry
+[PASS] Ordinary push uses non-writing projection even when post is due
+[PASS] PushState is at least two seconds apart
+[PASS] Held write queries are nonblocking PENDING and confirmed-only
+[PASS] Held identical retry and conflicting intent cannot execute another mutation
+[PASS] Held result finishes after idle expiry without reopening dashboard
+[PASS] Late result contains current reopened generation, never captured old metadata
+[PASS] Unregister suppresses all late held completion delivery and presentation
+[PASS] Replacing registration suppresses completion from previous record
+[PASS] Durable replay after session reconnect preserves ring authority
+[PASS] Live rejection identity conflicts are rejected and cache stays bounded
+[PASS] Query IDs cannot overwrite a known durable mutation identity
+[PASS] Projection failure blocks opening and writes; expired lease also blocks
+NetRouter transport: injected reply transport error
+[PASS] Transport errors permit explicit replay without a second charge
+NetRouter confirmed presentation: injected world presentation error
+[PASS] Visual failure never rolls back confirmed device purchase
+[PASS] Unexpected accounting callback error is surfaced and releases router pending flag
+NetRouter prompt world: injected world adapter error
+[PASS] World adapter errors deny recoverably without granting dashboard
+[PASS] Prompt requires exact ProximityPrompt, rejecting anchor and foreign clone
+[PASS] Real WorldService prompt enforces exact identity, living character and 12 studs
+[PASS] Destroy is idempotent and removes admission and lifecycle delivery
+[PASS] Real mission claim settles due post once and duplicate claims never credit again
+[PASS] Two registered real sessions receive only their own projections
+[PASS] Real room prompt from another owner cannot open this player's dashboard
+[PASS] Unstarted real session cannot open or admit economic work
+[PASS] Failed durable save leaves confirmed-only state and blocks fresh mutations
+[PASS] Canonical budget rejects long run ID before idle and accounting admission
+[PASS] Canonical budget rejects escaped ASCII run ID before idle and accounting admission
+[PASS] A close request ID cannot become an economic intent after reopening
+[PASS] A durable mutation ID cannot close a fresh dashboard after router cache replacement
+[PASS] Registered session before Start replies NOT_READY to well-shaped economic commands
+NetRouter spec: 89/89 passed, 0 failed
+[PASS] Organic admission returns one exact session-bound command and reserves before notification
+[PASS] AcceptMission emits only its frozen ID fields
+[PASS] PublishPost emits only its frozen ID fields
+[PASS] ClaimMission emits only its frozen ID fields
+[PASS] BeginMutation rejects invalid or non-mutation BuyDesk
+[PASS] BeginMutation rejects invalid or non-mutation HireWorker
+[PASS] BeginMutation rejects invalid or non-mutation CloseComputer
+[PASS] BeginMutation rejects invalid or non-mutation GetSnapshot
+[PASS] BeginMutation rejects invalid or non-mutation MadeUp
+[PASS] Rejects invalid PublishOrganic payload snack_meme
+[PASS] Rejects invalid PublishOrganic payload meal_meme
+[PASS] Rejects invalid PublishOrganic payload missing
+[PASS] Rejects invalid PublishOrganic payload nil
+[PASS] Rejects invalid AcceptMission payload unshipped_mission
+[PASS] Rejects invalid PublishPost payload snack_meme
+[PASS] Rejects invalid PublishPost payload meal_meme
+[PASS] Rejects invalid ClaimMission payload old-run
+[PASS] Rejects invalid ClaimMission payload run-original
+[PASS] Mutation cannot start while dashboard is Closed
+[PASS] Mutation cannot start while dashboard is Opening
+[PASS] Mutation cannot start while dashboard is Closing
+[PASS] Mutation cannot start while dashboard is Expired
+[PASS] Mutation cannot start while dashboard is ConnectionUncertain
 [PASS] Save status SAVE_UNAVAILABLE blocks all mutation modes but permits refresh
 [PASS] Save status BUSY blocks all mutation modes but permits refresh
 [PASS] Open without a confirmed writable snapshot cannot mutate
@@ -171,7 +372,8 @@ BS01_RULES_TESTS_PASSED
 [PASS] Remediation: unrepresentable profile identities fail closed before any write
 [PASS] Remediation: Advance reports failed settlement and recovers the same payout once
 [PASS] Remediation: Advance reports failed worker bank without losing its accrued interval
-SessionIntegration spec: 45/45 passed, 0 failed
+[PASS] BS12 production clock banks at 30 seconds, never at 29
+SessionIntegration spec: 46/46 passed, 0 failed
 [PASS] Fresh profile load yields a confirmed snapshot
 [PASS] A lease conflict is reported explicitly with no starter profile
 [PASS] A failed load yields no starter profile
@@ -285,10 +487,11 @@ SessionService spec: 73/73 passed, 0 failed
 [PASS] Prompt cannot be spoofed from another player's room via ProximityPrompt instance
 ==============================================
 WorldService spec: 30/30 passed, 0 failed
-BS-11 spec: 12/12 passed, 0 failed
 [SUITE PASS] AppClientIntegration.spec: AppClientIntegration: 9/9 passed
 [SUITE PASS] BS09FastPhone.spec: BS-09: 36/36 passed
 [SUITE PASS] BS10Recovery.spec: BS-10: 41/41 passed
+[SUITE PASS] BS11M1Content.spec: BS-11: 12/12 passed
+[SUITE PASS] BS12WorkerEconomy.spec: 21/21 passed
 [SUITE PASS] Bootstrap.spec: Bootstrap: 17/17 passed
 [SUITE PASS] ClientState.spec: ClientState: 30/30 passed
 [SUITE PASS] ComposerIntegration.spec: 14/14 passed
@@ -300,13 +503,10 @@ BS-11 spec: 12/12 passed, 0 failed
 [SUITE PASS] Presentation.spec: Presentation: 9/9 passed
 [SUITE PASS] ProfileStore.spec: ProfileStore: 59/59 passed
 [SUITE PASS] Rules.spec: Rules: 16/16 passed
-[SUITE PASS] SessionIntegration.spec: SessionIntegration: 45/45 passed
+[SUITE PASS] SessionIntegration.spec: SessionIntegration: 46/46 passed
 [SUITE PASS] SessionService.spec: SessionService: 73/73 passed
 [SUITE PASS] WorldService.spec: WorldService: 30/30 passed
-[SUITE PASS] BS11M1Content.spec: BS-11: 12/12 passed
 ==============================================
-BS-01 suites: 18/18 passed, 0 failed
-BS01_TESTS_PASSED
-ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type
-ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type
-ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type
+BS-01 suites: 19/19 passed, 0 failed
+BS_REGRESSION_RESULT {"suites":[{"ok":true,"name":"AppClientIntegration.spec","detail":"AppClientIntegration: 9/9 passed"},{"ok":true,"name":"BS09FastPhone.spec","detail":"BS-09: 36/36 passed"},{"ok":true,"name":"BS10Recovery.spec","detail":"BS-10: 41/41 passed"},{"ok":true,"name":"BS11M1Content.spec","detail":"BS-11: 12/12 passed"},{"ok":true,"name":"BS12WorkerEconomy.spec","detail":"21/21 passed"},{"ok":true,"name":"Bootstrap.spec","detail":"Bootstrap: 17/17 passed"},{"ok":true,"name":"ClientState.spec","detail":"ClientState: 30/30 passed"},{"ok":true,"name":"ComposerIntegration.spec","detail":"14/14 passed"},{"ok":true,"name":"EconomyService.spec","detail":"EconomyService: 39/39 passed"},{"ok":true,"name":"FeedService.spec","detail":"FeedService: 18/18 passed"},{"ok":true,"name":"MissionService.spec","detail":"MissionService: 85/85 passed"},{"ok":true,"name":"NetRouter.spec","detail":"NetRouter: 89/89 passed"},{"ok":true,"name":"PostingState.spec","detail":"PostingState: 57/57 passed"},{"ok":true,"name":"Presentation.spec","detail":"Presentation: 9/9 passed"},{"ok":true,"name":"ProfileStore.spec","detail":"ProfileStore: 59/59 passed"},{"ok":true,"name":"Rules.spec","detail":"Rules: 16/16 passed"},{"ok":true,"name":"SessionIntegration.spec","detail":"SessionIntegration: 46/46 passed"},{"ok":true,"name":"SessionService.spec","detail":"SessionService: 73/73 passed"},{"ok":true,"name":"WorldService.spec","detail":"WorldService: 30/30 passed"}],"runId":"2cef3e24-90c5-4d66-bf4e-8816ba966341","failed":0}
+BS01_TESTS_PASSED:2cef3e24-90c5-4d66-bf4e-8816ba966341

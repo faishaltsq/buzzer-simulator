@@ -8,6 +8,7 @@ local Composer = require(script.Parent:WaitForChild("PostComposer"))
 local Feed = require(script.Parent:WaitForChild("Feed"))
 local Missions = require(script.Parent:WaitForChild("Missions"))
 local Upgrades = require(script.Parent:WaitForChild("Upgrades"))
+local Workers = require(script.Parent:WaitForChild("Workers"))
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Catalog = require(Shared:WaitForChild("Catalog") :: any)
 local Presentation = require(Shared:WaitForChild("Presentation") :: any)
@@ -487,13 +488,9 @@ function Desktop:_buildPages()
 	self._upgrades = Upgrades.new({parent = self._contentArea, onAction = self._onAction, getBlockReason = self._getBlockReason})
 	self._contentContainers.Upgrades = self._upgrades.Root
 
-	-- 6. Workers Page (Informational placeholder)
-	self._contentContainers["Workers"] = self:_createPlaceholderPage(
-		"Home Studio Staffing",
-		"Recruit trainee assistants to generate automated, continuous online Cuan.",
-		"Planned for Milestone M1"
-	)
-
+	-- 6. Workers Page
+	self._workers = Workers.new({parent = self._contentArea, onAction = self._onAction, getBlockReason = self._getBlockReason})
+	self._contentContainers.Workers = self._workers.Root
 	-- Show Home by default
 	self:SelectTab("Home")
 end
@@ -892,6 +889,7 @@ function Desktop:Update(stateData: any)
 	self._composer:Update(stateData)
 	self._missions:Update(stateData)
 	self._upgrades:Update(stateData)
+	self._workers:Update(stateData)
 	local snap = stateData.snapshot
 	if snap == nil then
 		return
@@ -915,14 +913,14 @@ function Desktop:Update(stateData: any)
 		local strong, weak = Upgrades.payoutOf(device)
 		local nextDevice = nil
 		for _, candidate in ipairs(Catalog.Devices) do
-			if candidate.order == device.order + 1 and table.find(Catalog.V0Shipped.deviceIds, candidate.id) ~= nil then
+			if candidate.order == device.order + 1 and table.find(Catalog.Shipped.deviceIds, candidate.id) ~= nil then
 				nextDevice = candidate
 				break
 			end
 		end
 		self._homeDeviceName.Text = `{deviceLabel} (Equipped)`
 		self._homeDeviceNote.Text = string.format(
-			"%.2fx yield · strong %d Cuan · weak %d Cuan · reveal %ds. This phone produces your posts; the CRT is a dashboard terminal only.",
+			"%.2fx yield · strong %d Cuan · weak %d Cuan · reveal %ds. " .. (if device.isPhone then "This phone produces your posts; the CRT is dashboard-only." else "PC Rumah produces your posts; the docked phone is cosmetic."),
 			device.deviceYield,
 			strong,
 			weak,
@@ -940,7 +938,7 @@ function Desktop:Update(stateData: any)
 				nextDevice.revealSeconds
 			)
 		else
-			self._homeUpgradeDesc.Text = "Fast Phone is equipped. PC Rumah belongs to a later milestone and is not purchasable in this build."
+			self._homeUpgradeDesc.Text = "All shipped production hardware is equipped. Visit Workers to manage your first workstation."
 		end
 	else
 		self._homeDeviceName.Text = "Unknown device"

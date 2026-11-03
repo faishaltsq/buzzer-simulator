@@ -141,10 +141,17 @@ function Runtime:_syncWorld(record: any): boolean
 	local ok, success, detail = pcall(function()
 		if world.GetRoom(record.player) == nil then
 			return world.Spawn(record.player, profile)
-		elseif record.presentedDevice ~= profile.deviceId then
-			return world.SyncDevice(record.player, profile.deviceId)
+		else
+			if record.presentedDevice ~= profile.deviceId then
+				local okDev, errDev = world.SyncDevice(record.player, profile.deviceId)
+				if not okDev then return false, errDev end
+			end
+			if world.SyncWorkers ~= nil then
+				local okWork, errWork = world.SyncWorkers(record.player, profile.ownedDesks, profile.workers)
+				if not okWork then return false, errWork end
+			end
+			return true, nil
 		end
-		return true, nil
 	end)
 	if ok and success then
 		record.presentedDevice = profile.deviceId
