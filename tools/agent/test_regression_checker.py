@@ -16,7 +16,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from check_all_suites import parse_and_validate_regression_json, EXPECTED_SUITES
+from check_all_suites import parse_and_validate_regression_json, count_source_metrics, EXPECTED_SUITES
 
 
 class TestRegressionChecker(unittest.TestCase):
@@ -88,6 +88,15 @@ class TestRegressionChecker(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("Missing required suites", msg)
         self.assertIn("WorldService", msg)
+
+    def test_count_source_metrics_valid(self):
+        tests, asserts = count_source_metrics()
+        self.assertGreater(tests, 600)
+        self.assertGreater(asserts, 3000)
+
+    def test_count_source_metrics_missing_dir_fails_closed(self):
+        with self.assertRaises(FileNotFoundError):
+            count_source_metrics("/non/existent/path/for/sure")
 
 
 if __name__ == "__main__":

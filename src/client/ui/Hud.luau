@@ -4,10 +4,34 @@
 -- player tier, current progression objective, and system status banners.
 -- Contract sources: docs/03, docs/05.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Catalog = require(Shared:WaitForChild("Catalog") :: any) :: any
 local Theme = require(script.Parent:WaitForChild("Theme") :: any)
 
 local Hud = {}
 Hud.__index = Hud
+
+local function getTierName(tier: number): string
+	for _, def in ipairs(Catalog.Tiers) do
+		if def.tier == tier then
+			return def.name
+		end
+	end
+	return if tier >= 2 then "Studio Rumahan" else if tier == 1 then "Buzzer Rumahan" else "Buzzer Gabut"
+end
+
+local function computeEquipmentHint(snapshot: any?): string
+	local deviceId = if snapshot ~= nil then snapshot.deviceId or "phone_cheap" else "phone_cheap"
+	if deviceId == "pc_rumah" then
+		return "PC Rumah runs BuzzerOS • Active productive workstation"
+	else
+		return "Old CRT runs BuzzerOS • Equipped phone drives post yield"
+	end
+end
+
+Hud.tierName = getTierName
+Hud.equipmentHint = computeEquipmentHint
 
 export type HudOptions = {
 	parent: Instance,
@@ -164,7 +188,7 @@ function Hud.new(options: HudOptions): any
 	tierBadge.BackgroundTransparency = 1
 	tierBadge.Size = UDim2.new(1, 0, 1, 0)
 	tierBadge.Font = Theme.Fonts.Bold
-	tierBadge.Text = "Tier 0: Bedroom Solo"
+	tierBadge.Text = `Tier 0: {getTierName(0)}`
 	tierBadge.TextColor3 = Theme.Colors.Sage
 	tierBadge.TextSize = Theme.TextSizes.Tiny
 	tierBadge.TextXAlignment = Enum.TextXAlignment.Left
@@ -230,7 +254,7 @@ function Hud.new(options: HudOptions): any
 	hintLabel.BackgroundTransparency = 1
 	hintLabel.Size = UDim2.new(1, 0, 1, 0)
 	hintLabel.Font = Theme.Fonts.Regular
-	hintLabel.Text = "Old CRT runs BuzzerOS • Equipped phone drives post yield"
+	hintLabel.Text = computeEquipmentHint(nil)
 	hintLabel.TextColor3 = Theme.Colors.CreamMuted
 	hintLabel.TextSize = Theme.TextSizes.Tiny
 	hintLabel.TextXAlignment = Enum.TextXAlignment.Center
@@ -333,7 +357,10 @@ function Hud:Update(stateData: any, player: Player?)
 	self._pendingLabel.Text = `Unbanked: {Theme.formatNumber(pending)}`
 
 	-- Format tier badge
-	self._tierBadge.Text = `Tier {tier}: Bedroom Solo`
+	self._tierBadge.Text = `Tier {tier}: {getTierName(tier)}`
+
+	-- Format context-aware equipment hint
+	self._hintLabel.Text = computeEquipmentHint(snap)
 
 	-- Compute objective
 	local tag, desc = computeObjective(snap)
@@ -402,6 +429,14 @@ function Hud:SetDashboardOpen(isOpen: boolean, reducedMotion: boolean?)
 			GroupTransparency = targetAlpha,
 		})
 	end
+end
+
+function Hud:GetTierText(): string
+	return self._tierBadge.Text
+end
+
+function Hud:GetHintText(): string
+	return self._hintLabel.Text
 end
 
 function Hud:Destroy()
