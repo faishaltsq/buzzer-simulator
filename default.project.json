@@ -9,7 +9,8 @@
       },
       "WorkerPrefabs": {
         "$className": "Folder",
-        "Trainee1": { "$path": "assets/world/Trainee1.rbxmx" }
+        "Trainee1": { "$path": "assets/world/Trainee1.rbxmx" },
+        "Trainee2": { "$path": "assets/world/Trainee2.rbxmx" }
       }
     },
     "ServerScriptService": {
@@ -67,8 +68,14 @@
         "WorkerDesk1": {
           "$path": "assets/world/WorkerDesk1.rbxmx"
         },
+        "WorkerDesk2": {
+          "$path": "assets/world/WorkerDesk2.rbxmx"
+        },
         "Trainee1": {
           "$path": "assets/world/Trainee1.rbxmx"
+        },
+        "Trainee2": {
+          "$path": "assets/world/Trainee2.rbxmx"
         }
       }
     },

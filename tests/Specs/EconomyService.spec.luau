@@ -263,10 +263,14 @@ test("Desk 2 at exactly 250 succeeds", function()
 	withCatalogFixture({ "phone_cheap", "phone_fast", "pc_rumah" }, 2, function()
 		local p = pcTier1Profile()
 		p.lifetimeEarned = 1600
-		p.balance = 430
-		local first = expectOk(EconomyService.buyDesk(p, 1), "buy desk 1")
-		expectEqual(first.balance, 250, "180 spent, 250 left")
-		local second = expectOk(EconomyService.buyDesk(first, 2), "buy desk 2 at exactly 250")
+		-- Trainee 1 must be on duty before desk 2 (docs/04 line 42 gate):
+		-- 930 buys desk 1 (180) + trainee 1 (500) with exactly 250 left.
+		p.balance = 930
+		local desk1 = expectOk(EconomyService.buyDesk(p, 1), "buy desk 1")
+		expectEqual(desk1.balance, 750, "180 spent, 750 left")
+		local hired = expectOk(EconomyService.hireWorker(desk1, 1, "trainee"), "hire trainee 1 first")
+		expectEqual(hired.balance, 250, "500 spent, 250 left")
+		local second = expectOk(EconomyService.buyDesk(hired, 2), "buy desk 2 at exactly 250")
 		expectEqual(second.balance, 0, "250 debited")
 		expectEqual(#second.ownedDesks, 2, "two desks owned")
 		expectEqual(second.ownedDesks[2], 2, "slot 2 owned")

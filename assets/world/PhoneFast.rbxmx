@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
 <roblox version="4">
-  <Item class="Model" referent="RBX266">
+  <Item class="Model" referent="RBX24">
     <Properties>
       <string name="Name">PhoneFast</string>
-      <Ref name="PrimaryPart">RBX243</Ref>
+      <Ref name="PrimaryPart">RBX1</Ref>
     </Properties>
-    <Item class="Part" referent="RBX243">
+    <Item class="Part" referent="RBX1">
       <Properties>
         <string name="Name">Body</string>
         <Vector3 name="size">
@@ -44,7 +44,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX244">
+    <Item class="Part" referent="RBX2">
       <Properties>
         <string name="Name">BodyCross</string>
         <Vector3 name="size">
@@ -83,7 +83,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX245">
+    <Item class="Part" referent="RBX3">
       <Properties>
         <string name="Name">BodyCorner</string>
         <Vector3 name="size">
@@ -122,7 +122,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX246">
+    <Item class="Part" referent="RBX4">
       <Properties>
         <string name="Name">BodyCorner</string>
         <Vector3 name="size">
@@ -161,7 +161,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX247">
+    <Item class="Part" referent="RBX5">
       <Properties>
         <string name="Name">BodyCorner</string>
         <Vector3 name="size">
@@ -200,7 +200,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX248">
+    <Item class="Part" referent="RBX6">
       <Properties>
         <string name="Name">BodyCorner</string>
         <Vector3 name="size">
@@ -239,7 +239,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX249">
+    <Item class="Part" referent="RBX7">
       <Properties>
         <string name="Name">Screen</string>
         <Vector3 name="size">
@@ -278,7 +278,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX250">
+    <Item class="Part" referent="RBX8">
       <Properties>
         <string name="Name">ScreenCross</string>
         <Vector3 name="size">
@@ -317,7 +317,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX251">
+    <Item class="Part" referent="RBX9">
       <Properties>
         <string name="Name">ScreenCorner</string>
         <Vector3 name="size">
@@ -356,7 +356,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX252">
+    <Item class="Part" referent="RBX10">
       <Properties>
         <string name="Name">ScreenCorner</string>
         <Vector3 name="size">
@@ -395,7 +395,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX253">
+    <Item class="Part" referent="RBX11">
       <Properties>
         <string name="Name">ScreenCorner</string>
         <Vector3 name="size">
@@ -434,7 +434,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX254">
+    <Item class="Part" referent="RBX12">
       <Properties>
         <string name="Name">ScreenCorner</string>
         <Vector3 name="size">
@@ -473,7 +473,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX255">
+    <Item class="Part" referent="RBX13">
       <Properties>
         <string name="Name">BackPlate</string>
         <Vector3 name="size">
@@ -512,7 +512,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX256">
+    <Item class="Part" referent="RBX14">
       <Properties>
         <string name="Name">Notch</string>
         <Vector3 name="size">
@@ -551,7 +551,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX257">
+    <Item class="Part" referent="RBX15">
       <Properties>
         <string name="Name">ScreenHeader</string>
         <Vector3 name="size">
@@ -590,7 +590,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX258">
+    <Item class="Part" referent="RBX16">
       <Properties>
         <string name="Name">ScreenCard</string>
         <Vector3 name="size">
@@ -629,7 +629,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX259">
+    <Item class="Part" referent="RBX17">
       <Properties>
         <string name="Name">ScreenAccent</string>
         <Vector3 name="size">
@@ -668,7 +668,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX260">
+    <Item class="Part" referent="RBX18">
       <Properties>
         <string name="Name">HomeIndicator</string>
         <Vector3 name="size">
@@ -707,7 +707,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX261">
+    <Item class="Part" referent="RBX19">
       <Properties>
         <string name="Name">CameraBump</string>
         <Vector3 name="size">
@@ -746,7 +746,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX262">
+    <Item class="Part" referent="RBX20">
       <Properties>
         <string name="Name">VolumeRocker</string>
         <Vector3 name="size">
@@ -785,7 +785,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX263">
+    <Item class="Part" referent="RBX21">
       <Properties>
         <string name="Name">RestFoot</string>
         <Vector3 name="size">
@@ -824,7 +824,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX264">
+    <Item class="Part" referent="RBX22">
       <Properties>
         <string name="Name">CameraLens</string>
         <Vector3 name="size">
@@ -863,7 +863,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX265">
+    <Item class="Part" referent="RBX23">
       <Properties>
         <string name="Name">CameraLens</string>
         <Vector3 name="size">

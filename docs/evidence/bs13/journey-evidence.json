@@ -1,0 +1,28 @@
+{
+  "world": {
+    "Trainee2": 1,
+    "Trainee1": 1,
+    "WorkerDesk2": 1,
+    "PCRumah": 1,
+    "WorkerDesk1": 1
+  },
+  "pre_bank": {
+    "pend": 45,
+    "b": 627
+  },
+  "bank30": {
+    "before_balance": 627,
+    "pending_peak": 87,
+    "after_balance": 717,
+    "delta": 90
+  },
+  "parts": 285,
+  "rejoin": {
+    "expected_gate": "G2 BLOCKED (offline studio, in-memory DEV fallback)",
+    "observed": {
+      "vis": false,
+      "t": 0,
+      "b": 0
+    }
+  }
+}

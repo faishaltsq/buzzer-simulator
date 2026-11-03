@@ -1,12 +1,20 @@
 --!strict
 -- Client-only cosmetics. Confirmed world markers control existence, never income.
+-- BS-13: handles every Trainee{slot} cosmetic marker (per-slot prefab + a small
+-- deterministic phase offset so two trainees never type in perfect sync).
 local WorkerAnimationController = {}
 WorkerAnimationController.__index = WorkerAnimationController
 
-function WorkerAnimationController.new(root: Instance, prefab: Model, reducedMotion: (() -> boolean)?): any
-	local self: any = setmetatable({ _root = root, _prefab = prefab, _records = {}, _connections = {}, _elapsed = 0, _destroyed = false, _reducedMotion = reducedMotion }, WorkerAnimationController)
+local function slotPhaseOffset(marker: Instance): number
+	local digits = string.match(marker.Name, "%d+")
+	local slot = if digits ~= nil then tonumber(digits) else 1
+	return ((slot or 1) - 1) * 2.375 -- ~9.5s phrase cycle stays below the glance period
+end
+
+function WorkerAnimationController.new(root: Instance, prefabs: Instance, reducedMotion: (() -> boolean)?): any
+	local self: any = setmetatable({ _root = root, _prefabs = prefabs, _records = {}, _connections = {}, _elapsed = 0, _destroyed = false, _reducedMotion = reducedMotion }, WorkerAnimationController)
 	local function added(instance: Instance)
-		if instance:IsA("Folder") and instance.Name == "Trainee1" and instance:GetAttribute("WorkerCosmetic") == true then
+		if instance:IsA("Folder") and string.sub(instance.Name, 1, 7) == "Trainee" and instance:GetAttribute("WorkerCosmetic") == true then
 			self:_mount(instance)
 		end
 	end
@@ -20,9 +28,12 @@ end
 
 function WorkerAnimationController:_mount(marker: Instance)
 	if self._destroyed or self._records[marker] then return end
+	local prefabContainer = self._prefabs
+	local template = if typeof(prefabContainer) == "Instance" then prefabContainer:FindFirstChild(marker.Name) else nil
+	if template == nil or not template:IsA("Model") then return end
 	local seat = marker.Parent
 	if not seat or not seat:IsA("BasePart") then return end
-	local model = self._prefab:Clone()
+	local model = template:Clone()
 	model.Name = "WorkerCosmeticRig"
 	local humanoid = model:FindFirstChildOfClass("Humanoid")
 	if humanoid then humanoid.EvaluateStateMachine = false end
@@ -39,7 +50,7 @@ function WorkerAnimationController:_mount(marker: Instance)
 	for _, instance in ipairs(model:GetDescendants()) do
 		if instance:IsA("Motor6D") then joints[instance.Name] = { motor = instance, base = instance.C0 } end
 	end
-	self._records[marker] = { model = model, joints = joints }
+	self._records[marker] = { model = model, joints = joints, phase = slotPhaseOffset(marker) }
 	model.Parent = marker
 end
 
@@ -54,13 +65,14 @@ end
 function WorkerAnimationController:Step(dt: number)
 	if self._destroyed then return end
 	self._elapsed += dt
-	local t = self._elapsed
 	local still = self._reducedMotion and self._reducedMotion()
 	for marker, record in pairs(self._records) do
 		if not marker:IsDescendantOf(self._root) or record.model.Parent ~= marker then
 			self:_remove(marker)
 		else
 			-- A four-second typing phrase with a quiet pause, and a slow head glance.
+			-- The per-slot phase offset desynchronizes two trainees.
+			local t = self._elapsed + (record.phase :: number)
 			local typing = if still or t % 4 > 3 then 0 else math.sin(t * 12) * 0.035
 			for _, side in ipairs({ "Left", "Right" }) do
 				local direction = if side == "Left" then 1 else -1

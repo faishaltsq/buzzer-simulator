@@ -1,0 +1,39 @@
+=== Starting Studio Regression Runner (Timeout: 90.0s) ===
+Static Analysis: 20 spec files, 0 source-defined tests, ~0 assertion calls.
+Initiating Play Solo session...
+Verified fresh completion: PASSED:2e14cea7-0a5e-4d48-a917-e8d3b5bd9e0f
+Stopping Play Solo session...
+Execution finished in 2.58 seconds.
+Saved full raw console output (33837 chars) to: docs/logs/studio_regression_console.log
+
+=== Parsed Suite Summary (20/20 found) ===
+  [PASS] AppClientIntegration     : AppClientIntegration: 9/9 passed
+  [PASS] BS09FastPhone            : BS-09: 36/36 passed
+  [PASS] BS10Recovery             : BS-10: 41/41 passed
+  [PASS] BS11M1Content            : BS-11: 12/12 passed
+  [PASS] BS12WorkerEconomy        : 21/21 passed
+  [PASS] BS13HomeStudio           : 44/44 passed
+  [PASS] Bootstrap                : Bootstrap: 17/17 passed
+  [PASS] ClientState              : ClientState: 30/30 passed
+  [PASS] ComposerIntegration      : 14/14 passed
+  [PASS] EconomyService           : EconomyService: 39/39 passed
+  [PASS] FeedService              : FeedService: 18/18 passed
+  [PASS] MissionService           : MissionService: 85/85 passed
+  [PASS] NetRouter                : NetRouter: 89/89 passed
+  [PASS] PostingState             : PostingState: 57/57 passed
+  [PASS] Presentation             : Presentation: 9/9 passed
+  [PASS] ProfileStore             : ProfileStore: 59/59 passed
+  [PASS] Rules                    : Rules: 16/16 passed
+  [PASS] SessionIntegration       : SessionIntegration: 46/46 passed
+  [PASS] SessionService           : SessionService: 73/73 passed
+  [PASS] WorldService             : WorldService: 30/30 passed
+
+=== Test Metrics Breakdown ===
+  - Source-defined test cases : 0
+  - Runtime test executions   : 745
+  - Static assertion calls    : ~0
+
+=== Structured JSON Verification ===
+  [PASS] Structured result verified: runId=2e14cea7-0a5e-4d48-a917-e8d3b5bd9e0f, 20 suites passed
+
+[SUCCESS] ALL 20 SUITES PASSED CLEANLY (745 runtime tests verified).

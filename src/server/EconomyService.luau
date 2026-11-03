@@ -278,6 +278,11 @@ function EconomyService.buyDesk(profile: any, slotIndex: number): OperationResul
 	if slotIndex > 1 and not ownsDesk(profile, slotIndex - 1) then
 		return fail("NOT_READY", `desk slot {slotIndex - 1} must be owned first`)
 	end
+	-- docs/04: desk 2 additionally requires Trainee 1 to be hired first (the
+	-- second workstation is built around an occupied first seat).
+	if slotIndex > 1 and workerAtSlot(profile, slotIndex - 1) == nil then
+		return fail("NOT_READY", `a trainee must be hired at desk slot {slotIndex - 1} before desk slot {slotIndex}`)
+	end
 	-- A worker station requires the PC (docs/02 automation table).
 	if not ownsDevice(profile, PC_DEVICE_ID) then
 		return fail("NOT_READY", `a desk requires the {PC_DEVICE_ID} production device`)

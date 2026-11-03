@@ -26,6 +26,7 @@ EXPECTED_SUITES = [
     "BS10Recovery",
     "BS11M1Content",
     "BS12WorkerEconomy",
+    "BS13HomeStudio",
     "Bootstrap",
     "ClientState",
     "ComposerIntegration",
@@ -178,7 +179,10 @@ def run_regression_suite(timeout_sec: float = 30.0, studio_id: str = None, log_f
                         if offset > page["total"] or not page["messages"]:
                             break
                     full_server_log = "\n".join(item["message"] for item in history)
-                    if len(full_server_log) > len(raw_console):
+                    # Only adopt the LogService history when it actually contains
+                    # the fresh run's marker; stale history across play sessions
+                    # must never mask the marker stream of a FAILED run.
+                    if len(full_server_log) > len(raw_console) and run_id in full_server_log:
                         raw_console = full_server_log
                 except Exception as log_err:
                     print(f"Note: LogService page fetch: {log_err}")

@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
 <roblox version="4">
-  <Item class="Model" referent="RBX372">
+  <Item class="Model" referent="RBX41">
     <Properties>
       <string name="Name">Trainee1</string>
-      <Ref name="PrimaryPart">RBX332</Ref>
+      <Ref name="PrimaryPart">RBX1</Ref>
     </Properties>
-    <Item class="Part" referent="RBX332">
+    <Item class="Part" referent="RBX1">
       <Properties>
         <string name="Name">HumanoidRootPart</string>
         <Vector3 name="size">
@@ -43,11 +43,11 @@
         <token name="BottomSurface">0</token>
         <float name="Transparency">1</float>
       </Properties>
-      <Item class="Motor6D" referent="RBX348">
+      <Item class="Motor6D" referent="RBX17">
         <Properties>
           <string name="Name">Root</string>
-          <Ref name="Part0">RBX332</Ref>
-          <Ref name="Part1">RBX333</Ref>
+          <Ref name="Part0">RBX1</Ref>
+          <Ref name="Part1">RBX2</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>0.65</Y>
@@ -65,7 +65,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX333">
+    <Item class="Part" referent="RBX2">
       <Properties>
         <string name="Name">LowerTorso</string>
         <Vector3 name="size">
@@ -104,11 +104,11 @@
         <float name="Transparency">0</float>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX349">
+      <Item class="Motor6D" referent="RBX18">
         <Properties>
           <string name="Name">Waist</string>
-          <Ref name="Part0">RBX333</Ref>
-          <Ref name="Part1">RBX334</Ref>
+          <Ref name="Part0">RBX2</Ref>
+          <Ref name="Part1">RBX3</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>0.8</Y>
@@ -125,11 +125,11 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Motor6D" referent="RBX354">
+      <Item class="Motor6D" referent="RBX23">
         <Properties>
           <string name="Name">LeftHip</string>
-          <Ref name="Part0">RBX333</Ref>
-          <Ref name="Part1">RBX339</Ref>
+          <Ref name="Part0">RBX2</Ref>
+          <Ref name="Part1">RBX8</Ref>
           <CoordinateFrame name="C0">
             <X>-0.43</X>
             <Y>-0.17</Y>
@@ -146,11 +146,11 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Motor6D" referent="RBX360">
+      <Item class="Motor6D" referent="RBX29">
         <Properties>
           <string name="Name">RightHip</string>
-          <Ref name="Part0">RBX333</Ref>
-          <Ref name="Part1">RBX345</Ref>
+          <Ref name="Part0">RBX2</Ref>
+          <Ref name="Part1">RBX14</Ref>
           <CoordinateFrame name="C0">
             <X>0.43</X>
             <Y>-0.17</Y>
@@ -168,7 +168,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX334">
+    <Item class="Part" referent="RBX3">
       <Properties>
         <string name="Name">UpperTorso</string>
         <Vector3 name="size">
@@ -207,11 +207,11 @@
         <float name="Transparency">0</float>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX350">
+      <Item class="Motor6D" referent="RBX19">
         <Properties>
           <string name="Name">Neck</string>
-          <Ref name="Part0">RBX334</Ref>
-          <Ref name="Part1">RBX335</Ref>
+          <Ref name="Part0">RBX3</Ref>
+          <Ref name="Part1">RBX4</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>1.053686</Y>
@@ -228,11 +228,11 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Motor6D" referent="RBX351">
+      <Item class="Motor6D" referent="RBX20">
         <Properties>
           <string name="Name">LeftShoulder</string>
-          <Ref name="Part0">RBX334</Ref>
-          <Ref name="Part1">RBX336</Ref>
+          <Ref name="Part0">RBX3</Ref>
+          <Ref name="Part1">RBX5</Ref>
           <CoordinateFrame name="C0">
             <X>-0.84</X>
             <Y>0.505699</Y>
@@ -249,11 +249,11 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Motor6D" referent="RBX357">
+      <Item class="Motor6D" referent="RBX26">
         <Properties>
           <string name="Name">RightShoulder</string>
-          <Ref name="Part0">RBX334</Ref>
-          <Ref name="Part1">RBX342</Ref>
+          <Ref name="Part0">RBX3</Ref>
+          <Ref name="Part1">RBX11</Ref>
           <CoordinateFrame name="C0">
             <X>0.84</X>
             <Y>0.505699</Y>
@@ -271,7 +271,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX335">
+    <Item class="Part" referent="RBX4">
       <Properties>
         <string name="Name">Head</string>
         <Vector3 name="size">
@@ -310,11 +310,11 @@
         <float name="Transparency">0</float>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Weld" referent="RBX364">
+      <Item class="Weld" referent="RBX33">
         <Properties>
           <string name="Name">HairWeld</string>
-          <Ref name="Part0">RBX335</Ref>
-          <Ref name="Part1">RBX363</Ref>
+          <Ref name="Part0">RBX4</Ref>
+          <Ref name="Part1">RBX32</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>0.369099</Y>
@@ -331,11 +331,11 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Weld" referent="RBX366">
+      <Item class="Weld" referent="RBX35">
         <Properties>
           <string name="Name">EyeLWeld</string>
-          <Ref name="Part0">RBX335</Ref>
-          <Ref name="Part1">RBX365</Ref>
+          <Ref name="Part0">RBX4</Ref>
+          <Ref name="Part1">RBX34</Ref>
           <CoordinateFrame name="C0">
             <X>-0.25</X>
             <Y>0.001327</Y>
@@ -352,11 +352,11 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Weld" referent="RBX368">
+      <Item class="Weld" referent="RBX37">
         <Properties>
           <string name="Name">EyeRWeld</string>
-          <Ref name="Part0">RBX335</Ref>
-          <Ref name="Part1">RBX367</Ref>
+          <Ref name="Part0">RBX4</Ref>
+          <Ref name="Part1">RBX36</Ref>
           <CoordinateFrame name="C0">
             <X>0.25</X>
             <Y>0.001327</Y>
@@ -373,11 +373,11 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Weld" referent="RBX370">
+      <Item class="Weld" referent="RBX39">
         <Properties>
           <string name="Name">SmileWeld</string>
-          <Ref name="Part0">RBX335</Ref>
-          <Ref name="Part1">RBX369</Ref>
+          <Ref name="Part0">RBX4</Ref>
+          <Ref name="Part1">RBX38</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>-0.188908</Y>
@@ -395,7 +395,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX336">
+    <Item class="Part" referent="RBX5">
       <Properties>
         <string name="Name">LeftUpperArm</string>
         <Color3 name="Color">
@@ -434,11 +434,11 @@
         </Vector3>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX352">
+      <Item class="Motor6D" referent="RBX21">
         <Properties>
           <string name="Name">LeftElbow</string>
-          <Ref name="Part0">RBX336</Ref>
-          <Ref name="Part1">RBX337</Ref>
+          <Ref name="Part0">RBX5</Ref>
+          <Ref name="Part1">RBX6</Ref>
           <CoordinateFrame name="C0">
             <X>0.17349</X>
             <Y>0.789018</Y>
@@ -456,7 +456,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX337">
+    <Item class="Part" referent="RBX6">
       <Properties>
         <string name="Name">LeftLowerArm</string>
         <Color3 name="Color">
@@ -495,11 +495,11 @@
         </Vector3>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX353">
+      <Item class="Motor6D" referent="RBX22">
         <Properties>
           <string name="Name">LeftWrist</string>
-          <Ref name="Part0">RBX337</Ref>
-          <Ref name="Part1">RBX338</Ref>
+          <Ref name="Part0">RBX6</Ref>
+          <Ref name="Part1">RBX7</Ref>
           <CoordinateFrame name="C0">
             <X>-0.0</X>
             <Y>0.42594</Y>
@@ -517,7 +517,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX338">
+    <Item class="Part" referent="RBX7">
       <Properties>
         <string name="Name">LeftHand</string>
         <Vector3 name="size">
@@ -557,7 +557,7 @@
         <bool name="Massless">true</bool>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX339">
+    <Item class="Part" referent="RBX8">
       <Properties>
         <string name="Name">LeftUpperLeg</string>
         <Vector3 name="size">
@@ -596,11 +596,11 @@
         <float name="Transparency">0</float>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX355">
+      <Item class="Motor6D" referent="RBX24">
         <Properties>
           <string name="Name">LeftKnee</string>
-          <Ref name="Part0">RBX339</Ref>
-          <Ref name="Part1">RBX340</Ref>
+          <Ref name="Part0">RBX8</Ref>
+          <Ref name="Part1">RBX9</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>0.5</Y>
@@ -618,7 +618,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX340">
+    <Item class="Part" referent="RBX9">
       <Properties>
         <string name="Name">LeftLowerLeg</string>
         <Vector3 name="size">
@@ -657,11 +657,11 @@
         <float name="Transparency">0</float>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX356">
+      <Item class="Motor6D" referent="RBX25">
         <Properties>
           <string name="Name">LeftAnkle</string>
-          <Ref name="Part0">RBX340</Ref>
-          <Ref name="Part1">RBX341</Ref>
+          <Ref name="Part0">RBX9</Ref>
+          <Ref name="Part1">RBX10</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>-0.85</Y>
@@ -679,7 +679,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX341">
+    <Item class="Part" referent="RBX10">
       <Properties>
         <string name="Name">LeftFoot</string>
         <Vector3 name="size">
@@ -719,7 +719,7 @@
         <bool name="Massless">true</bool>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX342">
+    <Item class="Part" referent="RBX11">
       <Properties>
         <string name="Name">RightUpperArm</string>
         <Color3 name="Color">
@@ -758,11 +758,11 @@
         </Vector3>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX358">
+      <Item class="Motor6D" referent="RBX27">
         <Properties>
           <string name="Name">RightElbow</string>
-          <Ref name="Part0">RBX342</Ref>
-          <Ref name="Part1">RBX343</Ref>
+          <Ref name="Part0">RBX11</Ref>
+          <Ref name="Part1">RBX12</Ref>
           <CoordinateFrame name="C0">
             <X>-0.17349</X>
             <Y>0.789018</Y>
@@ -780,7 +780,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX343">
+    <Item class="Part" referent="RBX12">
       <Properties>
         <string name="Name">RightLowerArm</string>
         <Color3 name="Color">
@@ -819,11 +819,11 @@
         </Vector3>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX359">
+      <Item class="Motor6D" referent="RBX28">
         <Properties>
           <string name="Name">RightWrist</string>
-          <Ref name="Part0">RBX343</Ref>
-          <Ref name="Part1">RBX344</Ref>
+          <Ref name="Part0">RBX12</Ref>
+          <Ref name="Part1">RBX13</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>0.42594</Y>
@@ -841,7 +841,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX344">
+    <Item class="Part" referent="RBX13">
       <Properties>
         <string name="Name">RightHand</string>
         <Vector3 name="size">
@@ -881,7 +881,7 @@
         <bool name="Massless">true</bool>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX345">
+    <Item class="Part" referent="RBX14">
       <Properties>
         <string name="Name">RightUpperLeg</string>
         <Vector3 name="size">
@@ -920,11 +920,11 @@
         <float name="Transparency">0</float>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX361">
+      <Item class="Motor6D" referent="RBX30">
         <Properties>
           <string name="Name">RightKnee</string>
-          <Ref name="Part0">RBX345</Ref>
-          <Ref name="Part1">RBX346</Ref>
+          <Ref name="Part0">RBX14</Ref>
+          <Ref name="Part1">RBX15</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>0.5</Y>
@@ -942,7 +942,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX346">
+    <Item class="Part" referent="RBX15">
       <Properties>
         <string name="Name">RightLowerLeg</string>
         <Vector3 name="size">
@@ -981,11 +981,11 @@
         <float name="Transparency">0</float>
         <bool name="Massless">true</bool>
       </Properties>
-      <Item class="Motor6D" referent="RBX362">
+      <Item class="Motor6D" referent="RBX31">
         <Properties>
           <string name="Name">RightAnkle</string>
-          <Ref name="Part0">RBX346</Ref>
-          <Ref name="Part1">RBX347</Ref>
+          <Ref name="Part0">RBX15</Ref>
+          <Ref name="Part1">RBX16</Ref>
           <CoordinateFrame name="C0">
             <X>0.0</X>
             <Y>-0.85</Y>
@@ -1003,7 +1003,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Part" referent="RBX347">
+    <Item class="Part" referent="RBX16">
       <Properties>
         <string name="Name">RightFoot</string>
         <Vector3 name="size">
@@ -1043,7 +1043,7 @@
         <bool name="Massless">true</bool>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX363">
+    <Item class="Part" referent="RBX32">
       <Properties>
         <string name="Name">Hair</string>
         <Vector3 name="size">
@@ -1082,7 +1082,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX365">
+    <Item class="Part" referent="RBX34">
       <Properties>
         <string name="Name">EyeL</string>
         <Vector3 name="size">
@@ -1121,7 +1121,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX367">
+    <Item class="Part" referent="RBX36">
       <Properties>
         <string name="Name">EyeR</string>
         <Vector3 name="size">
@@ -1160,7 +1160,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX369">
+    <Item class="Part" referent="RBX38">
       <Properties>
         <string name="Name">Smile</string>
         <Vector3 name="size">
@@ -1199,7 +1199,7 @@
         <float name="Transparency">0</float>
       </Properties>
     </Item>
-    <Item class="Humanoid" referent="RBX371">
+    <Item class="Humanoid" referent="RBX40">
       <Properties>
         <string name="Name">Humanoid</string>
         <token name="RigType">1</token>

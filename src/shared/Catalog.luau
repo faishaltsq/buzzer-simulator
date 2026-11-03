@@ -179,8 +179,19 @@ Catalog.M1Shipped = {
 	maxShippedWorkerSlot = 1,
 }
 
--- Active live shipped gate defaults to M1 for BS-12 release:
-Catalog.Shipped = Catalog.M1Shipped
+-- BS-13 shipped table (Home Studio chapter): tiers/desks/workers 2/2/2.
+-- Extends M1 shipped content unchanged; only the progression caps move.
+Catalog.H2Shipped = {
+	missionIds = { "food_stall_launch", "fictional_gadget", "neon_market", "brand_remix" },
+	organicContextIds = { "organic_snack", "organic_gadget", "organic_weekend" },
+	deviceIds = { "phone_cheap", "phone_fast", "pc_rumah" },
+	maxShippedTier = 2,
+	maxShippedDeskSlot = 2,
+	maxShippedWorkerSlot = 2,
+}
+
+-- Active live shipped gate defaults to H2 for the BS-13 release:
+Catalog.Shipped = Catalog.H2Shipped
 -- Validate structural invariants (BS-01 acceptance): IDs unique, order exact,
 -- counts exact, tier gates consistent. Pure; no affinities touched.
 function Catalog.validate(): (boolean, { string })
