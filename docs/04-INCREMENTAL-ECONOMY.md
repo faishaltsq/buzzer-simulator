@@ -58,6 +58,27 @@ At every finished action or 30-second worker bank, auto-buy the next affordable 
 | Balanced | 1:50 | 3:56 | 5:26 | 9:31 | 12:31 | 14:01 |
 | Passive-focused | 1:50 | 4:10 | 5:00 | 10:50 | 18:20 | 22:20 |
 
+### BS-13 independent engine re-verification (isn't an edit to the targets)
+
+BS-13 removed the simulator's policy-specific hardcoded purchase timestamps and the
+Balanced special-casing (`tools/economy_sim.py` now derives every milestone from state:
+balance, lifetime, claims, tier eligibility, prerequisites, 30-second bank quantization).
+Pure state ladder: `phone_fast → pc_rumah → desk 1 → trainee 1 → desk 2 → trainee 2`,
+policies differing only in action cadence. Computed vs the authored targets above:
+
+| Policy | Desk 2 target → computed | Trainee 2 target → computed | Delta causes |
+|---|---|---|---|
+| Active | 10:40 → 10:30 | 11:45 → 11:45 | 30s bank at 10:30 commits 45 Cuan, crossing the Tier 2 line 10s early; targets were measured at action-completion boundaries. |
+| Balanced | 12:31 → 12:00 | 14:01 → 13:00 | The old Balanced-specific purchase condition (a brand-remix gate) was a recipe artifact, not a modeled decision; the unified ladder reaches Tier 2 one bank earlier. |
+| Passive-focused | 18:20 → 18:00 | 22:20 → 22:00 | Continuous-time estimates drifted 20s off the 30s bank grid the live game enforces (Tier 2 crosses at the t=1080s bank, Trainee 2 wallet at t=1320s). |
+
+All other milestones and the Active/Passive 10-minute window subtotals MATCH exactly
+(Balanced window shifts +91 banked worker Cuan because Trainee 2 joins 61s earlier).
+These are bank-quantization boundaries, not catalog changes: no price, rate, or
+threshold value moved. **The authored targets above are preserved pending director
+review**; a proposed correction (align targets to 30s bank-grid outputs:
+Active 10:30/11:45, Balanced 12:00/13:00, Passive 18:00/22:00) is recorded, not applied.
+
 At **10 connected minutes after the first hire**, modeled incremental earnings by source (second worker can join inside this window):
 | Policy | Mission bonuses | Organic posts | Banked workers | Total | Worker share |
 |---|---:|---:|---:|---:|---:|

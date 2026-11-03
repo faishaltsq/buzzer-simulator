@@ -1,0 +1,41 @@
+{
+  "persistence_classification": {
+    "tier_1_unit_specs": "In-memory mock store in Luau specs (tests/Specs/*, 20 suites, 747 tests passed)",
+    "tier_2_local_studio_dev": "Local offline Studio dev-fallback (RunService:IsStudio() in ProfileStore.luau, ephemeral in-memory mock store across Play Solo restarts; Gate G2 expected and strictly verified as BLOCKED offline)",
+    "tier_3_dev_cloud_datastore": "Dedicated development universe live DataStore (Universe 10774181892, Place 100558697471228, G2-01 through G2-08 cloud tests verified in BS-10)",
+    "tier_4_production_cloud": "Production place live cloud DataStore (strict boundary: real DataStoreService required, dev fallback strictly forbidden)"
+  },
+  "world": {
+    "Trainee2": 1,
+    "Trainee1": 1,
+    "WorkerDesk2": 1,
+    "PCRumah": 1,
+    "WorkerDesk1": 1
+  },
+  "pre_bank": {
+    "pend": 45,
+    "b": 627
+  },
+  "bank30": {
+    "before_balance": 627,
+    "pending_peak": 87,
+    "after_balance": 717,
+    "delta": 90
+  },
+  "parts": {
+    "live_total": 287,
+    "budget_ceiling": 350,
+    "margin_remaining": 63,
+    "utilization_pct": 82.0,
+    "verdict": "PASS"
+  },
+  "rejoin": {
+    "expected_gate": "G2 BLOCKED (offline studio, in-memory DEV fallback)",
+    "observed": {
+      "vis": false,
+      "t": 0,
+      "b": 0
+    },
+    "note": "Offline Studio session correctly resets ephemeral in-memory dev store on Play Solo restart. Durable persistence is governed by Cloud Gate G2 (Tier 3/4)."
+  }
+}

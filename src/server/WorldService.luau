@@ -92,7 +92,15 @@ local PLACEMENT_CONFIG = {
 		yOffset = 0,
 		rotation = CFrame.identity,
 	},
+	WorkerDesk2 = {
+		yOffset = 0,
+		rotation = CFrame.identity,
+	},
 	Trainee1 = {
+		yOffset = 0,
+		rotation = CFrame.identity,
+	},
+	Trainee2 = {
 		yOffset = 0,
 		rotation = CFrame.identity,
 	},

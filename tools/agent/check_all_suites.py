@@ -17,7 +17,8 @@ import time
 import json
 from typing import Dict, List, Tuple
 
-sys.path.append(os.path.abspath("tools/agent"))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.append(os.path.join(PROJECT_ROOT, "tools", "agent"))
 import studio
 
 EXPECTED_SUITES = [
@@ -26,6 +27,7 @@ EXPECTED_SUITES = [
     "BS10Recovery",
     "BS11M1Content",
     "BS12WorkerEconomy",
+    "BS13HomeStudio",
     "Bootstrap",
     "ClientState",
     "ComposerIntegration",
@@ -42,27 +44,35 @@ EXPECTED_SUITES = [
     "WorldService",
 ]
 
-LOG_FILE = "docs/logs/studio_regression_console.log"
+LOG_FILE = os.path.join(PROJECT_ROOT, "docs", "logs", "studio_regression_console.log")
 
 
-def count_source_metrics() -> Tuple[int, int]:
-    """Inspect tests/Specs to count source-defined test functions and expect calls."""
-    specs_dir = "tests/Specs"
+def count_source_metrics(specs_dir: str = None) -> Tuple[int, int]:
+    """Inspect tests/Specs to count source-defined test functions and expect calls.
+    Fails closed if the directory does not exist or contains no test files."""
+    if specs_dir is None:
+        specs_dir = os.path.join(PROJECT_ROOT, "tests", "Specs")
     total_tests = 0
     total_asserts = 0
 
     if not os.path.exists(specs_dir):
-        return 0, 0
+        raise FileNotFoundError(f"Specs directory not found at {specs_dir}")
 
-    for f in sorted(os.listdir(specs_dir)):
-        if f.endswith(".spec.luau"):
-            path = os.path.join(specs_dir, f)
-            with open(path, "r", encoding="utf-8") as file:
-                content = file.read()
-            tests = re.findall(r'(?m)^\s*test\s*\(', content)
-            asserts = re.findall(r'\b(?:expect\w*|assert\w*|equal|check|truth)\s*\(', content)
-            total_tests += len(tests)
-            total_asserts += len(asserts)
+    spec_files = [f for f in sorted(os.listdir(specs_dir)) if f.endswith(".spec.luau")]
+    if not spec_files:
+        raise FileNotFoundError(f"No .spec.luau files found in specs directory {specs_dir}")
+
+    for f in spec_files:
+        path = os.path.join(specs_dir, f)
+        with open(path, "r", encoding="utf-8") as file:
+            content = file.read()
+        tests = re.findall(r'(?m)^\s*test\s*\(', content)
+        asserts = re.findall(r'\b(?:expect\w*|assert\w*|equal|check|truth)\s*\(', content)
+        total_tests += len(tests)
+        total_asserts += len(asserts)
+
+    if total_tests == 0:
+        raise RuntimeError(f"Zero source tests found in {specs_dir}")
 
     return total_tests, total_asserts
 
@@ -178,7 +188,10 @@ def run_regression_suite(timeout_sec: float = 30.0, studio_id: str = None, log_f
                         if offset > page["total"] or not page["messages"]:
                             break
                     full_server_log = "\n".join(item["message"] for item in history)
-                    if len(full_server_log) > len(raw_console):
+                    # Only adopt the LogService history when it actually contains
+                    # the fresh run's marker; stale history across play sessions
+                    # must never mask the marker stream of a FAILED run.
+                    if len(full_server_log) > len(raw_console) and run_id in full_server_log:
                         raw_console = full_server_log
                 except Exception as log_err:
                     print(f"Note: LogService page fetch: {log_err}")

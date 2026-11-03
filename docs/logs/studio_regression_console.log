@@ -1,4 +1,3 @@
-[PASS] Scoring formula is exactly 2*trendMatch + audienceMatch
 [PASS] fitForTemplate classifies strong and weak correctly
 [PASS] A tie is rejected, never resolved randomly
 [PASS] A missing affinity is rejected
@@ -487,11 +486,12 @@ SessionService spec: 73/73 passed, 0 failed
 [PASS] Prompt cannot be spoofed from another player's room via ProximityPrompt instance
 ==============================================
 WorldService spec: 30/30 passed, 0 failed
-[SUITE PASS] AppClientIntegration.spec: AppClientIntegration: 9/9 passed
+[SUITE PASS] AppClientIntegration.spec: AppClientIntegration: 11/11 passed
 [SUITE PASS] BS09FastPhone.spec: BS-09: 36/36 passed
 [SUITE PASS] BS10Recovery.spec: BS-10: 41/41 passed
 [SUITE PASS] BS11M1Content.spec: BS-11: 12/12 passed
 [SUITE PASS] BS12WorkerEconomy.spec: 21/21 passed
+[SUITE PASS] BS13HomeStudio.spec: 44/44 passed
 [SUITE PASS] Bootstrap.spec: Bootstrap: 17/17 passed
 [SUITE PASS] ClientState.spec: ClientState: 30/30 passed
 [SUITE PASS] ComposerIntegration.spec: 14/14 passed
@@ -507,6 +507,6 @@ WorldService spec: 30/30 passed, 0 failed
 [SUITE PASS] SessionService.spec: SessionService: 73/73 passed
 [SUITE PASS] WorldService.spec: WorldService: 30/30 passed
 ==============================================
-BS-01 suites: 19/19 passed, 0 failed
-BS_REGRESSION_RESULT {"suites":[{"ok":true,"name":"AppClientIntegration.spec","detail":"AppClientIntegration: 9/9 passed"},{"ok":true,"name":"BS09FastPhone.spec","detail":"BS-09: 36/36 passed"},{"ok":true,"name":"BS10Recovery.spec","detail":"BS-10: 41/41 passed"},{"ok":true,"name":"BS11M1Content.spec","detail":"BS-11: 12/12 passed"},{"ok":true,"name":"BS12WorkerEconomy.spec","detail":"21/21 passed"},{"ok":true,"name":"Bootstrap.spec","detail":"Bootstrap: 17/17 passed"},{"ok":true,"name":"ClientState.spec","detail":"ClientState: 30/30 passed"},{"ok":true,"name":"ComposerIntegration.spec","detail":"14/14 passed"},{"ok":true,"name":"EconomyService.spec","detail":"EconomyService: 39/39 passed"},{"ok":true,"name":"FeedService.spec","detail":"FeedService: 18/18 passed"},{"ok":true,"name":"MissionService.spec","detail":"MissionService: 85/85 passed"},{"ok":true,"name":"NetRouter.spec","detail":"NetRouter: 89/89 passed"},{"ok":true,"name":"PostingState.spec","detail":"PostingState: 57/57 passed"},{"ok":true,"name":"Presentation.spec","detail":"Presentation: 9/9 passed"},{"ok":true,"name":"ProfileStore.spec","detail":"ProfileStore: 59/59 passed"},{"ok":true,"name":"Rules.spec","detail":"Rules: 16/16 passed"},{"ok":true,"name":"SessionIntegration.spec","detail":"SessionIntegration: 46/46 passed"},{"ok":true,"name":"SessionService.spec","detail":"SessionService: 73/73 passed"},{"ok":true,"name":"WorldService.spec","detail":"WorldService: 30/30 passed"}],"runId":"2cef3e24-90c5-4d66-bf4e-8816ba966341","failed":0}
-BS01_TESTS_PASSED:2cef3e24-90c5-4d66-bf4e-8816ba966341
+BS-01 suites: 20/20 passed, 0 failed
+BS_REGRESSION_RESULT {"suites":[{"ok":true,"name":"AppClientIntegration.spec","detail":"AppClientIntegration: 11/11 passed"},{"ok":true,"name":"BS09FastPhone.spec","detail":"BS-09: 36/36 passed"},{"ok":true,"name":"BS10Recovery.spec","detail":"BS-10: 41/41 passed"},{"ok":true,"name":"BS11M1Content.spec","detail":"BS-11: 12/12 passed"},{"ok":true,"name":"BS12WorkerEconomy.spec","detail":"21/21 passed"},{"ok":true,"name":"BS13HomeStudio.spec","detail":"44/44 passed"},{"ok":true,"name":"Bootstrap.spec","detail":"Bootstrap: 17/17 passed"},{"ok":true,"name":"ClientState.spec","detail":"ClientState: 30/30 passed"},{"ok":true,"name":"ComposerIntegration.spec","detail":"14/14 passed"},{"ok":true,"name":"EconomyService.spec","detail":"EconomyService: 39/39 passed"},{"ok":true,"name":"FeedService.spec","detail":"FeedService: 18/18 passed"},{"ok":true,"name":"MissionService.spec","detail":"MissionService: 85/85 passed"},{"ok":true,"name":"NetRouter.spec","detail":"NetRouter: 89/89 passed"},{"ok":true,"name":"PostingState.spec","detail":"PostingState: 57/57 passed"},{"ok":true,"name":"Presentation.spec","detail":"Presentation: 9/9 passed"},{"ok":true,"name":"ProfileStore.spec","detail":"ProfileStore: 59/59 passed"},{"ok":true,"name":"Rules.spec","detail":"Rules: 16/16 passed"},{"ok":true,"name":"SessionIntegration.spec","detail":"SessionIntegration: 46/46 passed"},{"ok":true,"name":"SessionService.spec","detail":"SessionService: 73/73 passed"},{"ok":true,"name":"WorldService.spec","detail":"WorldService: 30/30 passed"}],"runId":"ec465cb7-cc1d-4543-ab49-705966761649","failed":0}
+BS01_TESTS_PASSED:ec465cb7-cc1d-4543-ab49-705966761649

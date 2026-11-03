@@ -40,7 +40,7 @@ local function isReducedMotion(): boolean
 end
 
 local WorkerAnimationController = require(script.Parent:WaitForChild("WorkerAnimationController") :: any)
-local workerAnimation = WorkerAnimationController.new(Workspace, ReplicatedStorage:WaitForChild("WorkerPrefabs"):WaitForChild("Trainee1") :: Model, isReducedMotion)
+local workerAnimation = WorkerAnimationController.new(Workspace, ReplicatedStorage:WaitForChild("WorkerPrefabs"), isReducedMotion)
 script.Destroying:Connect(function() workerAnimation:Destroy() end)
 
 -- Initialize state container

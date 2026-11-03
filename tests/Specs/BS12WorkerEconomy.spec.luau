@@ -4,11 +4,11 @@
 -- 1. Desk 1 gating: requires PC Rumah + Tier 1 + 180 Cuan. Phone or Tier 0 refused (NOT_READY).
 -- 2. Desk 1 exact price: 180 Cuan debited, balance drops, lifetime untouched. 179 refused.
 -- 3. Desk 1 duplicate refused (ALREADY_DONE).
--- 4. Desk 2 locked in BS-12 (NOT_READY).
+-- 4. Desk 2 locked before Tier 2 / Trainee 1 (NOT_READY).
 -- 5. Trainee 1 gating: requires Desk 1 + Tier 1 + PC Rumah + 500 Cuan. Without Desk 1 refused (NOT_READY).
 -- 6. Trainee 1 exact price: 500 debited, 499 refused (INSUFFICIENT_FUNDS).
 -- 7. Trainee 1 duplicate refused (ALREADY_DONE).
--- 8. Trainee 2 locked in BS-12 (NOT_READY).
+-- 8. Trainee 2 locked without Desk 2 (NOT_READY).
 -- 9. Single worker accrual: exactly 1.5 Cuan/s online.
 -- 10. Fractional carry: 0.5 residual carry across ticks without loss.
 -- 11. Zero workers accrual: 0 workers produce 0 Cuan.
@@ -135,14 +135,14 @@ test("Duplicate Desk 1 purchase is refused with ALREADY_DONE", function()
 	expectEqual(r2.code, "ALREADY_DONE", "code is ALREADY_DONE")
 end)
 
--- 4. Desk 2 locked in BS-12
-test("Desk 2 is locked in BS-12 because maxShippedDeskSlot is 1 and requires Tier 2", function()
+-- 4. Desk 2 locked before Tier 2 / Trainee 1
+test("Desk 2 is locked before Tier 2 and before Trainee 1 is hired", function()
 	local p = pcTier1Profile()
 	local r1 = EconomyService.buyDesk(p, 1)
 	expectEqual(r1.ok, true, "desk 1 purchased")
 	local r2 = EconomyService.buyDesk(r1.profile, 2)
-	expectEqual(r2.ok, false, "desk 2 refused in M1/BS-12")
-	expectEqual(r2.code, "NOT_READY", "desk 2 requires Tier 2")
+	expectEqual(r2.ok, false, "desk 2 refused before tier 2 / trainee 1")
+	expectEqual(r2.code, "NOT_READY", "code is NOT_READY")
 end)
 
 -- 5. Trainee 1 gating: requires Desk 1, PC Rumah, Tier 1, and funds
@@ -191,13 +191,13 @@ test("Duplicate Trainee 1 hire is refused with ALREADY_DONE", function()
 	expectEqual(r2.code, "ALREADY_DONE", "code is ALREADY_DONE")
 end)
 
--- 8. Trainee 2 locked in BS-12
-test("Trainee 2 is locked in BS-12 because slot 2 is not shipped and requires Tier 2", function()
+-- 8. Trainee 2 locked without Desk 2
+test("Trainee 2 is locked without Desk 2 even when Trainee 1 is on duty", function()
 	local pDesk = EconomyService.buyDesk(pcTier1Profile(), 1).profile
 	local r1 = EconomyService.hireWorker(pDesk, 1, "trainee")
 	expectEqual(r1.ok, true, "trainee 1 hired")
 	local r2 = EconomyService.hireWorker(r1.profile, 2, "trainee")
-	expectEqual(r2.ok, false, "trainee 2 refused")
+	expectEqual(r2.ok, false, "trainee 2 refused without desk 2")
 	expectEqual(r2.code, "NOT_READY", "code is NOT_READY")
 end)
 
@@ -311,24 +311,24 @@ test("Workers.projectState projects correct operational phases", function()
 		snapshot = freshProfile(),
 	}
 	local pLocked = Workers.projectState(stateLocked)
-	expectEqual(pLocked.desk1Phase, "need_pc", "desk 1 needs PC Rumah when phone is starter")
-	expectEqual(pLocked.trainee1Phase, "need_pc", "trainee 1 needs PC Rumah")
+	expectEqual(pLocked.deskPhase[1], "need_pc", "desk 1 needs PC Rumah when phone is starter")
+	expectEqual(pLocked.traineePhase[1], "need_pc", "trainee 1 needs PC Rumah")
 
 	local stateTier1NoMoney = {
 		snapshot = pcTier1Profile(),
 	}
 	stateTier1NoMoney.snapshot.balance = 50
 	local pNoMoney = Workers.projectState(stateTier1NoMoney)
-	expectEqual(pNoMoney.desk1Phase, "locked", "desk 1 locked due to funds")
-	expectEqual(pNoMoney.trainee1Phase, "need_desk", "trainee 1 needs desk first")
+	expectEqual(pNoMoney.deskPhase[1], "locked", "desk 1 locked due to funds")
+	expectEqual(pNoMoney.traineePhase[1], "need_desk", "trainee 1 needs desk first")
 
 	local stateAffordable = {
 		snapshot = pcTier1Profile(),
 	}
 	stateAffordable.snapshot.balance = 1000
 	local pAffordable = Workers.projectState(stateAffordable)
-	expectEqual(pAffordable.desk1Phase, "affordable", "desk 1 is affordable")
-	expectEqual(pAffordable.trainee1Phase, "need_desk", "trainee 1 still needs desk")
+	expectEqual(pAffordable.deskPhase[1], "affordable", "desk 1 is affordable")
+	expectEqual(pAffordable.traineePhase[1], "need_desk", "trainee 1 still needs desk")
 
 	local stateDeskOwned = {
 		snapshot = pcTier1Profile(),
@@ -336,8 +336,8 @@ test("Workers.projectState projects correct operational phases", function()
 	stateDeskOwned.snapshot.balance = 600
 	stateDeskOwned.snapshot.ownedDesks = { 1 }
 	local pDeskOwned = Workers.projectState(stateDeskOwned)
-	expectEqual(pDeskOwned.desk1Phase, "owned", "desk 1 is owned")
-	expectEqual(pDeskOwned.trainee1Phase, "affordable", "trainee 1 is affordable")
+	expectEqual(pDeskOwned.deskPhase[1], "owned", "desk 1 is owned")
+	expectEqual(pDeskOwned.traineePhase[1], "affordable", "trainee 1 is affordable")
 
 	local stateHired = {
 		snapshot = pcTier1Profile(),
@@ -345,8 +345,8 @@ test("Workers.projectState projects correct operational phases", function()
 	stateHired.snapshot.ownedDesks = { 1 }
 	stateHired.snapshot.workers = { { slotIndex = 1, roleId = "trainee" } }
 	local pHired = Workers.projectState(stateHired)
-	expectEqual(pHired.desk1Phase, "owned", "desk 1 is owned")
-	expectEqual(pHired.trainee1Phase, "hired", "trainee 1 is hired")
+	expectEqual(pHired.deskPhase[1], "owned", "desk 1 is owned")
+	expectEqual(pHired.traineePhase[1], "hired", "trainee 1 is hired")
 end)
 
 -- 16. ClientState mutation validation for BuyDesk and HireWorker
@@ -390,9 +390,9 @@ test("ClientState admits valid BuyDesk and HireWorker mutations and rejects inva
 	cState:ApplyReply({ requestId = cmdHire.requestId, ok = true, code = "OK", revision = 3, serverTime = 102 }, 102)
 	cState:ApplyStateSnapshot(pDesk)
 
-	-- Invalid slot 2 rejected
+	-- Slot 2 before Tier 2 rejected (BS-13 ships slot 2; the tier gate must hold)
 	local cmdSlot2 = cState:BeginMutation("BuyDesk", { slotIndex = 2 }, 102)
-	expectTrue(cmdSlot2 == nil, "BuyDesk slot 2 rejected in BS-12")
+	expectTrue(cmdSlot2 == nil, "BuyDesk slot 2 rejected before Tier 2")
 
 	-- Invalid role rejected
 	local cmdBoss = cState:BeginMutation("HireWorker", { slotIndex = 1, roleId = "boss" }, 103)
@@ -427,9 +427,9 @@ test("Workers pending accrual cannot fund purchases and reconciles only on snaps
 	p.pendingWorkerCuan = 1000
 	p.incomePerSecond = 1.5
 	view:Update({ snapshot = p })
-	expectTrue(view._buyDeskButton.Size.Y.Offset >= 44 and view._hireWorkerButton.Size.Y.Offset >= 44, "worker action touch heights")
+	expectTrue(view._deskButtons[1].Size.Y.Offset >= 44 and view._traineeButtons[1].Size.Y.Offset >= 44, "worker action touch heights")
 	expectEqual(view._projected.balance, 100, "pending excluded from wallet")
-	expectEqual(view._projected.desk1Phase, "locked", "pending cannot buy desk")
+	expectEqual(view._projected.deskPhase[1], "locked", "pending cannot buy desk")
 	local before = view._overviewStats.Text
 	view:Tick(100000)
 	expectEqual(view._overviewStats.Text, before, "no local income prediction")
@@ -439,14 +439,19 @@ test("Workers pending accrual cannot fund purchases and reconciles only on snaps
 	view:Update({ snapshot = p })
 	expectEqual(view._projected.balance, 190, "confirmed bank reconciled")
 	expectEqual(view._projected.pendingWorkerCuan, 0, "pending clears from server")
-	expectEqual(view._projected.desk1Phase, "affordable", "confirmed funds buy desk")
+	expectEqual(view._projected.deskPhase[1], "affordable", "confirmed funds buy desk")
 	view:Destroy()
 	parent:Destroy()
 end)
 
 test("Shipped slot caps reject Tier 2 eligible server requests", function()
-	local cap = Catalog.Shipped.maxShippedTier
-	Catalog.Shipped.maxShippedTier = 2
+	-- BS-13 ships caps 2/2/2; enforcement is only observable by lowering the
+	-- caps. A tier-2-qualifying profile must still be refused while slot 2 is
+	-- unshipped, proving the cap gate is independent of eligibility data.
+	local shipped = Catalog.Shipped or Catalog.V0Shipped
+	local realTier = shipped.maxShippedTier
+	local realDesk, realWorker = shipped.maxShippedDeskSlot, shipped.maxShippedWorkerSlot
+	shipped.maxShippedTier, shipped.maxShippedDeskSlot, shipped.maxShippedWorkerSlot = 1, 1, 1
 	local ok, err = pcall(function()
 		local p = pcTier1Profile()
 		p.lifetimeEarned = 2000
@@ -454,14 +459,15 @@ test("Shipped slot caps reject Tier 2 eligible server requests", function()
 		p.balance = 10000
 		p.ownedDesks = { 1 }
 		p.workers = { { hireId = "trainee-slot-1", roleId = "trainee", slotIndex = 1 } }
-		expectEqual(Rules.eligibleTier(p.lifetimeEarned, p.completedMissions, 2), 2, "fixture really qualifies for Tier 2")
+		expectEqual(Rules.eligibleTier(p.lifetimeEarned, p.completedMissions, 2), 2, "fixture data really qualifies for Tier 2")
 		expectEqual(EconomyService.buyDesk(p, 2).code, "NOT_READY", "server rejects unshipped desk independently of tier")
 		p.ownedDesks = { 1, 2 }
 		expectEqual(EconomyService.hireWorker(p, 2, "trainee").code, "NOT_READY", "server rejects unshipped worker with all prerequisites")
 		expectEqual(p.balance, 10000, "rejection cannot spend")
 		expectEqual(#p.workers, 1, "rejection cannot hire")
 	end)
-	Catalog.Shipped.maxShippedTier = cap
+	shipped.maxShippedTier = realTier
+	shipped.maxShippedDeskSlot, shipped.maxShippedWorkerSlot = realDesk, realWorker
 	if not ok then error(err, 0) end
 end)
 
@@ -487,7 +493,8 @@ end)
 
 test("R15 cosmetic typing and head motion clean up without orphan rigs", function()
 	local Controller = require(spScripts:WaitForChild("WorkerAnimationController")) :: any
-	local prefab = ReplicatedStorage:WaitForChild("WorkerPrefabs"):WaitForChild("Trainee1") :: Model
+	local prefabs = ReplicatedStorage:WaitForChild("WorkerPrefabs") :: any
+	local prefab = prefabs:WaitForChild("Trainee1") :: Model
 	expectEqual(prefab:FindFirstChildOfClass("Humanoid").RigType, Enum.HumanoidRigType.R15, "real R15 rig")
 	local motors = 0
 	for _, child in ipairs(prefab:GetDescendants()) do if child:IsA("Motor6D") then motors += 1; expectTrue(child.Part0 ~= nil and child.Part1 ~= nil, "connected joint") end end
@@ -507,7 +514,7 @@ test("R15 cosmetic typing and head motion clean up without orphan rigs", functio
 	marker:SetAttribute("WorkerCosmetic", true)
 	marker.Parent = seat
 	local reduced = false
-	local controller = Controller.new(root, prefab, function() return reduced end)
+	local controller = Controller.new(root, prefabs, function() return reduced end)
 	local record = controller._records[marker]
 	expectTrue(record ~= nil, "existing markers restored on start")
 	local wrist = record.joints.RightWrist

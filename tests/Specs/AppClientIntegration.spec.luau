@@ -409,6 +409,53 @@ test("Missing anchor during opening aborts opening, closes server session, and n
 	expectEqual(sentCommands[1].dashboardSessionId, "sess_missing_anchor", "correct session closed on server")
 end)
 
+-- 10. HUD displays canonical Catalog tier names across progression tiers 0, 1, and 2
+test("HUD displays canonical Catalog tier names across progression tiers 0, 1, and 2", function()
+	local container = Instance.new("Folder")
+	local hud = Hud.new({ parent = container })
+
+	expectEqual(hud:GetTierText(), "Tier 0: Buzzer Gabut", "Initial HUD tier 0 is Buzzer Gabut")
+	expectEqual(Hud.tierName(0), "Buzzer Gabut", "Pure tierName(0)")
+	expectEqual(Hud.tierName(1), "Buzzer Rumahan", "Pure tierName(1)")
+	expectEqual(Hud.tierName(2), "Studio Rumahan", "Pure tierName(2)")
+
+	local snap1 = sampleSnapshot(1, 100)
+	snap1.tier = 1
+	hud:Update({ snapshot = snap1 })
+	expectEqual(hud:GetTierText(), "Tier 1: Buzzer Rumahan", "HUD tier 1 is Buzzer Rumahan")
+
+	local snap2 = sampleSnapshot(2, 100)
+	snap2.tier = 2
+	hud:Update({ snapshot = snap2 })
+	expectEqual(hud:GetTierText(), "Tier 2: Studio Rumahan", "HUD tier 2 is Studio Rumahan")
+
+	hud:Destroy()
+end)
+
+-- 11. HUD equipment hint is context-aware for OldCRT vs PC Rumah productive role
+test("HUD equipment hint is context-aware for OldCRT vs PC Rumah productive role", function()
+	local container = Instance.new("Folder")
+	local hud = Hud.new({ parent = container })
+
+	expectEqual(hud:GetHintText(), "Old CRT runs BuzzerOS • Equipped phone drives post yield", "Default hint describes OldCRT dashboard-only role")
+	expectEqual(Hud.equipmentHint({ deviceId = "phone_cheap" }), "Old CRT runs BuzzerOS • Equipped phone drives post yield", "Pure equipmentHint phone_cheap")
+	expectEqual(Hud.equipmentHint({ deviceId = "phone_fast" }), "Old CRT runs BuzzerOS • Equipped phone drives post yield", "Pure equipmentHint phone_fast")
+	expectEqual(Hud.equipmentHint({ deviceId = "pc_rumah" }), "PC Rumah runs BuzzerOS • Active productive workstation", "Pure equipmentHint pc_rumah")
+
+	local snapPhone = sampleSnapshot(1, 100)
+	snapPhone.deviceId = "phone_fast"
+	hud:Update({ snapshot = snapPhone })
+	expectEqual(hud:GetHintText(), "Old CRT runs BuzzerOS • Equipped phone drives post yield", "Phone device retains OldCRT dashboard role hint")
+
+	local snapPC = sampleSnapshot(2, 500)
+	snapPC.deviceId = "pc_rumah"
+	hud:Update({ snapshot = snapPC })
+	expectEqual(hud:GetHintText(), "PC Rumah runs BuzzerOS • Active productive workstation", "PC Rumah identifies active productive workstation")
+	expectFalse(string.find(hud:GetHintText(), "Old CRT") ~= nil, "PC Rumah hint does not claim Old CRT is active terminal")
+
+	hud:Destroy()
+end)
+
 
 -- Runner loop
 local passed = 0

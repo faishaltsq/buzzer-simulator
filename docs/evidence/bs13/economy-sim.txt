@@ -1,0 +1,112 @@
+=== Event-Driven Deterministic Economy Simulation (docs/04-INCREMENTAL-ECONOMY.md) ===
+
+[Policy: Active]
+  Milestones:
+    [MATCH] Fast phone   : expected 1:50, got 1:50
+    [MATCH] PC Rumah     : expected 4:10, got 4:10
+    [MATCH] Desk 1       : expected 5:15, got 5:15
+    [MATCH] Trainee 1    : expected 7:25, got 7:25
+    [DIFF -0:10] Desk 2       : expected 10:40, got 10:30
+    [MATCH] Trainee 2    : expected 11:45, got 11:45
+      [EVENT TRACE] Milestone 'Desk 2' (computed 10:30 vs target 10:40):
+        Exact purchase time : 630s (10:30) [cost=250, wallet_after=440, lifetime=1640, claims=8]
+        Tier unlock times   : Tier 1 at 250s (4:10), Tier 2 at 630s (10:30)
+        Surrounding 30s checkpoints (window [600s, 670s]):
+          t= 600s (10:00): wallet= 645, lifetime=1595, claims=8, tier=1
+          t= 630s (10:30): wallet= 690, lifetime=1640, claims=8, tier=2
+          t= 660s (11:00): wallet= 682, lifetime=1882, claims=9, tier=2
+  10-Minute Post-Hire Earnings Window:
+    [MATCH] mission_bonus  : expected 1440, got 1440
+    [MATCH] organic        : expected 333, got 333
+    [MATCH] worker         : expected 1335, got 1335
+    [MATCH] total          : expected 3108, got 3108
+    [MATCH] worker_share   : expected 43.0, got 43.0
+
+[Policy: Balanced]
+  Milestones:
+    [MATCH] Fast phone   : expected 1:50, got 1:50
+    [MATCH] PC Rumah     : expected 3:56, got 3:56
+    [MATCH] Desk 1       : expected 5:26, got 5:26
+    [MATCH] Trainee 1    : expected 9:31, got 9:31
+    [DIFF -0:31] Desk 2       : expected 12:31, got 12:00
+    [DIFF -1:01] Trainee 2    : expected 14:01, got 13:00
+      [EVENT TRACE] Milestone 'Desk 2' (computed 12:00 vs target 12:31):
+        Exact purchase time : 720s (12:00) [cost=250, wallet_after=435, lifetime=1635, claims=7]
+        Tier unlock times   : Tier 1 at 301s (5:01), Tier 2 at 720s (12:00)
+        Surrounding 30s checkpoints (window [690s, 781s]):
+          t= 690s (11:30): wallet= 640, lifetime=1590, claims=7, tier=1
+          t= 720s (12:00): wallet= 685, lifetime=1635, claims=7, tier=2
+          t= 750s (12:30): wallet= 480, lifetime=1680, claims=7, tier=2
+          t= 780s (13:00): wallet= 759, lifetime=1959, claims=8, tier=2
+      [EVENT TRACE] Milestone 'Trainee 2' (computed 13:00 vs target 14:01):
+        Exact purchase time : 780s (13:00) [cost=750, wallet_after=9, lifetime=1959, claims=8]
+        Tier unlock times   : Tier 1 at 301s (5:01), Tier 2 at 720s (12:00)
+        Surrounding 30s checkpoints (window [750s, 871s]):
+          t= 750s (12:30): wallet= 480, lifetime=1680, claims=7, tier=2
+          t= 780s (13:00): wallet= 759, lifetime=1959, claims=8, tier=2
+          t= 810s (13:30): wallet=  99, lifetime=2049, claims=8, tier=2
+          t= 840s (14:00): wallet= 189, lifetime=2139, claims=8, tier=2
+          t= 870s (14:30): wallet= 513, lifetime=2463, claims=9, tier=2
+  10-Minute Post-Hire Earnings Window:
+    [MATCH] mission_bonus  : expected 960, got 960
+    [MATCH] organic        : expected 481, got 481
+    [DIFF +91] worker         : expected 1392, got 1483
+    [DIFF +91] total          : expected 2833, got 2924
+    [DIFF +1.6%] worker_share   : expected 49.1, got 50.7
+
+[Policy: Passive-focused]
+  Milestones:
+    [MATCH] Fast phone   : expected 1:50, got 1:50
+    [MATCH] PC Rumah     : expected 4:10, got 4:10
+    [MATCH] Desk 1       : expected 5:00, got 5:00
+    [MATCH] Trainee 1    : expected 10:50, got 10:50
+    [DIFF -0:20] Desk 2       : expected 18:20, got 18:00
+    [DIFF -0:20] Trainee 2    : expected 22:20, got 22:00
+      [EVENT TRACE] Milestone 'Desk 2' (computed 18:00 vs target 18:20):
+        Exact purchase time : 1080s (18:00) [cost=250, wallet_after=415, lifetime=1615, claims=3]
+        Tier unlock times   : Tier 1 at 250s (4:10), Tier 2 at 1080s (18:00)
+        Surrounding 30s checkpoints (window [1050s, 1130s]):
+          t=1050s (17:30): wallet= 620, lifetime=1570, claims=3, tier=1
+          t=1080s (18:00): wallet= 665, lifetime=1615, claims=3, tier=2
+          t=1110s (18:30): wallet= 460, lifetime=1660, claims=3, tier=2
+      [EVENT TRACE] Milestone 'Trainee 2' (computed 22:00 vs target 22:20):
+        Exact purchase time : 1320s (22:00) [cost=750, wallet_after=25, lifetime=1975, claims=3]
+        Tier unlock times   : Tier 1 at 250s (4:10), Tier 2 at 1080s (18:00)
+        Surrounding 30s checkpoints (window [1290s, 1370s]):
+          t=1290s (21:30): wallet= 730, lifetime=1930, claims=3, tier=2
+          t=1320s (22:00): wallet= 775, lifetime=1975, claims=3, tier=2
+  10-Minute Post-Hire Earnings Window:
+    [MATCH] mission_bonus  : expected 0, got 0
+    [MATCH] organic        : expected 0, got 0
+    [MATCH] worker         : expected 870, got 870
+    [MATCH] total          : expected 870, got 870
+    [MATCH] worker_share   : expected 100.0, got 100.0
+
+=== Sensitivity Sweeps & Invariant Asserts ===
+  [PASS] Disconnect and unbanked accrual loss bounded to <= 30s
+  [PASS] First hire payback verified: 5:33 (5:33)
+  [PASS] Bundle 1 payback verified: 7:33 (7:33)
+  [PASS] Bundle 2 payback verified: 11:07 (11:07)
+  [PASS] Two-worker 30s bank == 90 Cuan verified
+  [PASS] Mixed one->two worker interval (10s @ 1.5 + 20s @ 3.0 == 75 Cuan) verified
+  [PASS] Purchase during pending accrual preserves unbanked worker carry verified
+
+=== Simulation Verdict & Reconciliation Summary ===
+1. Model Execution & Invariant Validity : PASSED (100% invariant adherence)
+2. Documented Target Agreement          : PARTIAL AGREEMENT (25/33 matched, 8 deltas)
+
+=== Actual Computed Milestone Outcomes (Authoritative Discrete Model) ===
+  - Active Policy          : Trainee 2 reached at 11:45 (Matches target 11:45)
+  - Balanced Policy        : Trainee 2 reached at 13:00 (Target: 14:01, Delta: -1:01 earlier)
+  - Passive-focused Policy : Trainee 2 reached at 22:00 (Target: 22:20, Delta: -0:20 earlier)
+
+=== Proposed Scenario Expectation Adjustments for Director Review ===
+Note: In-game Catalog.luau constants (Desk 2: 250, Trainee 2: 750, Rate: 3.0, Tier 2: 1600) are unchanged.
+  - [Active] Desk 2: documented 10:40 -> computed actual 10:30 (-0:10)
+  - [Balanced] Desk 2: documented 12:31 -> computed actual 12:00 (-0:31)
+  - [Balanced] Trainee 2: documented 14:01 -> computed actual 13:00 (-1:01)
+  - [Balanced] worker: documented 1392 -> computed actual 1483 (+91)
+  - [Balanced] total: documented 2833 -> computed actual 2924 (+91)
+  - [Balanced] worker_share: documented 49.1 -> computed actual 50.7 (+1.6%)
+  - [Passive-focused] Desk 2: documented 18:20 -> computed actual 18:00 (-0:20)
+  - [Passive-focused] Trainee 2: documented 22:20 -> computed actual 22:00 (-0:20)

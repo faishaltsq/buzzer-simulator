@@ -421,12 +421,53 @@ def build_worker_desk_1():
     return model("WorkerDesk1", c, "DeskTop")
 
 
-def build_trainee_1():
-    # R15 topology, authored seated at WorkerSeat1. Only the client clones this kit.
+def build_worker_desk_2():
+    # BS-13 second workstation. Same anchor contract as WorkerDesk1 (PrimaryPart
+    # DeskTop at (0, 0, 0) on WorkerDeskSlot2), related design language, distinct
+    # composition: metal legs, navy desk mat, sage monitor trim, task light and
+    # a compact storage box instead of a foot crossbar. Still exactly 29 parts.
+    c = [
+        part("DeskTop", (4, .3, 2.4), (0, 0, 0), "wood", "Wood", collide=True),
+        part("DeskApronFront", (3.6, .35, .15), (0, -.25, 1.05), "wood_dark", "Wood"),
+        part("DeskApronBack", (3.6, .35, .15), (0, -.25, -1.05), "wood_dark", "Wood"),
+        part("DeskApronLeft", (.15, .35, 2.1), (-1.8, -.25, 0), "wood_dark", "Wood"),
+        part("DeskApronRight", (.15, .35, 2.1), (1.8, -.25, 0), "wood_dark", "Wood"),
+        part("DeskLegFL", (.22, 3.05, .22), (-1.8, -1.65, 1.0), "metal", "Metal", collide=True),
+        part("DeskLegFR", (.22, 3.05, .22), (1.8, -1.65, 1.0), "metal", "Metal", collide=True),
+        part("DeskLegBL", (.22, 3.05, .22), (-1.8, -1.65, -1.0), "metal", "Metal", collide=True),
+        part("DeskLegBR", (.22, 3.05, .22), (1.8, -1.65, -1.0), "metal", "Metal", collide=True),
+        part("DeskMat", (1.9, .02, .9), (0, .16, .15), "navy", "Fabric"),
+        part("MonitorStand", (.4, .05, .4), (0, .175, -.7), "metal", "Metal"),
+        part("MonitorStem", (.12, .7, .12), (0, .55, -.7), "metal", "Metal"),
+        part("MonitorPanel", (2.4, 1.2, .1), (0, 1.1, -.7), "ink"),
+        part("MonitorBezel", (2.3, 1.1, .03), (0, 1.1, -.64), "sage_dark"),
+        part("MonitorScreen", (2.2, 1.0, .02), (0, 1.1, -.62), "screen"),
+        part("ScreenLine1", (1.3, .04, .01), (.15, 1.2, -.605), "phosphor"),
+        part("ScreenLine2", (1.0, .04, .01), (-.25, 1.05, -.605), "cream"),
+        part("KeyboardBase", (1.2, .04, .4), (-.1, .18, .15), "ink"),
+        part("KeyboardKeys", (1.1, .03, .32), (-.1, .21, .15), "linen"),
+        part("Mouse", (.18, .06, .28), (.7, .19, .15), "sage_dark"),
+        part("StorageBox", (.8, .6, .6), (1.4, .3, -.8), "sage_dark", "Wood"),
+        part("TaskLightArm", (.08, .9, .08), (-1.5, .55, -.85), "metal", "Metal"),
+        part("TaskLightShade", (.4, .25, .4), (-1.5, 1.05, -.75), "amber", "Neon"),
+        part("ChairSeat", (1.6, .2, 1.6), (0, -1.6, 1.8), "sage", "Fabric", collide=True),
+        part("ChairCushion", (1.4, .1, 1.4), (0, -1.45, 1.8), "navy", "Fabric"),
+        part("ChairBackSupport", (.15, 1.4, .15), (0, -.8, 2.55), "metal", "Metal"),
+        part("ChairBack", (1.5, 1.2, .18), (0, -.6, 2.5), "sage_dark", "Fabric"),
+        part("ChairStem", (.2, 1.3, .2), (0, -2.3, 1.8), "metal", "Metal"),
+        part("ChairBaseBar", (1.5, .12, 1.5), (0, -2.95, 1.8), "metal", "Metal"),
+    ]
+    return model("WorkerDesk2", c, "DeskTop")
+
+
+def build_trainee(shirt: str = "cream", hair: str = "ink"):
+    # R15 topology, authored seated at any WorkerSeat slot. Only the client
+    # clones this kit. `shirt` and `hair` vary Trainee 1 vs Trainee 2 while the
+    # body geometry, joints and part count (20) stay identical.
     c = [part("HumanoidRootPart", (.8, .8, .8), (0, 0, 0), "cream", transparency=1)]
     specs = [
         ("LowerTorso", (1.6, .32, .8), (0, .65, 0), "navy", (0, 0, 0)),
-        ("UpperTorso", (1.6, 1.28, .8), (0, 1.45, -.08), "cream", (6, 0, 0)),
+        ("UpperTorso", (1.6, 1.28, .8), (0, 1.45, -.08), shirt, (6, 0, 0)),
         ("Head", (1.6, .8, .8), (0, 2.52, -.18), "plaster", (4, 0, 0)),
     ]
     for side, sign in (("Left", -1), ("Right", 1)):
@@ -485,7 +526,7 @@ def build_trainee_1():
     for side in ("Left", "Right"):
         for name, parent, child in (("Shoulder", "UpperTorso", side+"UpperArm"), ("Elbow", side+"UpperArm", side+"LowerArm"), ("Wrist", side+"LowerArm", side+"Hand"), ("Hip", "LowerTorso", side+"UpperLeg"), ("Knee", side+"UpperLeg", side+"LowerLeg"), ("Ankle", side+"LowerLeg", side+"Foot")):
             joint(side+name, parent, child)
-    hair = part("Hair", (1.62, .25, .84), (0, 2.89, -.18), "ink")
+    hair = part("Hair", (1.62, .25, .84), (0, 2.89, -.18), hair)
     hair.find("Properties/bool[@name='Anchored']").text = "false"
     c.append(hair)
     lookup["Hair"] = hair
@@ -500,6 +541,19 @@ def build_trainee_1():
     return model("Trainee1", c, "HumanoidRootPart")
 
 
+def build_trainee_1():
+    result = build_trainee("cream", "ink")
+    result.attrib["referent"] = result.attrib["referent"]
+    return result
+
+
+def build_trainee_2():
+    result = build_trainee("sage", "wood")
+    model_name = result.find("./Properties/string[@name='Name']")
+    model_name.text = "Trainee2"
+    return result
+
+
 def write_model(path, root):
     roblox = ET.Element("roblox", {"version": "4"})
     roblox.append(root)
@@ -510,12 +564,15 @@ def write_model(path, root):
 
 
 def main():
+    global _ref_counter
     output = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "world")
     os.makedirs(output, exist_ok=True)
     for name, builder in (("Bedroom", build_bedroom), ("OldCRT", build_old_crt),
                           ("PhoneCheap", build_phone_cheap), ("PhoneFast", build_phone_fast),
                           ("PCRumah", build_pc_rumah), ("WorkerDesk1", build_worker_desk_1),
-                          ("Trainee1", build_trainee_1)):
+                          ("WorkerDesk2", build_worker_desk_2), ("Trainee1", build_trainee_1),
+                          ("Trainee2", build_trainee_2)):
+        _ref_counter = 0
         write_model(os.path.join(output, name + ".rbxmx"), builder())
 
 

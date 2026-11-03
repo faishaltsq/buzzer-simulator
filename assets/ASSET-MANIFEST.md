@@ -15,13 +15,16 @@ used; there are no external asset dependencies.
 | `PhoneFast.rbxmx` | Slim rounded touchscreen phone with rear dual cameras | 23 |
 | `PCRumah.rbxmx` | High-productivity PC workstation: monitor, keyboard, tower, mouse, desk mat | 32 |
 | `WorkerDesk1.rbxmx` | BS-12 Worker desk workstation: desk frame, monitor, keyboard, mouse, office chair | 29 |
+| `WorkerDesk2.rbxmx` | BS-13 second workstation: metal legs, navy mat, sage monitor trim, task light, storage box | 29 |
 | `Trainee1.rbxmx` | BS-12 R15 cosmetic trainee rig: 15 body parts, 4 facial/hair details, 15 Motor6Ds | 20 |
+| `Trainee2.rbxmx` | BS-13 R15 cosmetic trainee rig: same topology, sage shirt + wood hair, 15 Motor6Ds | 20 |
 
-A furnished room in BS-12 contains 239 BaseParts server-side (Bedroom 155 + PCRumah 32 +
-PhoneFast 23 + WorkerDesk1 29, or 259 with OldCRT), including invisible markers.
-When the client cosmetic Trainee 1 rig (20 BaseParts) is mounted, the client-rendered
-total is 259 BaseParts (or 279 with OldCRT). Both configurations remain strictly under
-the 350-part budget limit. This is an exact part count, not a low-end device performance claim.
+A furnished room in BS-13 contains 268 BaseParts server-side (Bedroom 155 + PCRumah 32 +
+PhoneFast 23 + WorkerDesk1 29 + WorkerDesk2 29, or 288 with OldCRT), including invisible
+markers. When both client cosmetic Trainee rigs (20 + 20 BaseParts) are mounted, the
+client-rendered total is 308 BaseParts (or 328 with OldCRT). Both configurations remain
+strictly under the 350-part budget limit. This is an exact part count, not a low-end
+device performance claim.
 
 ## Art direction and implementation
 
@@ -83,12 +86,16 @@ rotation faces them toward the approaching player (+Z).
 | PhoneFast | Body (0, 1.1, 0) | +1.1 | 3.35 |
 | PCRumah | MonitorStand (0, .175, -.7) | +0.175 | 3.35 |
 | WorkerDesk1 | DeskTop (0, 0, 0) | 0.0 | 0.0 (Floor) / 3.2 (Surface) |
+| WorkerDesk2 | DeskTop (0, 0, 0) | 0.0 | 0.0 (Floor) / 3.2 (Surface) |
 | Trainee1 | HumanoidRootPart (0, 0, 0) | 0.0 | Seated at WorkerSeat1 |
+| Trainee2 | HumanoidRootPart (0, 0, 0) | 0.0 | Seated at WorkerSeat2 |
 
 The CRT/phone horizontal gap is 0.70 studs. The keyboard stays within the
 desktop. In BS-12, `WorkerDeskSlot1` at (-8, 3.2, -8) is occupied by `WorkerDesk1`,
 and `WorkerSeat1` at (-8, 1.6, -6.2) receives client-side cosmetic `Trainee1` when hired.
-`WorkerDeskSlot2` and `WorkerSeat2` remain reserved empty capacity volumes for future tiers.
+In BS-13, `WorkerDeskSlot2` at (-8, 3.2, -2) is occupied by `WorkerDesk2`, and
+`WorkerSeat2` at (-8, 1.6, -0.2) receives client-side cosmetic `Trainee2` when hired.
+Walking clearance between the two workstation rows is preserved.
 
 ## BS-12 Worker Workstation and Trainee Rig
 
@@ -104,6 +111,26 @@ and `WorkerSeat1` at (-8, 1.6, -6.2) receives client-side cosmetic `Trainee1` wh
   - Rig parts are `Anchored = false` and `Massless = true`.
   - **Client-Only Cosmetic Lifecycle:** The rig is spawned strictly on the client by `WorkerAnimationController.luau` via `WorldService.WorkerCosmeticSync` replica markers. The server never simulates character physics or humanoid state for trainees.
   - **Reduced-Motion Support:** Evaluates user accessibility settings (`UserGameSettings.ReducedMotion`). When enabled, worker animations freeze at a static natural seated pose, eliminating per-frame motor updates while preserving visual fidelity.
+
+## BS-13 Second Workstation and Trainee 2
+
+- **WorkerDesk2 (`assets/world/WorkerDesk2.rbxmx`):**
+  - 29 BaseParts total, related but distinct from WorkerDesk1: metal legs instead
+    of a foot crossbar, navy desk mat, sage monitor bezel, amber task light, and a
+    compact sage storage box.
+  - Server-mounted when Desk 2 (Tier 2 + Trainee 1 prerequisites) is purchased.
+  - PrimaryPart is `DeskTop` anchored at (0, 0, 0) relative to `WorkerDeskSlot2` (-8, 3.2, -2).
+- **Trainee2 (`assets/world/Trainee2.rbxmx`):**
+  - 20 BaseParts, identical R15 topology and part count to Trainee1; sage shirt
+    and wood-tone hair keep the two trainees visually distinguishable.
+  - Client-only cosmetic marker `Trainee2` under `WorkerSeat2`; no server-side
+    Humanoid simulation.
+- **Controller generalization (`src/client/WorkerAnimationController.luau`):**
+  - Matches any `Trainee*` folder carrying the `WorkerCosmetic` attribute; clones
+    a per-slot prefab from `ReplicatedStorage.WorkerPrefabs`.
+  - Deterministic per-slot typing phase offset (`(slot - 1) * 2.375s`) keeps two
+    trainees from typing in sync; reduced-motion still freezes every rig.
+  - Records are per-marker, so removing one slot cleans only its own rig.
 
 ## Dashboard interaction and isolation
 

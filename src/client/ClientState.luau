@@ -306,6 +306,17 @@ function ClientState:BeginMutation(action: string, payload: any, localNow: numbe
 			if not hasPrior then
 				return self:_rejectMutation(errorText("NOT_READY"))
 			end
+			-- Server contract (docs/04): desk 2 also requires Trainee 1 hired.
+			local priorWorker = false
+			for _, w in ipairs(snapshot.workers or {}) do
+				if (w :: any).slotIndex == slotIndex - 1 then
+					priorWorker = true
+					break
+				end
+			end
+			if not priorWorker then
+				return self:_rejectMutation(errorText("NOT_READY"))
+			end
 		end
 		local price = Catalog.DeskPrices and Catalog.DeskPrices[slotIndex] or 0
 		if price <= 0 or typeof(snapshot.balance) ~= "number" or snapshot.balance < price then

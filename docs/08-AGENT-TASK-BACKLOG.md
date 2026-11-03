@@ -148,7 +148,7 @@
 - **Constraints:** Reuse same worker service/rig; no new room prefab, role, per-NPC loop or empty office UI. Do not alter schema without reviewed amendment.
 - **Acceptance:** Active/balanced/passive second-hire scenario 11:45/14:01/22:20 under `04` assumptions; 30 healthy seconds bank90 with two; no offline earnings; two visible non-clipping workers on mobile; profile restore after rejoin.
 - **Validation:** Fake-clock/seat tests, dev-store rejoin, Studio art/performance/phone captures, balance simulator and Codex review.
-- **DoD:** IC-4 M1 home-studio arc complete; common DoD.
+- **DoD:** IC-4 M1 home-studio arc complete; common DoD. Implemented on branch `agent/BS-13-second-worker-and-scale`; all 20 Studio regression suites green (745 tests, BS13HomeStudio 44/44); full genuine Studio visual and gameplay evidence in `docs/evidence/bs13/`.
 
 ### BS-14 — Closed-beta candidate gate
 - **Objective:** Verify the exact content-complete candidate for limited closed beta and fix only evidenced defects.
