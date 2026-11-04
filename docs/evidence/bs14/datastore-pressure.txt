@@ -1,0 +1,26 @@
+=== BS-14 DataStore Schema, Rollback Reader & Write-Pressure Audit ===
+Timestamp: 2026-11-04 05:26:17 UTC
+Tier: 2 (offline Studio, real ProfileStore code + injected store adapter)
+Total: 7, Passed: 7
+
+[PASS] PERSIST-01 Unknown extra envelope field tolerated, balance preserved
+  Details: ok=true code=OK balance=750
+
+[PASS] PERSIST-02 Foreign schemaVersion refused (never migrated blindly)
+  Details: ok=false code=UNSUPPORTED_SCHEMA
+
+[PASS] PERSIST-03 Stale revision write aborted, newer durable state intact
+  Details: saveCode=SAVE_UNAVAILABLE durableRevision=7 durableBalance=3000
+
+[PASS] PERSIST-04 Concurrent second server denied the live lease
+  Details: first=true second=LOCKED
+
+[PASS] PERSIST-05 30 sustained writes serialized without loss
+  Details: writes=30 backendWrites=31 revision=31 balance=300 latencyMs p50=49.9 p95=51.2 max=51.4
+
+[PASS] PERSIST-06 Ambiguous failures retried to exactly one durable write
+  Details: ok=true code=OK revision=2 backendWrites=2
+
+[PASS] PERSIST-07 Reused operation ID with different payload refused
+  Details: first=OK replay=INVALID_PROFILE
+

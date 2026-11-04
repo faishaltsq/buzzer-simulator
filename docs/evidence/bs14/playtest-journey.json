@@ -1,0 +1,129 @@
+{
+  "timestamp": "2026-11-03 16:31:43 UTC",
+  "status": "PASS",
+  "milestonesCount": 17,
+  "timeline": [
+    {
+      "step": 0,
+      "name": "Fresh 0-Cuan Spawn",
+      "time": "16:16:55 UTC",
+      "detail": "Spawned, balance: 0, lifetime: 0, tier: 0"
+    },
+    {
+      "step": 1,
+      "name": "OldCRT Prompt & BuzzerOS Discovery",
+      "time": "16:16:58 UTC",
+      "detail": "Prompt invoked: True, Desktop visible: True"
+    },
+    {
+      "step": 2,
+      "name": "First Organic Snack Post",
+      "time": "16:17:19 UTC",
+      "detail": "Published & settled snack_meme, payout balance: 15 Cuan, lifetime: 15"
+    },
+    {
+      "step": 3,
+      "name": "Food Stall Launch Mission",
+      "time": "16:17:46 UTC",
+      "detail": "Completed: claims=1, balance=110 Cuan, lifetime=110"
+    },
+    {
+      "step": 4,
+      "name": "Fast Phone Purchase",
+      "time": "16:17:46 UTC",
+      "detail": "Bought & equipped: phone_fast, balance: 60 Cuan"
+    },
+    {
+      "step": 5,
+      "name": "Mission 2 (Fictional Gadget)",
+      "time": "16:18:14 UTC",
+      "detail": "Missions completed: 2, balance: 184"
+    },
+    {
+      "step": 6,
+      "name": "Mission 3 (Neon Market) -> Tier 1",
+      "time": "16:18:42 UTC",
+      "detail": "Tier: 1, missions: 3, balance: 328"
+    },
+    {
+      "step": 7,
+      "name": "Mission 4 (Brand Remix)",
+      "time": "16:19:09 UTC",
+      "detail": "Missions completed: 4, balance: 512, lifetime: 562"
+    },
+    {
+      "step": 8,
+      "name": "PC Rumah Purchase",
+      "time": "16:19:10 UTC",
+      "detail": "Swapped terminal to pc_rumah, balance: 292"
+    },
+    {
+      "step": 9,
+      "name": "Desk 1 Purchase",
+      "time": "16:19:58 UTC",
+      "detail": "Desk 1 purchased, owned desks: [1], balance: 112"
+    },
+    {
+      "step": 10,
+      "name": "Trainee 1 Hire",
+      "time": "16:21:40 UTC",
+      "detail": "Workers: 1, passive rate: 1.5 Cuan/s, balance: 532"
+    },
+    {
+      "step": 11,
+      "name": "Tier 2 Unlock ('Studio Rumahan')",
+      "time": "16:29:42 UTC",
+      "detail": "Tier reached: 2, lifetime: 1614, balance: 664"
+    },
+    {
+      "step": 12,
+      "name": "Desk 2 Purchase",
+      "time": "16:29:42 UTC",
+      "detail": "Desk 2 purchased, owned desks: [1, 2], balance: 420"
+    },
+    {
+      "step": 13,
+      "name": "Trainee 2 Hire (Chapter Complete)",
+      "time": "16:31:37 UTC",
+      "detail": "Workers: 2, passive rate: 3 Cuan/s, balance: 5"
+    },
+    {
+      "step": 14,
+      "name": "HUD Clarity & Terminology Audit",
+      "time": "16:31:37 UTC",
+      "detail": "Tier badge: 'Tier 2: Studio Rumahan', Rate text: '+3.0/s', Objective: 'None'"
+    },
+    {
+      "step": 15,
+      "name": "Desktop Close (Session Intermission)",
+      "time": "16:31:39 UTC",
+      "detail": "Closed: True, desktop visible: False"
+    },
+    {
+      "step": 16,
+      "name": "Second Session Re-entry",
+      "time": "16:31:42 UTC",
+      "detail": "Reopened: True, Tier: 2, Workers: 2, Rate: 3 Cuan/s, Device: pc_rumah"
+    }
+  ],
+  "finalState": {
+    "workers": 2,
+    "rate": 3,
+    "deviceId": "pc_rumah",
+    "state": "Open",
+    "balance": 5,
+    "tier": 2,
+    "reopened": true,
+    "lifetime": 1955,
+    "desks": [
+      1,
+      2
+    ]
+  },
+  "hud": {
+    "hasHud": true,
+    "cuanText": "5 Cuan",
+    "rateText": "+3.0/s",
+    "tierText": "Tier 2: Studio Rumahan"
+  }
+}

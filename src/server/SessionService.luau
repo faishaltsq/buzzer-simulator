@@ -66,6 +66,15 @@ local MAX_TIME_CHUNK = 60
 local MAX_RECENT_OUTCOMES = 32
 local MAX_QUEUED_ACTIONS = 32
 
+-- Transient save-path failure codes (ProfileStore.Save). These never prove a
+-- durable write did not land, so a mutation blocked by one must stay
+-- unconfirmed (lookup UNKNOWN) instead of being cached as a definite
+-- rejection; only definite domain failures are cached (see Mutate).
+local SAVE_PATH_CODES: { [string]: boolean } = {
+	SAVE_UNAVAILABLE = true,
+	BUSY = true,
+}
+
 local MAX_LIVE_RESULTS = 64
 local MAX_PENDING_INTERVALS = 32
 -- Server-owned operation-ID namespaces. Client request IDs never enter these.
@@ -1192,7 +1201,17 @@ function SessionService:_executeMutation(
 			revision = self._revision,
 			detail = "pending settlement could not be confirmed",
 		}
-		self:_cacheResult(requestId, intent, blocked)
+		-- A save-path failure never proves the write did not land, so it must
+		-- not be cached as a definite rejection: a later lookup would resolve
+		-- this command as REJECTED for a possibly persisted settlement
+		-- (docs/03: an ordinary SAVE_UNAVAILABLE reply cannot release a
+		-- possibly persisted action). Same rule as the command commit below:
+		-- only definite domain failures are cached. The reservation is released
+		-- so a later turn retries the settlement under its stable post identity
+		-- and then runs this command exactly once.
+		if not SAVE_PATH_CODES[settle.code] then
+			self:_cacheResult(requestId, intent, blocked)
+		end
 		self._reserved[requestId] = nil
 		self._reservedIntents[requestId] = nil
 		return blocked

@@ -1,0 +1,109 @@
+{
+  "timestamp": "2026-11-03 15:34:03 UTC",
+  "viewports": [
+    {
+      "isCompact": true,
+      "fails": [],
+      "failedTouchTargets": 0,
+      "totalTouchTargets": 10,
+      "viewport": {
+        "y": 474,
+        "x": 296
+      },
+      "window": {
+        "y": 366.0799865722656,
+        "x": 280
+      },
+      "mobileNavVisible": true,
+      "navRailVisible": false,
+      "name": "Mobile Portrait (390x844)",
+      "target_mode": "compact",
+      "modeMatch": true
+    },
+    {
+      "isCompact": true,
+      "fails": [],
+      "failedTouchTargets": 0,
+      "totalTouchTargets": 6,
+      "viewport": {
+        "y": 474,
+        "x": 296
+      },
+      "window": {
+        "y": 366.0799865722656,
+        "x": 280
+      },
+      "mobileNavVisible": true,
+      "navRailVisible": false,
+      "name": "Mobile Portrait Missions (390x844)",
+      "target_mode": "compact",
+      "modeMatch": true
+    },
+    {
+      "isCompact": true,
+      "fails": [],
+      "failedTouchTargets": 0,
+      "totalTouchTargets": 9,
+      "viewport": {
+        "y": 156,
+        "x": 324
+      },
+      "window": {
+        "y": 240,
+        "x": 291.6000061035156
+      },
+      "mobileNavVisible": true,
+      "navRailVisible": false,
+      "name": "Mobile Landscape (640x360)",
+      "target_mode": "compact",
+      "modeMatch": true
+    },
+    {
+      "isCompact": true,
+      "fails": [],
+      "failedTouchTargets": 0,
+      "totalTouchTargets": 10,
+      "viewport": {
+        "y": 544,
+        "x": 724
+      },
+      "window": {
+        "y": 427.67999267578125,
+        "x": 651.5999755859375
+      },
+      "mobileNavVisible": true,
+      "navRailVisible": false,
+      "name": "Tablet Landscape (768x1024)",
+      "target_mode": "wide",
+      "modeMatch": false
+    },
+    {
+      "isCompact": false,
+      "fails": [],
+      "failedTouchTargets": 0,
+      "totalTouchTargets": 11,
+      "viewport": {
+        "y": 642,
+        "x": 1510
+      },
+      "window": {
+        "y": 513.9199829101562,
+        "x": 1100
+      },
+      "mobileNavVisible": false,
+      "navRailVisible": true,
+      "name": "Desktop 1080p (1280x720+)",
+      "target_mode": "wide",
+      "modeMatch": true
+    }
+  ],
+  "performance": {
+    "budgetOk": true,
+    "budgetLimit": 350,
+    "fpsTargetOk": true,
+    "baseParts": 249,
+    "memoryMb": 1638.4,
+    "avgFps": 59.9,
+    "minFps": 49.7
+  }
+}

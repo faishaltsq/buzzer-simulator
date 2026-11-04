@@ -1,0 +1,39 @@
+=== BS-14 Remediation Record: settlement-blocked command cached as a definite rejection ===
+Timestamp: 2026-11-04 (UTC+7)
+Found by: BS-14 security review pass 2 (SessionService.luau settlement gate), confirmed by a
+          purpose-built regression test before any fix was applied.
+
+DEFECT
+  SessionService:_executeMutation processed a due settlement before a command. When that
+  settlement's durable write failed, the command's blocked result was cached in the live
+  result table unconditionally, so a later progress lookup for the same requestId resolved
+  as REJECTED (a definite verdict) even though the settlement write may have landed.
+  Contract: docs/03-TECHNICAL-ARCHITECTURE.md ("An ordinary SAVE_UNAVAILABLE reply cannot
+  release a possibly persisted action"; settlement commit failures must stay unconfirmed).
+  The command-commit failure path two dozen lines below already applied the correct rule
+  (only definite domain failures are cached); the settlement gate did not.
+
+RED (pre-fix, new test B6 in tests/Specs/BS10Recovery.spec.luau)
+  Run: BS-01 regression, runId 002af95f-6482-45ab-b12e-ff907073a6f9
+  Result: BS10Recovery.spec failed
+    B6: A settlement-blocked command is never cached as a definite rejection:
+        an unconfirmed settlement write is never a definite rejection: expected UNKNOWN, got REJECTED
+  All other BS-10 assertions (41/42) passed, isolating the defect to the caching decision.
+  All other 19 suites passed.
+
+FIX (src/server/SessionService.luau)
+  - Added module constant SAVE_PATH_CODES = { SAVE_UNAVAILABLE = true, BUSY = true } with a
+    comment stating why save-path failures never prove a write did not land.
+  - In the settlement-failure branch of _executeMutation, the blocked result is cached only
+    when the code is NOT a save-path code, matching the rule already applied to command
+    commit failures. The reservation is still released so a later turn retries the retained
+    settlement under its stable post identity and then runs the command exactly once.
+
+GREEN (post-fix)
+  Run: BS-01 regression, runId 5cb79682-5ea9-4fd5-85b0-f269fbb2d2db
+  Result: 20/20 suites passed, 0 failed, 748 assertions (747 + B6).
+  B6 now also proves the full recovery: the blocked lookup is UNKNOWN, Reconcile commits the
+  retained settlement exactly once, save status returns to healthy, and the same requestId
+  then executes and publishes exactly once (durable balance 15, no double credit).
+
+VERDICT: defect fixed with a regression test; no other suite regressed.
