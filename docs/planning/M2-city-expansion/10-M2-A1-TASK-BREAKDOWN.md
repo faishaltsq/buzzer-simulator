@@ -3,7 +3,7 @@
 > **Purpose**: Turn the recommended first milestone (`07`, §3) into an
 > executable, reviewable task list for the implementation session.
 > **Status**: Planning. This branch implements none of it.
-> **Precondition**: director accepts the coordinate + anchor contract (G1).
+> **Precondition**: director accepts the coordinate + anchor contract (M2-G1).
 
 ---
 
@@ -46,37 +46,41 @@ project-file owner.
 ### T1 — Freeze the contract in the generator
 
 - Encode the coordinate table (`02`, §3) as constants: grid 16, grade 0,
-  street `z 18–64`, town center `z 64–160`, gate `z 160–176`, lot width 24,
-  facade depth 24.
+  street `z 16–64`, town center `z 64–160`, gate `z 160–176`, lot width 24,
+  facade depth 24, plaza radius 40 (estimate).
 - Add a generator self-check that asserts every zone pivot matches the table.
 - **Verify:** running the generator prints the constants and passes the
   self-check; no `.rbxmx` exported yet.
 
 ### T2 — Generate `HouseExterior` blockout
 
-- Wrap the 24×24 room with a 0.6-stud offset shell.
+- Wrap the 24×24 room with a 0.6-stud offset shell; grade begins at `z = 16`
+  (4-stud stoop).
 - Cut a doorway at `x -7.85…-4.15`, `y 0…7.3`, aligned to `Door`.
 - Parapet at `y = 11.9`; **no roof plane**.
+- Place `City_HomeDoor` on the exterior face at `(-6, 3.65, 16)` and
+  `City_DoorPromptInterior` inside at `(-6, 3.65, 8)`. Leave the frozen `Door`
+  part untouched.
 - **Verify:** export, open in Studio, walk to the stoop from inside; no gap at
   the door frame, no z-fighting, no camera clip.
 
 ### T3 — Generate `StreetBlock` blockout
 
-- Road `x -12…+12`, sidewalks 8 studs each side, `z 18–64`.
+- Road `x -16…+16`, sidewalks 8 studs each side, `z 16–64`.
 - Two lamp poles, two signpost anchor parts.
 - **Verify:** walk from stoop to plaza edge in ≤ 4 s; no prop blocks a 6-stud
   clear path.
 
 ### T4 — Generate `TownCenter` blockout
 
-- Paving disc radius 38 at `(0, 0, 112)`; fountain cylinder radius 8.
+- Paving disc radius 40 (estimate) at `(0, 0, 112)`; fountain cylinder radius 8.
 - Four lamps, four benches (massing only).
 - **Verify:** fountain and boards kiosk visible from the stoop; 8-stud clear
   ring around the fountain.
 
 ### T5 — Generate `CityBackdrop`
 
-- 8 parts max, `z -200…-120`, one tower mass, two antenna tips.
+- 8 parts max, `z -192…-112`, one tower mass, two antenna tips.
 - `ModelStreamingMode = Persistent` when assembled.
 - **Verify:** from the desk camera, the window shows silhouettes, not sky; no
   part is reachable or collidable.
@@ -129,4 +133,4 @@ project-file owner.
 ## Estimated effort
 
 1–2 dev-days including Studio review. If it exceeds 3 dev-days, the coordinate
-contract is wrong — stop and re-open G1 rather than pushing through.
+contract is wrong — stop and re-open M2-G1 rather than pushing through.

@@ -80,18 +80,29 @@ Listed so ownership can be serialized. Nothing here happens in this PR.
 
 ## 4. Dependency on BS-13 (Agent 1)
 
+**BS-13 is complete** (PR #7, merged at `27213d4`). The shipped table is
+`Catalog.H2Shipped` with `maxShippedTier = 2`, `maxShippedDeskSlot = 2`,
+`maxShippedWorkerSlot = 2`, so every term of the unlock gate is now reachable
+on the current build. The gate below is therefore **validated, not speculative**:
+
+```text
+cityUnlocked = (profile.tier >= 2)
+            and (#ownedDesks >= 2)
+            and (#workers >= 2)
+```
+
 | BS-13 outcome | M2 impact |
 |---|---|
 | Tier 2 remains the chapter end | unlock gate unchanged |
 | `workers` stores two entries with `slotIndex` 1/2 | gate `#workers >= 2` unchanged |
 | `ownedDesks` stores `{1, 2}` | gate `#ownedDesks >= 2` unchanged |
+| `Catalog.Shipped` caps (`H2Shipped`) | gate terms must not exceed the shipped caps |
 | Any change to worker completion semantics | update `cityUnlocked` derivation; no schema change |
 | Any change to `Catalog.Tiers` values | **re-derive the gate from the new values; do not hard-code 2** |
 | BS-13 adds a new persisted field | check whether the gate should use it; avoid duplicate state |
 
-**Rule:** the gate is derived from *existing* fields, not new ones. If BS-13
-introduces a chapter-complete flag, prefer that flag over a two-field
-heuristic — but that is a director decision.
+**Rule:** the gate is derived from *existing* fields, not new ones. No new
+persisted field is introduced by M2.
 
 ---
 

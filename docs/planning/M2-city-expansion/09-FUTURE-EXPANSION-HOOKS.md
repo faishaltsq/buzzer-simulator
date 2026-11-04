@@ -74,7 +74,7 @@ not a system.
 **Fantasy:** the horizon. The tower the player looks at from the bedroom window
 and eventually enters.
 
-**Hook shipped in M2:** the backdrop silhouette at `z -200…-120`, with two
+**Hook shipped in M2:** the backdrop silhouette at `z -192…-112`, with two
 blinking antenna lights. It is `Persistent`, ≤ 8 parts, non-collidable,
 non-reachable.
 
@@ -98,7 +98,7 @@ until a chapter is approved.
 
 **Fantasy:** the city is connected. Fast travel between districts.
 
-**Hook shipped in M2:** `City_TransitStop` at `(20, 0, 96)`, a dressed shelter
+**Hook shipped in M2:** `City_TransitStop` at `(24, 0, 96)`, a dressed shelter
 with a "Belum beroperasi" sign. Inert in M2-A/B.
 
 **When it opens:** when a second walkable district exists (M2-C at the

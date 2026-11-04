@@ -3,8 +3,10 @@
 > **Document status**: Planning only. Not implementation authority.
 > **Target**: Buzzer Simulator M2 ("Kota") — the chapter after the M1 home studio.
 > **Branch**: `agent/M2-city-world-blueprint`
-> **Baseline**: `origin/master` @ `b1e8800` (BS-12 merged; BS-13 in progress by Agent 1).
+> **Baseline**: `origin/master` @ `27213d4` (BS-13 / PR #7 merged; `Catalog.Shipped = H2Shipped`).
 > **Owner**: Agent 2 (world expansion planning). Production owner: director.
+> **Evidence status**: all distances, part counts, and effort ranges in this
+> package are **estimates** until measured in Studio.
 
 ---
 
@@ -43,9 +45,9 @@ The city is a **short walk outside the door**, not a second game.
   briefs, read the daily board, buy visible cosmetics, and stamp landmarks,
   then returns home to publish and bank. This preserves the M1 loop and gives
   the exterior a reason to exist.
-- **Compact by contract.** 224 × 198 studs of walkable city, one 16-stud
-  building module, longest meaningful walk ≈ 10 seconds. No MMO scale, no
-  vehicles in MVP, no seamless open world.
+- **Compact by contract.** 216 × 200 studs of walkable city, an 8-stud build
+  module with 16-stud major lines, longest meaningful walk ≈ 10 seconds
+  (estimate). No MMO scale, no vehicles in MVP, no seamless open world.
 - **Zero new economy numbers in this blueprint.** Shops surface the *existing*
   `Catalog` entries. Event rewards reuse existing mission rewards or grant
   cosmetics only. Any new price, tier, or bonus is a separate director decision.
@@ -81,13 +83,29 @@ From `docs/01`, `docs/03`, `docs/06`, `docs/DESIGN.md`, and this task:
 
 ## 4. Approval gates
 
+### 4.1 Global project QA gates (unchanged)
+
+`G0–G5` in [`docs/09-TESTING-AND-QUALITY.md`](../../09-TESTING-AND-QUALITY.md)
+remain the project-wide gates. They are **not** renamed or replaced here. In
+particular **G2 is the real-DataStore/data-safety gate**; no M2 gate overrides
+or substitutes for it.
+
+### 4.2 M2 city-specific gates
+
+These are planning gates for the city program only. They are prefixed `M2-G*`
+so they can never be confused with the global `G0–G5` suite.
+
 | Gate | Owner | Blocks |
 |---|---|---|
-| G1 — Coordinate + anchor contract accepted | Director + technical art | Any city prefab authoring |
-| G2 — M2-A blockout visually signed off in Studio | Director | M2-A merge |
-| G3 — Shop/event copy + economy boundary accepted | Director | M2-B shop content |
-| G4 — Schema v2 decision (city flags) | Director | M2-C districts, future gates |
-| G5 — Real-device performance evidence | Director | Any public city release |
+| M2-G1 — Coordinate + anchor contract accepted | Director + technical art | Any city prefab authoring |
+| M2-G2 — M2-A blockout visually signed off in Studio | Director | M2-A merge |
+| M2-G3 — Shop/event copy + economy boundary accepted | Director | M2-B shop content |
+| M2-G4 — Schema v2 decision (city flags) | Director | M2-C districts, future gates |
+| M2-G5 — Real-device performance evidence | Director | Any public city release |
+
+M2-G2 is a **visual blockout sign-off**, not the global G2 DataStore gate.
+Passing M2-G2 says nothing about data safety; global G2 still applies to every
+build.
 
 Nothing in this package authorizes a merge into `master` beyond the documents
 themselves.
@@ -96,12 +114,15 @@ themselves.
 
 ## 5. Relationship to Agent 1 / BS-13
 
-Agent 1 owns BS-13 (second workstation, home-studio goal) and the M1 economy
-freeze. This blueprint:
+**BS-13 is complete.** PR #7 merged to `master` at `27213d4`; the shipped table
+is `Catalog.H2Shipped` (`maxShippedTier = 2`, `maxShippedDeskSlot = 2`,
+`maxShippedWorkerSlot = 2`). This blueprint:
 
 - does not edit `Catalog.luau`, `EconomyService.luau`, or tests;
-- assumes **no change** to the shipped M1 catalog;
+- assumes **no change** to the shipped H2 catalog;
+- derives the city gate from the now-shipped Tier 2 + two-desk + two-worker
+  profile (validated in `08-INTEGRATION-DEPENDENCIES.md`, §4);
 - flags every future implementation touchpoint in
   [`08-INTEGRATION-DEPENDENCIES.md`](08-INTEGRATION-DEPENDENCIES.md);
-- recommends M2 implementation begins only after the BS-14 closed-beta gate
-  produces a Go with measured M1 balances.
+- keeps M2 implementation behind the BS-14 closed-beta Go unless the director
+  explicitly changes that dependency.

@@ -35,7 +35,7 @@ existing ≤ 350 budget is untouched.
 |---|---|
 | **Purpose** | Make the frozen bedroom read as a real house from outside, and define the threshold between private and public. |
 | **Gameplay role** | The only door. Entry/exit prompt. No economy. |
-| **Extent** | `x -22…+22`, `z -22…+22`; shell offset 0.6 studs outside the 24×24 room. |
+| **Extent** | `x -24…+24`, `z -24…+16`; shell offset 0.6 studs outside the 24×24 room, city grade beginning at `z = 16`. |
 | **Example interactions** | Interior prompt `Keluar Rumah` on `City_DoorPromptInterior`; exterior prompt `Masuk Rumah` on `City_HomeDoor`. Locked-state copy when `cityUnlocked == false`. |
 | **Visuals** | Cream plaster cladding, walnut door surround, sage awning, one hanging bulb, house number plate, potted plant, low stoop step, scooter prop. Warm amber bulb tint. |
 | **Required prefabs** | `HouseExterior.rbxmx` (shell + facade + stoop), `City_DoorPrompts` (anchor parts only). |
@@ -53,8 +53,8 @@ from the desk, the window shows skyline only.
 | Field | Specification |
 |---|---|
 | **Purpose** | Orientation corridor and pacing beat. Teaches the city scale on first exit. |
-| **Gameplay role** | Traversal only. Signage, no purchases. 3.6-second walk to the boards. |
-| **Extent** | `x -20…+20`, `z +18…+64`; 24-stud road + 8-stud sidewalks. |
+| **Gameplay role** | Traversal only. Signage, no purchases. Estimated 3.5-second walk to the boards (verify in the blockout). |
+| **Extent** | `x -24…+24`, `z +16…+64`; 32-stud road + 8-stud sidewalk each side (48 total). |
 | **Example interactions** | Two signposts (`City_Signpost_01/02`), a lamp post light, one non-interactive neighbor porch. |
 | **Visuals** | Wet asphalt (SmoothPlastic, low specular), painted center line, sage awnings on both sides, hanging cables between poles, faded fictional shop sign, one parked delivery bike. |
 | **Required prefabs** | `StreetBlock.rbxmx`. |
@@ -70,7 +70,7 @@ from the desk, the window shows skyline only.
 |---|---|
 | **Purpose** | The city's heart and fast-travel landmark. Where the player understands "this is the hub". |
 | **Gameplay role** | Mission + daily boards, bus stop (inert), landmark stamps, event announcements. |
-| **Extent** | `x -56…+56`, `z +64…+160`; plaza disc radius 38 at `(0, 0, 112)`. |
+| **Extent** | `x -56…+56`, `z +64…+160`; plaza disc radius 40 (estimate) at `(0, 0, 112)`. |
 | **Example interactions** | Board kiosk prompt, 3 signposts, bench sit (cosmetic animation, optional), fountain inspect (flavor line), bus stop read. |
 | **Visuals** | Circular paved plaza (two-tone stone), low fountain with 8-stud basin, 4 benches, 3 lamp posts, flag banner over the board kiosk, warm evening tone, visible shop awnings on both sides as sightlines. |
 | **Required prefabs** | `TownCenter.rbxmx`, `CityProps.rbxmx` (benches, lamps, bins). |
@@ -86,7 +86,7 @@ from the desk, the window shows skyline only.
 |---|---|
 | **Purpose** | A physical storefront for the **existing** upgrade catalog. |
 | **Gameplay role** | Gameplay shop. Opens the existing BuzzerOS `Upgrades` tab, filtered and pre-scrolled. **No new prices, no new items.** |
-| **Extent** | `x +56…+84`, `z +72…+96`; open-front kiosk, 24-stud facade, 12-stud counter depth. |
+| **Extent** | `x +56…+80`, `z +72…+96`; open-front kiosk, 24-stud lot width, 24-stud facade depth. |
 | **Example interactions** | `City_Prompt_ElectroMart` → server confirms anchor + distance → client opens `Upgrades`. Locked until `neon_market` completed (copy: "Pak Bud belum kenal kamu"). |
 | **Visuals** | Amber sign, sage awning, CRT stack on shelves (reuse `OldCRT` silhouette geometry, not the prefab instance), phone boxes, cable coils, counter bell, fluorescent tube (one PointLight, no shadows). |
 | **Required prefabs** | `ShopRowElectronics.rbxmx` (shell + counter + shelf boxes only; **no product models from `assets/world/`**). |
@@ -106,7 +106,7 @@ from the desk, the window shows skyline only.
 |---|---|
 | **Purpose** | Cosmetic expression for the bedroom. The first place players can spend on looks instead of power. |
 | **Gameplay role** | Cosmetic shop. Sells room props that are **visual only**: no Cuan, no yield, no reveal, no worker effect. |
-| **Extent** | `x -84…-56`, `z +72…+96`; open-front kiosk. |
+| **Extent** | `x -80…-56`, `z +72…+96`; open-front kiosk. |
 | **Example interactions** | `City_Prompt_RumahRapi` → opens a cosmetic catalog panel (new UI, M2-B) → purchase confirms a decor item placed in the room by a future `DecorService`. Locked until `fictional_gadget` completed. |
 | **Visuals** | Walnut shelving, sage fabric bolts, a sample chair, a rug rack, a plant corner, warm desk lamp. Cozy, not luxury. |
 | **Required prefabs** | `ShopFurniture.rbxmx`; cosmetic item prefabs are **separate, small, and director-approved** (see `07`, asset priority). |
@@ -122,7 +122,7 @@ from the desk, the window shows skyline only.
 |---|---|
 | **Purpose** | A stage for limited-time authored events and seasonal dressing. |
 | **Gameplay role** | Event venue. Hosts pop-ups, campaign weeks, festival overlays. Reuses existing mission rewards or grants cosmetic stamps. |
-| **Extent** | `x -140…-84`, `z +104…+164`; 56×60 open plaza, 16-stud connector to town center. |
+| **Extent** | `x -136…-80`, `z +104…+164`; 56×60 open plaza, 24-stud connector to town center. |
 | **Example interactions** | Event board prompt (read-only until an event is active), stage inspect, 2 signposts, NPC crowd (client-local). |
 | **Visuals** | Low stage (2 studs), string lights, banner rig, 6 fold-out stalls stored as an alternate model, empty lot when idle so it doesn't look broken. |
 | **Required prefabs** | `EventPlaza.rbxmx` (permanent shell), `EventPlaza_PopUp.rbxmx` (event-only dressing, streamed in on demand). |
@@ -138,7 +138,7 @@ from the desk, the window shows skyline only.
 |---|---|
 | **Purpose** | The physical delivery point for campaign briefs. The reason to leave the room every session. |
 | **Gameplay role** | Mission delivery. Adds a brief to the existing mission queue; **publishing still happens at the terminal**. |
-| **Extent** | `x -12…+12`, `z +66…+76`, inside the town center south edge, facing the arriving player. |
+| **Extent** | `x -12…+12`, `z +64…+72`, on the town center north edge, facing the arriving player. |
 | **Example interactions** | `City_Prompt_Boards` → opens the mission list (existing `Missions` tab) or a compact board panel; daily brief shows one rotating authored entry with a visible reset time. |
 | **Visuals** | Two cork boards under a sage awning, pinned paper cards, a hanging lamp, chalk headline, a small queue rope. No floating 3D text. |
 | **Required prefabs** | `CityBoards.rbxmx` (30 parts) + anchors. |
@@ -170,7 +170,7 @@ from the desk, the window shows skyline only.
 |---|---|
 | **Purpose** | Fix V-03: the bedroom window currently looks at raw sky. |
 | **Gameplay role** | None. Aspirational vista; hides the edge of the world. |
-| **Extent** | `x +10…+160`, `z -200…-120`, height ≤ 120; **never walkable**. |
+| **Extent** | `x +16…+160`, `z -192…-112`, height ≤ 120; **never walkable**. |
 | **Visuals** | 3–4 flat silhouette slabs (navy/sage), one taller Agency Tower shape, haze plane, two blinking antenna lights. |
 | **Required prefabs** | `CityBackdrop.rbxmx` (≤ 8 parts, `Persistent` streaming). |
 | **Budget** | 8 BaseParts. |

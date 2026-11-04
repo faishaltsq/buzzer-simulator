@@ -199,10 +199,30 @@ cityUnlocked =
 ```
 
 - Uses only fields that already exist and are already validated.
-- Tier 2 is already authored in `Catalog.Tiers` (1600 lifetime / 3 claims).
+- Tier 2 is already authored in `Catalog.Tiers` (1600 lifetime / 3 claims) and
+  shipped via `Catalog.H2Shipped` since BS-13 (PR #7).
 - The second worker is the M1 chapter endpoint (BS-13), so the door opens
   exactly when the home-studio chapter closes.
 - No new tier, no new price, no new counter.
+- `Catalog.Shipped` now carries `maxShippedTier = 2`,
+  `maxShippedDeskSlot = 2`, `maxShippedWorkerSlot = 2`, so every term of the
+  gate is reachable on the current build.
+
+**Director decision still open — do not change the gate without approval:**
+
+| Option | Gate | Benefit | Cost |
+|---|---|---|---|
+| **A (current default)** | Entire city opens after Tier 2 + two desks + two trainees | Clean chapter break; protects M1 closed-beta pacing; the door is a visible reward | Players who never finish M1 never see the city |
+| **B** | Residential street + boards accessible earlier (e.g. Tier 1); shops/plaza/events gated after Home Studio | Early wonder; gives mid-M1 players a change of scenery | Splits the chapter break; risks distracting from unmeasured M1 pacing; needs a second gate surface |
+
+**Recommendation: A.** The city is the next chapter, not a mid-chapter
+distraction. The M1 endpoint is already a strong visible goal (two trainees,
+full room), and the door unlocking exactly there makes the transition legible.
+Option B should only be adopted if BS-14 playtests show players stalling
+*without* looking for more world.
+
+Both options are documented here; the documents implement **A** only. Option B
+is not silently implemented anywhere in this package.
 
 **Door behavior before unlock:** the door prompt is visible and locked, with
 honest copy — *"The city opens when the studio is running. Hire your second

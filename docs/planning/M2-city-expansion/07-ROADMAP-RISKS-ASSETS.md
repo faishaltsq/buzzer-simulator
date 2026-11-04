@@ -57,12 +57,13 @@ Do these in order. Do not parallelize across the art/contract boundary.
    possible moment to prevent rework.
 2. **Blockout** house shell + street + town center with grey parts only.
    Walk it on a phone. Confirm the door threshold, sightlines, and walk time.
-3. **Sign off the blockout** (G2). No texture, no sign, no prop until this
+3. **Sign off the blockout** (M2-G2). No texture, no sign, no prop until this
    passes.
 4. **Add the boards kiosk** and the existing mission surface routing. This is
    the first *functional* reason to leave.
 5. **Add the door prompts + `cityUnlocked` gate** using existing profile
-   fields. Prove no schema change is needed.
+   fields (tier 2 + 2 desks + 2 workers — all present since BS-13).
+   Prove no schema change is needed.
 6. **Add streaming roots** and verify no pop at the door.
 7. **Detail pass**: street props, plaza fountain/benches, signage, backdrop.
 8. **ElectroMart** (existing Upgrades routing) — the cheapest "real shop".
@@ -120,7 +121,7 @@ playable at step 5 — before any shop exists.
 | R1 | Door threshold misalignment (shell vs. frozen `Door`) | High | Medium | visible gap/step at the stoop | Freeze coordinates; blockout before art; single `HouseExterior` prefab | Tech art |
 | R2 | Roof/parapet clips orbit camera | High | Medium | camera pushes into geometry at the desk | No interior ceiling; parapet ≤ 11.9; camera test in A1 | Tech art + director |
 | R3 | Streaming pops the room or a zone at the door | High | Medium | half-built shop, missing walls | `Atomic` room/zones, `Persistent` backdrop, `RequestStreamAroundAsync` | Engineering |
-| R4 | City becomes a second economy surface | Critical | Medium | shop holds its own price table | Prompt → existing UI only; no new constants; review gate G3 | Director |
+| R4 | City becomes a second economy surface | Critical | Medium | shop holds its own price table | Prompt → existing UI only; no new constants; review gate M2-G3 | Director |
 | R5 | Cosmetic items accidentally affect stats | Critical | Low | yield/reveal changes after purchase | Cosmetic catalog schema with explicit `effect = none`; spec test | Engineering |
 | R6 | Schema v2 migration corrupts profiles | Critical | Low (M2-C only) | old profile fails to load | Versioned reader + rollback rehearsal; defer to last milestone | Director + engineering |
 | R7 | Scope creep into districts | High | High | "just one more shop" | Phase gates; M2-C requires director approval | Director |
@@ -157,7 +158,7 @@ Priority = **P0 must exist for the loop**, **P1 makes it a city**,
 | P1 | `ShopUtility` | M2-B | 50 | free map + return |
 | P1 | `EventPlaza` permanent | M2-B | 160 | empty-lot fallback |
 | P2 | `ShopFurniture` | M2-B | 100 | cosmetic-only |
-| P2 | cosmetic room items ×10 | M2-B | 6–20 each | director-approved table |
+| P2 | cosmetic room items ×10 | M2-B | 6–20 each | director-approved table; counts against the bedroom's remaining 195 parts, **not** the city budget |
 | P2 | `EventPlaza_PopUp` | M2-C | 60 | event dressing |
 | P2 | `ShopCosmetics` | M2-C | 90 | try-on |
 | P2 | district shell | M2-C | 400 | Office District stub |

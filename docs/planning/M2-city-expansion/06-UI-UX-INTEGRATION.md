@@ -30,7 +30,7 @@ Therefore:
 
 Reasons:
 
-1. The city is 224 × 198 studs — smaller than one Roblox minimap circle would
+1. The city is 216 × 200 studs (estimate) — smaller than one Roblox minimap circle would
    usefully depict.
 2. Every zone is visible from the town center, and the door is always behind
    the player on exit.
