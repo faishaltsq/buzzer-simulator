@@ -519,6 +519,43 @@ test("B5: A settlement whose response was lost never pays twice", function()
 	expectEqual(session:GetConfirmedProfile().balance, 15, "confirmed view agrees with the backend")
 end)
 
+test("B6: A settlement-blocked command is never cached as a definite rejection", function()
+	local store = FakeStore.new()
+	local clock, advance = makeClock(5000)
+	seedEnvelope(store, freshProfile(), 1)
+	local session = startSession(store, clock)
+	session:Mutate({ requestId = "org-1", action = "PublishOrganic", payload = { templateId = "snack_meme" } })
+	advance(18)
+	-- Every save attempt for the due settlement fails, so nothing landed.
+	store.failUpdateTimes = 3
+	local blocked = session:Mutate({ requestId = "org-2", action = "PublishOrganic", payload = { templateId = "snack_thread" } })
+	expectEqual(blocked.ok, false, "the command is not confirmed while its settlement write fails")
+	expectEqual(blocked.code, "SAVE_UNAVAILABLE", "the save failure is reported, never a fake success")
+	-- docs/03: an ordinary SAVE_UNAVAILABLE reply cannot release a possibly
+	-- persisted action, so a progress query must not resolve it as REJECTED.
+	local look = session:Snapshot("org-2")
+	expectEqual(look.lookup.status, "UNKNOWN", "an unconfirmed settlement write is never a definite rejection")
+	-- The scheduler retries the retained proposal; the identical command then
+	-- lands exactly once.
+	expectTrue(session:Reconcile().ok, "the retained settlement reconciles")
+	expectEqual(session:GetSaveStatus(), "healthy", "a successful reconcile restores writability")
+	expectEqual(durableBalance(store), 15, "the settlement paid exactly once during reconcile")
+	-- The identical request id is retried with a template valid for the context
+	-- the post would publish into (the original attempt never executed, so no
+	-- intent was ever recorded for this id).
+	local nextContextId = session:Snapshot().snapshot.nextOrganicContextId
+	local retryTemplate = "snack_meme"
+	for _, ctx in ipairs(Catalog.OrganicContexts) do
+		if ctx.contextId == nextContextId then
+			retryTemplate = ctx.templates[1]
+			break
+		end
+	end
+	local retry = session:Mutate({ requestId = "org-2", action = "PublishOrganic", payload = { templateId = retryTemplate } })
+	expectEqual(retry.ok, true, `the identical command resolves once the save recovers (code={tostring(retry.code)} detail={tostring(retry.detail)})`)
+	expectEqual(durableBalance(store), 15, "the settlement paid exactly once")
+end)
+
 -- =============================================================================
 -- Phase C — Fast Phone purchase across rejoin and retry
 -- =============================================================================

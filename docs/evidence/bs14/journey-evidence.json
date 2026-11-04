@@ -1,0 +1,717 @@
+{
+  "fresh": {
+    "t": 0,
+    "s": false,
+    "b": 0
+  },
+  "mission_food_stall_launch": {
+    "balance": 95,
+    "lifetime": 95,
+    "active": false,
+    "claims": 1,
+    "mission": "food_stall_launch"
+  },
+  "mission_fictional_gadget": {
+    "balance": 210,
+    "lifetime": 210,
+    "active": false,
+    "claims": 2,
+    "mission": "fictional_gadget"
+  },
+  "mission_neon_market": {
+    "balance": 345,
+    "lifetime": 345,
+    "active": false,
+    "claims": 3,
+    "mission": "neon_market"
+  },
+  "after_tier1": {
+    "balance": 345,
+    "lifetimeEarned": 345,
+    "completedMissions": 3,
+    "tier": 1
+  },
+  "brand_remix": {
+    "balance": 520,
+    "claims": 4,
+    "lifetime": 520
+  },
+  "buy_phone_fast": {
+    "pendingWorkerCuan": 0,
+    "saveStatus": "healthy",
+    "feedVersion": 19,
+    "workers": [],
+    "completedMissions": 4,
+    "ownedDesks": [],
+    "lifetimeEarned": 520,
+    "deviceId": "phone_fast",
+    "ownPosts": [
+      {
+        "postId": "post-4",
+        "templateId": "comparison_thread",
+        "finalImpact": 264,
+        "contextId": "before_after",
+        "missionRunId": "run-4",
+        "mode": "mission",
+        "publishedAt": 1793759916.765312,
+        "organicCuan": 15
+      },
+      {
+        "postId": "post-3",
+        "templateId": "event_thread",
+        "finalImpact": 192,
+        "contextId": "weekend_plans",
+        "missionRunId": "run-3",
+        "mode": "mission",
+        "publishedAt": 1793759888.850568,
+        "organicCuan": 15
+      },
+      {
+        "postId": "post-2",
+        "templateId": "demo_joke",
+        "finalImpact": 156,
+        "contextId": "demo_curious",
+        "missionRunId": "run-2",
+        "mode": "mission",
+        "publishedAt": 1793759861.201366,
+        "organicCuan": 15
+      },
+      {
+        "postId": "post-1",
+        "templateId": "meal_meme",
+        "finalImpact": 120,
+        "contextId": "meal_time",
+        "missionRunId": "run-1",
+        "mode": "mission",
+        "publishedAt": 1793759833.568999,
+        "organicCuan": 15
+      }
+    ],
+    "balance": 470,
+    "incomePerSecond": 0,
+    "tier": 1,
+    "nextOrganicContextId": "organic_snack",
+    "maxShippedTier": 2,
+    "serverTime": 1793759943.499461,
+    "revision": 19
+  },
+  "buy_pc": {
+    "pendingWorkerCuan": 0,
+    "saveStatus": "healthy",
+    "feedVersion": 76,
+    "workers": [],
+    "completedMissions": 4,
+    "ownedDesks": [],
+    "lifetimeEarned": 1002,
+    "deviceId": "pc_rumah",
+    "ownPosts": [
+      {
+        "postId": "post-32",
+        "templateId": "snack_meme",
+        "finalImpact": 192,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760613.25553,
+        "organicCuan": 24
+      },
+      {
+        "postId": "post-31",
+        "templateId": "local_roundup",
+        "finalImpact": 192,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760595.155503,
+        "organicCuan": 24
+      },
+      {
+        "postId": "post-30",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760561.223899,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-29",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760527.258289,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-28",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760506.075101,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-27",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760487.993326,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-26",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760453.977577,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-25",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760432.762117,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-24",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760414.662146,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-23",
+        "templateId": "snack_honest",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760367.914466,
+        "organicCuan": 14
+      }
+    ],
+    "balance": 732,
+    "incomePerSecond": 0,
+    "tier": 1,
+    "nextOrganicContextId": "organic_gadget",
+    "maxShippedTier": 2,
+    "serverTime": 1793760631.405374,
+    "revision": 76
+  },
+  "buy_desk1": {
+    "pendingWorkerCuan": 0,
+    "saveStatus": "healthy",
+    "feedVersion": 77,
+    "workers": [],
+    "completedMissions": 4,
+    "ownedDesks": [
+      1
+    ],
+    "lifetimeEarned": 1002,
+    "deviceId": "pc_rumah",
+    "ownPosts": [
+      {
+        "postId": "post-32",
+        "templateId": "snack_meme",
+        "finalImpact": 192,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760613.25553,
+        "organicCuan": 24
+      },
+      {
+        "postId": "post-31",
+        "templateId": "local_roundup",
+        "finalImpact": 192,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760595.155503,
+        "organicCuan": 24
+      },
+      {
+        "postId": "post-30",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760561.223899,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-29",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760527.258289,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-28",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760506.075101,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-27",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760487.993326,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-26",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760453.977577,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-25",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760432.762117,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-24",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760414.662146,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-23",
+        "templateId": "snack_honest",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760367.914466,
+        "organicCuan": 14
+      }
+    ],
+    "balance": 552,
+    "incomePerSecond": 0,
+    "tier": 1,
+    "nextOrganicContextId": "organic_gadget",
+    "maxShippedTier": 2,
+    "serverTime": 1793760631.971907,
+    "revision": 77
+  },
+  "hire_worker1": {
+    "pendingWorkerCuan": 0,
+    "saveStatus": "healthy",
+    "feedVersion": 78,
+    "workers": [
+      {
+        "slotIndex": 1,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-1"
+      }
+    ],
+    "completedMissions": 4,
+    "ownedDesks": [
+      1
+    ],
+    "lifetimeEarned": 1002,
+    "deviceId": "pc_rumah",
+    "ownPosts": [
+      {
+        "postId": "post-32",
+        "templateId": "snack_meme",
+        "finalImpact": 192,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760613.25553,
+        "organicCuan": 24
+      },
+      {
+        "postId": "post-31",
+        "templateId": "local_roundup",
+        "finalImpact": 192,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760595.155503,
+        "organicCuan": 24
+      },
+      {
+        "postId": "post-30",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760561.223899,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-29",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760527.258289,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-28",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760506.075101,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-27",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760487.993326,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-26",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760453.977577,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-25",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760432.762117,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-24",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760414.662146,
+        "organicCuan": 14
+      },
+      {
+        "postId": "post-23",
+        "templateId": "snack_honest",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760367.914466,
+        "organicCuan": 14
+      }
+    ],
+    "balance": 52,
+    "incomePerSecond": 1.5,
+    "tier": 1,
+    "nextOrganicContextId": "organic_gadget",
+    "maxShippedTier": 2,
+    "serverTime": 1793760632.105672,
+    "revision": 78
+  },
+  "grind": {
+    "posts": 165,
+    "balance": 1443,
+    "lifetime": 2393,
+    "tier": 2,
+    "claims": 4,
+    "rejected": 8
+  },
+  "grind_final": {
+    "balance": 1443,
+    "lifetimeEarned": 2393,
+    "completedMissions": 4,
+    "tier": 2,
+    "deviceId": "pc_rumah"
+  },
+  "buy_desk2": {
+    "pendingWorkerCuan": 0,
+    "saveStatus": "healthy",
+    "feedVersion": 121,
+    "workers": [
+      {
+        "slotIndex": 1,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-1"
+      }
+    ],
+    "completedMissions": 4,
+    "ownedDesks": [
+      1,
+      2
+    ],
+    "lifetimeEarned": 2397,
+    "deviceId": "pc_rumah",
+    "ownPosts": [
+      {
+        "postId": "post-52",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793761122.285148,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-51",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793761081.987236,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-50",
+        "templateId": "snack_meme",
+        "finalImpact": 300,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793761067.087621,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-49",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793761049.021952,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-48",
+        "templateId": "specs_breakdown",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793761021.40616,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-47",
+        "templateId": "snack_meme",
+        "finalImpact": 300,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793761000.207728,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-46",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760982.12521,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-45",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760941.842275,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-44",
+        "templateId": "snack_meme",
+        "finalImpact": 300,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760927.008723,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-43",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760908.877615,
+        "organicCuan": 37
+      }
+    ],
+    "balance": 1197,
+    "incomePerSecond": 1.5,
+    "tier": 2,
+    "nextOrganicContextId": "organic_snack",
+    "maxShippedTier": 2,
+    "serverTime": 1793761139.185965,
+    "revision": 121
+  },
+  "hire_worker2": {
+    "pendingWorkerCuan": 1,
+    "saveStatus": "healthy",
+    "feedVersion": 122,
+    "workers": [
+      {
+        "slotIndex": 1,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-1"
+      },
+      {
+        "slotIndex": 2,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-2"
+      }
+    ],
+    "completedMissions": 4,
+    "ownedDesks": [
+      1,
+      2
+    ],
+    "lifetimeEarned": 2401,
+    "deviceId": "pc_rumah",
+    "ownPosts": [
+      {
+        "postId": "post-52",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793761122.285148,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-51",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793761081.987236,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-50",
+        "templateId": "snack_meme",
+        "finalImpact": 300,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793761067.087621,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-49",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793761049.021952,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-48",
+        "templateId": "specs_breakdown",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793761021.40616,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-47",
+        "templateId": "snack_meme",
+        "finalImpact": 300,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793761000.207728,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-46",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760982.12521,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-45",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793760941.842275,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-44",
+        "templateId": "snack_meme",
+        "finalImpact": 300,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793760927.008723,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-43",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793760908.877615,
+        "organicCuan": 37
+      }
+    ],
+    "balance": 451,
+    "incomePerSecond": 3,
+    "tier": 2,
+    "nextOrganicContextId": "organic_snack",
+    "maxShippedTier": 2,
+    "serverTime": 1793761142.217151,
+    "revision": 122
+  },
+  "world": {
+    "Trainee2": 1,
+    "Trainee1": 1,
+    "WorkerDesk2": 1,
+    "PCRumah": 1,
+    "WorkerDesk1": 1
+  },
+  "pre_bank": {
+    "pend": 25,
+    "b": 451
+  },
+  "bank30": {
+    "before_balance": 451,
+    "pending_peak": 89,
+    "after_balance": 543,
+    "delta": 92
+  },
+  "parts": 285,
+  "rejoin": {
+    "expected_gate": "G2 BLOCKED (offline studioDEV fallback in-memory)",
+    "snapshot": {
+      "balance": 0,
+      "tier": 0,
+      "deviceId": "phone_cheap"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+=== BS-14 Security & Client-Server Boundary Regression Audit ===
+Timestamp: 2026-11-04 05:26:32 UTC
+Total Probes: 10, Passed: 10, Failed: 0
+Verdict: PASS
+
+[PASS] SEC-01 Unknown action forgery rejected
+  Details: dashboard=true code=UNKNOWN_ACTION
+
+[PASS] SEC-02 Client price injection rejected
+  Details: code=INVALID_INPUT
+
+[PASS] SEC-03 Invalid slot numerics rejected
+  Details: codes=INVALID_INPUT,INVALID_INPUT,INVALID_INPUT
+
+[PASS] SEC-04 Prompt beyond 12 studs rejected
+  Details: far=false err=player is 40 studs away; the limit is 12 near=true
+
+[PASS] SEC-05 Cloned prompt rejected
+  Details: valid=false err=prompt does not belong to this player's room
+
+[PASS] SEC-06 Command flood throttled
+  Details: admitted=1 throttled=19
+
+[PASS] SEC-07 Conflicting replay refused
+  Details: code=INVALID_INPUT
+
+[PASS] SEC-08 Insufficient funds purchase refused
+  Details: code=INSUFFICIENT_FUNDS
+
+[PASS] SEC-09 Premature desk 2 blocked
+  Details: code=NOT_READY
+
+[PASS] SEC-10 Expired dashboard refuses mutation
+  Details: code=SESSION_EXPIRED
+
