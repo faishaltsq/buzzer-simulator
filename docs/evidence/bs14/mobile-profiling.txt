@@ -1,0 +1,45 @@
+=== BS-14 Real Mobile & Low-End Profiling Evidence ===
+Timestamp: 2026-11-03 15:34:03 UTC
+
+1. MULTI-VIEWPORT AUDIT:
+- Mobile Portrait (390x844):
+    Viewport: {'y': 474, 'x': 296}, Window: {'y': 366.0799865722656, 'x': 280}
+    Mode: actual=compact, target=compact, match=True
+    Navigation: NavRail=False, MobileNav=True
+    Touch targets: total=10, fails=0
+
+- Mobile Portrait Missions (390x844):
+    Viewport: {'y': 474, 'x': 296}, Window: {'y': 366.0799865722656, 'x': 280}
+    Mode: actual=compact, target=compact, match=True
+    Navigation: NavRail=False, MobileNav=True
+    Touch targets: total=6, fails=0
+
+- Mobile Landscape (640x360):
+    Viewport: {'y': 156, 'x': 324}, Window: {'y': 240, 'x': 291.6000061035156}
+    Mode: actual=compact, target=compact, match=True
+    Navigation: NavRail=False, MobileNav=True
+    Touch targets: total=9, fails=0
+
+- Tablet Landscape (768x1024):
+    Viewport: {'y': 544, 'x': 724}, Window: {'y': 427.67999267578125, 'x': 651.5999755859375}
+    Mode: actual=compact, target=wide, match=False
+    Navigation: NavRail=False, MobileNav=True
+    Touch targets: total=10, fails=0
+
+- Desktop 1080p (1280x720+):
+    Viewport: {'y': 642, 'x': 1510}, Window: {'y': 513.9199829101562, 'x': 1100}
+    Mode: actual=wide, target=wide, match=True
+    Navigation: NavRail=True, MobileNav=False
+    Touch targets: total=11, fails=0
+
+2. BASEPART & MEMORY BUDGET:
+- BaseParts in Workspace: 249 (Ceiling <= 350): PASS
+- Average FPS: 59.9, Min FPS: 49.7 (Target >= 30 FPS): PASS
+- Client/Server Memory Footprint: 1638.4 MB
+
+3. CAPTURED SCREENSHOTS:
+- docs/evidence/bs14/01-mobile-portrait-workers.jpg
+- docs/evidence/bs14/02-mobile-portrait-missions.jpg
+- docs/evidence/bs14/03-mobile-landscape.jpg
+- docs/evidence/bs14/04-tablet-layout.jpg
+- docs/evidence/bs14/05-desktop-1080p.jpg
