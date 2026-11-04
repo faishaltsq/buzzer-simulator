@@ -23,9 +23,9 @@ What *is* true: the code is stable on its own terms. The full Luau suite passes 
 | Gate | Required proof | Status | Basis |
 | :-- | :-- | :-- | :-- |
 | **G0** | Static build, regression, executable assertions | **PASS** | 20/20 suites, 748 tests, runId `1fbf063e-…`, untruncated console (511 lines) |
-| **G1** | Connected client/server gameplay | **PASS** | automated journey through `StudioClientBridge → NetRouter → SessionService`: 0 → tier 2, 2 desks, 2 trainees in 15 min, plus the 20-minute idle session |
+| **G1** | Connected client/server gameplay | **PARTIAL** | automated journey through `StudioClientBridge → NetRouter → SessionService`: 0 → tier 2, 2 desks, 2 trainees in 15 min, plus the 20-minute idle session. **No human or client-variety evidence** — the journey is automated, so the gate's "connected gameplay" requirement is only partly met |
 | **G2** | Real cloud DataStore safety and rejoin | **BLOCKED** | no published staging universe, no API access, no authorization to publish; local Studio logs `DEV_FALLBACK` and states "Real DataStore G2 remains OPEN" |
-| **G3** | UI/art and Studio viewport checks | **BLOCKED** | Studio viewport checks pass at measured viewports (0 touch-target failures across 6 profiles), but no row matched its labelled resolution and no device pixels exist. `assets/ASSET-MANIFEST.md:199-203` independently records that human art approval is still pending |
+| **G3** | UI/art and Studio viewport checks | **PARTIAL** | Studio viewport checks pass at measured viewports (0 touch-target failures across 6 profiles), but **no row matched its labelled resolution and no device pixels exist**. `assets/ASSET-MANIFEST.md:199-203` independently records that human art approval is still pending |
 | **G4** | M1 economy, workers, chapter completion | **PASS** | desk/hire prices and 1.5 Cuan/s per worker verified live; worker income 3,599 vs 3,599.456 expected over 1,199.818648 s of server time, sources attributed separately (`02-idle-20min-analysis.md` §3) |
 | **G5** | Real device, human playtest, reliability, rollback | **BLOCKED** | no physical Android device, no participants, rollback unrehearsed |
 
