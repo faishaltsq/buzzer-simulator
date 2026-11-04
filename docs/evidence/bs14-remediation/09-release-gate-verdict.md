@@ -26,7 +26,7 @@ What *is* true: the code is stable on its own terms. The full Luau suite passes 
 | **G1** | Connected client/server gameplay | **PASS** | automated journey through `StudioClientBridge → NetRouter → SessionService`: 0 → tier 2, 2 desks, 2 trainees in 15 min, plus the 20-minute idle session |
 | **G2** | Real cloud DataStore safety and rejoin | **BLOCKED** | no published staging universe, no API access, no authorization to publish; local Studio logs `DEV_FALLBACK` and states "Real DataStore G2 remains OPEN" |
 | **G3** | UI/art and Studio viewport checks | **BLOCKED** | Studio viewport checks pass at measured viewports (0 touch-target failures across 6 profiles), but no row matched its labelled resolution and no device pixels exist. `assets/ASSET-MANIFEST.md:199-203` independently records that human art approval is still pending |
-| **G4** | M1 economy, workers, chapter completion | **PASS** | desk/hire prices and 1.5 Cuan/s per worker verified live; 3.0 Cuan/s at two workers measured over 1,201.8 s |
+| **G4** | M1 economy, workers, chapter completion | **PASS** | desk/hire prices and 1.5 Cuan/s per worker verified live; worker income 3,599 vs 3,599.456 expected over 1,199.818648 s of server time, sources attributed separately (`02-idle-20min-analysis.md` §3) |
 | **G5** | Real device, human playtest, reliability, rollback | **BLOCKED** | no physical Android device, no participants, rollback unrehearsed |
 
 The previous document reported G0–G5 all green, including "DataStore Resilience 7/7" (an injected adapter) and "Mobile Usability 5/5" (server Heartbeat FPS at mislabeled viewports). Those classifications were wrong; see `01-source-evidence-reconciliation.md` for all 17 corrected claims.
@@ -37,12 +37,21 @@ The previous document reported G0–G5 all green, including "DataStore Resilienc
 
 | Area | Status | Detail |
 | :-- | :-- | :-- |
-| 20-minute connected idle | **PASS** | 3,615 Cuan vs 3,600 expected; 40 commits; `healthy` 41/41; memory **not measured** |
+| 20-minute connected idle | **PASS** | worker income 3,599 vs 3,599.456 expected over 1,199.818648 s of server time (−0.456, inside fractional carry); **sources attributed separately**: 3,578 banked + 21 unbanked worker + 37 organic post = 3,615 wallet delta; 40 commits; `healthy` 41/41; memory **not measured** |
 | DataStore write-pressure | **NOT TESTED** | requires cloud; the earlier "stress simulation" was an in-memory adapter |
 | Security (server boundary) | **PASS** | 10/10 probes; settlement/lease/concurrency cases rest on the spec suite |
 | Physical mobile | **BLOCKED** | no device, no ADB, no published build |
 | Human uncoached testing | **BLOCKED** | no participants |
 | Rollback rehearsal | **BLOCKED (PLANNED — NOT VERIFIED)** | levers audited; none rehearsed; two previously documented levers do not exist |
+| Server-internal introspection during idle | **NOT OBTAINED** | `server_snapshot.error = "no runtime"` in all 41 samples; idle evidence comes from authoritative server-built client snapshots, and lane behaviour is source-reviewed only (`02-idle-20min-analysis.md` §4) |
+
+**Gate vs subtest.** A passing subtest never promotes its gate. `G1`, `G3` are
+`PARTIAL` and `G2`, `G5` are `BLOCKED` in `candidate-manifest.json`, in this
+document, and in PR #10 — the three sources are consistent. Passing subtests
+that sit inside blocked gates: Studio viewport layout (G3), automated connected
+journey (G1), security server boundary (part of G5's reliability scope), and
+economy-sim invariants (G4-adjacent). None of them satisfies the gate-level
+requirement of device pixels, cloud persistence, or human evidence.
 
 ---
 
@@ -58,6 +67,8 @@ The previous document reported G0–G5 all green, including "DataStore Resilienc
 | D6 | Old idle harness raised on the first `sent:false`, with no retry or diagnosis | **Harness** | rebuilt with retry/backoff and refusal diagnosis; root cause is the client's own anti-double-submit gate |
 | D7 | Buy-device order is enforced (`phone_fast` before `pc_rumah`); a skipped device is refused `NOT_READY` | **Product rule, correct** | harness corrected; rule documented |
 | D8 | Economy sim agrees with `docs/04` on 25/33 pacing targets (8 deltas, all slightly earlier) | **Docs drift** | reported, not reconciled; acceptance criteria untouched |
+| D9 | The 3,615 Cuan wallet delta was attributed entirely to worker income and compared against a 3,600 wall-clock expectation | **Evidence/method** | re-attributed: 3,578 banked + 21 unbanked worker + 37 organic post = 3,615; expectation recomputed from snapshot `serverTime` (1,199.818648 s → 3,599.456). Worker total 3,599 vs 3,599.456 = −0.456, inside fractional carry. Found by director review; fixed with `attribute_income` + `detect_mutations` in the harness, plus an 8-check self-test |
+| D10 | `server_snapshot.error = "no runtime"` in all 41 idle samples, previously not disclosed | **Evidence** | documented honestly; lane-behaviour invariants reclassified as source-reviewed, snapshot-derived checks remain valid (`02-idle-20min-analysis.md` §4) |
 
 **No production defect was confirmed.** No file under `src/` was modified in this remediation. The only code written is verification tooling under `tools/agent/`.
 

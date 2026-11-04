@@ -55,12 +55,21 @@
     },
     "idle_20min": {
       "observed_seconds": 1201.8,
-      "expected_cuan": 3600,
-      "observed_cuan": 3615,
-      "effective_rate_per_second": 3.0085,
+      "server_elapsed_seconds": 1199.818648,
+      "clock_note": "expectation uses snapshot serverTime, not harness wall clock",
+      "expected_worker_income": 3599.456,
+      "observed_worker_income": 3599,
+      "worker_income_difference": -0.456,
+      "banked_worker_income": 3578,
+      "unbanked_worker_income": 21,
+      "organic_post_settled_cuan": 37,
+      "organic_post": "post-43 (local_roundup) pending at baseline, settled during window",
+      "balance_delta": 3615,
       "banking_commits": 40,
       "save_status": "healthy in 41/41 samples",
       "max_sample_delta": 91,
+      "mutations_during_window": "none (detect_mutations returns [])",
+      "server_probe_status": "server_snapshot error 'no runtime' in all 41 samples; no direct server-internal introspection claimed",
       "memory_sampled": false
     },
     "security": {
@@ -89,6 +98,21 @@
     "G3": "PARTIAL — Studio viewport checks pass at measured viewports; no device pixels",
     "G4": "PASS — tier 2, 2 desks, 2 workers, 3.0/s verified live",
     "G5": "BLOCKED — no physical device, no human playtest, rollback not rehearsed"
+  },
+  "gate_subtests": {
+    "note": "subtest status is separate from full gate status; a passing subtest never promotes its gate",
+    "g0_regression": "PASS — 20/20 suites, 748 tests, 0 failures, untruncated console",
+    "connected_idle_20min": "PASS — worker income 3599 vs 3599.456 expected (server clock); sources attributed separately",
+    "security_server_boundary": "PASS — 10/10 probes; live-client security NOT covered",
+    "studio_viewport_layout": "PASS at measured viewports — but labelled resolutions did not match, so G3 stays PARTIAL",
+    "economy_sim_invariants": "PASS — model-level; 8 documented-target deltas reported, not reconciled",
+    "automated_journey": "PASS — automated client actions only; this is not human gameplay evidence",
+    "datastore_cloud": "BLOCKED — no staging universe, no API access, no publish authority",
+    "physical_mobile": "BLOCKED — no device, no adb, no published build",
+    "human_uncoached_playtest": "BLOCKED — no participants recruited",
+    "rollback_rehearsal": "BLOCKED — PLANNED, NOT VERIFIED",
+    "camera_recovery": "NOT RUN — Phase 6 item 9 still outstanding",
+    "idle_memory_growth": "NOT MEASURED — memory not sampled during the idle window"
   },
   "blocked_prerequisites": [
     "published staging universe with Studio API access and director authorization",

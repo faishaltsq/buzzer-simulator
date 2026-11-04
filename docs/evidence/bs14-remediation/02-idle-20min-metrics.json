@@ -5693,5 +5693,25 @@
       },
       "elapsed_seconds": 1200.0
     }
-  ]
+  ],
+  "income_attribution": {
+    "balance_delta": 3615,
+    "lifetime_delta": 3615,
+    "organic_post_settled": {
+      "postId": "post-43",
+      "templateId": "local_roundup",
+      "organicCuan": 37,
+      "settleAt": 1793776145.040839,
+      "baseline_serverTime": 1793776133.675018
+    },
+    "organic_post_cuan": 37,
+    "banked_worker_income": 3578,
+    "unbanked_worker_income": 21,
+    "worker_income_total": 3599,
+    "server_elapsed_seconds": 1199.818648
+  },
+  "mutations_during_window": [],
+  "server_elapsed_seconds": 1199.818648,
+  "expected_worker_income": 3599.456,
+  "expected_gross_basis": "worker accrual expectation computed from snapshot serverTime (1199.818648s x 3.0/s), not harness wall clock"
 }

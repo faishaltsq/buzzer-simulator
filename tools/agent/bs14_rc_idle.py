@@ -242,6 +242,147 @@ def sample(runner, label, extra=None):
     return record
 
 
+def attribute_income(baseline, final):
+    """Split an idle window's earnings into their actual sources.
+
+    The wallet delta cannot be read as worker income: an organic post pending
+    at the start credits the wallet when it settles mid-window, and
+    `pendingWorkerCuan` is worker income that has accrued but not yet been
+    banked. Both must be separated or the worker check silently absorbs them.
+
+    `lifetimeEarned` is the spend-immune total-earned measure, so worker
+    attribution is derived from it; the balance delta is reported alongside
+    because it also falls by any purchase made during the window.
+
+    Returns plain ints/floats so the result is directly JSON-serialisable.
+    """
+    base_pending_post = baseline.get("pendingPost") or {}
+    final_pending_post = final.get("pendingPost") or {}
+    base_worker_pending = baseline.get("pendingWorkerCuan") or 0
+    final_worker_pending = final.get("pendingWorkerCuan") or 0
+
+    balance_delta = round(final.get("balance", 0) - baseline.get("balance", 0), 3)
+    lifetime_delta = round(final.get("lifetimeEarned", 0) - baseline.get("lifetimeEarned", 0), 3)
+
+    # Organic settlement: a post pending at baseline that is gone at the end.
+    organic_settled = 0
+    organic_source = None
+    if base_pending_post and not final_pending_post:
+        organic_settled = base_pending_post.get("organicCuan") or 0
+        organic_source = {
+            "postId": base_pending_post.get("postId"),
+            "templateId": base_pending_post.get("templateId"),
+            "organicCuan": organic_settled,
+            "settleAt": base_pending_post.get("settleAt"),
+            "baseline_serverTime": baseline.get("serverTime"),
+        }
+
+    banked_worker = lifetime_delta - organic_settled
+    unbanked_worker = final_worker_pending - base_worker_pending
+    worker_total = banked_worker + unbanked_worker
+
+    elapsed = (final.get("serverTime") or 0) - (baseline.get("serverTime") or 0)
+
+    return {
+        "balance_delta": balance_delta,
+        "lifetime_delta": lifetime_delta,
+        "organic_post_settled": organic_source,
+        "organic_post_cuan": organic_settled,
+        "banked_worker_income": banked_worker,
+        "unbanked_worker_income": unbanked_worker,
+        "worker_income_total": worker_total,
+        "server_elapsed_seconds": round(elapsed, 6),
+    }
+
+
+def expected_worker_income(elapsed_seconds, rate):
+    """Authoritative expectation from serverTime, not harness wall clock."""
+    return round(elapsed_seconds * rate, 3)
+
+
+def detect_mutations(baseline, final):
+    """Report anything that changed state during an 'idle' window.
+
+    An idle gate only proves the accrual path if nothing else moved: a mission
+    claimed, a post published, a device bought or a worker hired during the
+    window contaminates the income attribution.
+
+    Two transitions are expected and are NOT mutations:
+    - `pendingWorkerCuan` rising (accrued-but-unbanked worker income, already
+      attributed separately as `unbanked_worker_income`);
+    - the baseline pending post leaving `pendingPost` and joining `ownPosts`
+      (that is the settlement being attributed as `organic_post_cuan`).
+
+    A post that appears in `ownPosts` without having been pending at baseline
+    WAS published during the window and is reported.
+    """
+    findings = []
+
+    def compare(field, label):
+        before, after = baseline.get(field), final.get(field)
+        if before != after:
+            findings.append({"field": field, "label": label, "before": before, "after": after})
+
+    compare("completedMissions", "missions completed")
+    compare("activeMission", "active mission")
+    compare("ownedDesks", "owned desks")
+    compare("workers", "hired workers")
+    compare("deviceId", "owned device")
+    compare("tier", "tier")
+    compare("incomePerSecond", "income rate")
+
+    base_pending_id = (baseline.get("pendingPost") or {}).get("postId")
+    base_post_ids = {p.get("postId") for p in (baseline.get("ownPosts") or [])}
+    base_post_ids.add(base_pending_id)  # the settling post is expected in ownPosts
+    final_posts = [p.get("postId") for p in (final.get("ownPosts") or [])]
+    new_posts = [p for p in final_posts if p not in base_post_ids]
+    if new_posts:
+        findings.append({
+            "field": "ownPosts",
+            "label": "posts published during window (not pending at baseline)",
+            "new_posts": new_posts,
+        })
+
+    if final.get("pendingPost"):
+        findings.append({"field": "pendingPost", "label": "post still pending at end", "after": final.get("pendingPost")})
+
+    return findings
+
+
+def self_test():
+    """Run income attribution against the recorded fixture. No Studio needed.
+
+    Guards the arithmetic that the director review corrected: the wallet delta
+    is NOT worker income, and the organic post settled mid-window must be
+    attributed separately.
+    """
+    if not os.path.exists(METRICS):
+        raise SystemExit(f"fixture missing: {METRICS} (run the idle gate first)")
+    with open(METRICS, encoding="utf-8") as handle:
+        fixture = json.load(handle)
+
+    base, final = fixture["baseline"], fixture["final"]
+    got = attribute_income(base, final)
+
+    checks = [
+        ("balance delta is not worker income", got["balance_delta"] == 3615 and got["banked_worker_income"] == 3578),
+        ("organic post settlement is attributed", got["organic_post_cuan"] == 37),
+        ("unbanked worker income is separated", got["unbanked_worker_income"] == 21),
+        ("total worker income excludes organic", got["worker_income_total"] == 3599),
+        ("serverTime is the elapsed authority", abs(got["server_elapsed_seconds"] - 1199.81865) < 0.001),
+        ("expected uses serverTime not wall clock", expected_worker_income(got["server_elapsed_seconds"], 3.0) == 3599.456),
+        ("worker total matches expectation within 1 Cuan", abs(got["worker_income_total"] - 3599.456) <= 1.0),
+        ("idle window had no contaminating mutations", detect_mutations(base, final) == []),
+    ]
+
+    failed = [name for name, ok in checks if not ok]
+    for name, ok in checks:
+        print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
+    if failed:
+        raise SystemExit(f"attribution self-test failed: {failed}")
+    print(f"attribution self-test: {len(checks)}/{len(checks)} passed against {os.path.basename(METRICS)}")
+
+
 def main():
     runner = Runner()
     log(f"=== BS-14 RC-1 connected idle gate ===")
@@ -335,6 +476,25 @@ def main():
     if rate != EXPECTED_RATE:
         raise SystemExit(f"rate is {rate}, expected {EXPECTED_RATE}; not a valid idle baseline")
 
+    # Clean baseline (option A): a post pending at the start would settle into
+    # the wallet mid-window and contaminate the worker attribution, so wait it
+    # out before measuring. Only the baseline post is waited on; anything that
+    # appears during the window is reported by detect_mutations.
+    base_snap = baseline.get("client_snapshot") or {}
+    for attempt in range(40):
+        pending = base_snap.get("pendingPost")
+        if not pending:
+            break
+        log(f"  waiting for baseline post {pending.get('postId')} to settle ({pending.get('organicCuan')} Cuan) before measuring")
+        time.sleep(2)
+        base_snap = runner.cluau(BRIDGE + "return HttpService:JSONEncode(snap())")
+    if (base_snap.get("pendingPost") or None):
+        raise SystemExit("baseline post never settled; rerun for a clean idle window")
+    if base_snap != (baseline.get("client_snapshot") or {}):
+        baseline["client_snapshot"] = base_snap
+        samples[0] = baseline
+        log(f"  clean baseline after settle: balance={base_snap.get('balance')} lifetime={base_snap.get('lifetimeEarned')} pendingWorkerCuan={base_snap.get('pendingWorkerCuan')}")
+
     log("[7] begin 20 real minutes of connected idle")
     started = time.time()
     samples = [baseline]
@@ -365,19 +525,29 @@ def main():
         deltas.append(round(current - previous, 3))
         previous = current
 
+    # Income attribution: never read the wallet delta as worker earnings.
+    attribution = attribute_income(base, final)
+    mutations = detect_mutations(base, final)
+    server_elapsed = attribution["server_elapsed_seconds"]
+    expected_worker = expected_worker_income(server_elapsed, EXPECTED_RATE)
+
     metrics = {
         "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "studio_id": runner.sid,
         "idle_seconds_requested": IDLE_SECONDS,
         "idle_seconds_observed": round(time.time() - started, 1),
+        "server_elapsed_seconds": server_elapsed,
         "sample_interval_seconds": SAMPLE_SECONDS,
         "sample_count": len(samples),
         "expected_rate_per_second": EXPECTED_RATE,
         "expected_gross": EXPECTED_RATE * IDLE_SECONDS,
+        "expected_worker_income": expected_worker,
         "baseline": base,
         "final": final,
-        "observed_lifetime_delta": round(final.get("lifetimeEarned", 0) - base.get("lifetimeEarned", 0), 3),
-        "observed_balance_delta": round(final.get("balance", 0) - base.get("balance", 0), 3),
+        "observed_lifetime_delta": attribution["lifetime_delta"],
+        "observed_balance_delta": attribution["balance_delta"],
+        "income_attribution": attribution,
+        "mutations_during_window": mutations,
         "sample_lifetime_deltas": deltas,
         "deltas_out_of_band": [d for d in deltas if d < 0 or d > 100],
         "revision_baseline": base.get("revision"),
@@ -389,10 +559,16 @@ def main():
     with open(METRICS, "w", encoding="utf-8") as handle:
         json.dump(metrics, handle, indent=2)
     log(f"[9] metrics written to {METRICS}")
-    log(f"  observed_lifetime_delta={metrics['observed_lifetime_delta']} expected_gross={metrics['expected_gross']}")
+    log(f"  server elapsed {server_elapsed}s (harness wall {metrics['idle_seconds_observed']}s)")
+    log(f"  balance delta {attribution['balance_delta']} = organic {attribution['organic_post_cuan']} + banked worker {attribution['banked_worker_income']}")
+    log(f"  worker income total {attribution['worker_income_total']} (unbanked {attribution['unbanked_worker_income']}) vs expected {expected_worker}")
+    log(f"  mutations during window: {mutations}")
     log("=== idle gate complete ===")
     _log_handle.close()
 
 
 if __name__ == "__main__":
-    main()
+    if "--self-test" in sys.argv:
+        self_test()
+    else:
+        main()
