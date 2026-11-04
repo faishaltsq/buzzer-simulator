@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1488" height="2472" viewBox="0 0 1488 2472">
+<rect width="100%" height="100%" fill="#FBF8F1"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#506C56"/></marker></defs>
+<rect x="12.0" y="96.0" width="1680.0" height="1056.0" fill="#D6D8CC" fill-opacity="0.35" stroke="none" stroke-width="0"/>
+<text x="24.0" y="936.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="400" fill="#6B7268" text-anchor="start">rear yard + horizon apron (non-walkable, ground plane only)</text>
+<text x="24.0" y="1020.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#7C837A" text-anchor="start">no prop, no prompt, no collision - it exists so the skyline has a floor</text>
+<rect x="192.0" y="144.0" width="1440.0" height="480.0" fill="#202A2D" fill-opacity="0.92" stroke="#202A2D" stroke-width="2"/>
+<text x="204.0" y="180.0" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#E9DEC7" text-anchor="start">NORTH SKYLINE BACKDROP  (non-walkable, Persistent, &lt;= 9 parts)</text>
+<text x="204.0" y="240.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="400" fill="#B9C4BD" text-anchor="start">4 silhouette slabs + Agency Tower + 2 antenna tips + haze plane + ground apron</text>
+<rect x="768.0" y="1152.0" width="288.0" height="240.0" fill="#E9DEC7" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="780.0" y="1170.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z0  Home &amp; Threshold</text>
+<text x="780.0" y="1212.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">48 x 40 studs</text>
+<rect x="768.0" y="1392.0" width="288.0" height="288.0" fill="#D9D3C5" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="780.0" y="1410.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z1  Gang Melati</text>
+<text x="780.0" y="1452.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">48 x 48 studs</text>
+<rect x="576.0" y="1680.0" width="672.0" height="576.0" fill="#E5DDCA" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="588.0" y="1698.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z2  Alun-Alun</text>
+<text x="588.0" y="1740.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">112 x 96 studs</text>
+<rect x="1248.0" y="1728.0" width="144.0" height="432.0" fill="#EBDCC4" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="1260.0" y="1746.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z3  East shop row</text>
+<text x="1260.0" y="1788.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">24 x 72 studs</text>
+<rect x="432.0" y="1728.0" width="144.0" height="144.0" fill="#E8DBC7" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="444.0" y="1746.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z4  West shop row</text>
+<text x="444.0" y="1788.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">24 x 24 studs</text>
+<rect x="96.0" y="1920.0" width="336.0" height="360.0" fill="#DEE4D3" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="108.0" y="1938.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z5  Event Plaza</text>
+<text x="108.0" y="1980.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">56 x 60 studs</text>
+<rect x="840.0" y="1680.0" width="144.0" height="48.0" fill="#F6ECD8" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="852.0" y="1698.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z6  Boards kiosk</text>
+<text x="852.0" y="1740.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">24 x 8 studs</text>
+<rect x="864.0" y="2256.0" width="96.0" height="96.0" fill="#D6DADD" fill-opacity="0.55" stroke="#202A2D" stroke-width="1.5"/>
+<text x="876.0" y="2274.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="start">Z7  Future Gate</text>
+<text x="876.0" y="2316.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#5A606A" text-anchor="start">16 x 16 studs</text>
+<circle cx="912.0" cy="1968.0" r="240.0" fill="#E9E1CE" fill-opacity="0.5" stroke="#99704B" stroke-width="2"/>
+<circle cx="912.0" cy="1968.0" r="48.0" fill="#96B2B1" fill-opacity="0.9" stroke="#344451" stroke-width="2"/>
+<rect x="834.9" y="1218.9" width="154.2" height="154.2" fill="#DBD3BE" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<rect x="861.0" y="1373.1" width="30.0" height="18.9" fill="#E9DEC7" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="903.0" y="1358.6" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="start">stoop</text>
+<rect x="1248.0" y="1728.0" width="144.0" height="144.0" fill="#E7C79A" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="1404.0" y="1776.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="start">ElectroMart</text>
+<rect x="1248.0" y="1872.0" width="144.0" height="144.0" fill="#E8C4B4" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="1404.0" y="1920.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="start">Cosmetics (M2-C)</text>
+<rect x="1248.0" y="2016.0" width="144.0" height="144.0" fill="#C9D2DC" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="1404.0" y="2064.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="start">Utility (M2-B)</text>
+<rect x="432.0" y="1728.0" width="144.0" height="144.0" fill="#99704B" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="420.0" y="1776.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="end">Rumah Rapi</text>
+<rect x="876.0" y="1686.0" width="72.0" height="36.0" fill="#E9DEC7" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="864.0" y="1680.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="end">Boards</text>
+<rect x="192.0" y="2172.0" width="144.0" height="60.0" fill="#506C56" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="180.0" y="2178.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="end">stage</text>
+<rect x="864.0" y="2256.0" width="96.0" height="96.0" fill="#6E7773" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="852.0" y="2280.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="end">Future gate</text>
+<rect x="1038.0" y="1854.0" width="36.0" height="36.0" fill="#344451" fill-opacity="0.95" stroke="#202A2D" stroke-width="2"/>
+<text x="1086.0" y="1848.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#202A2D" text-anchor="start">transit</text>
+<rect x="816.0" y="1392.0" width="192.0" height="288.0" fill="#9AA0A0" fill-opacity="0.45" stroke="none" stroke-width="0"/>
+<text x="918.0" y="1560.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#2F3A3C" text-anchor="start">32-stud lane</text>
+<polyline points="912.0,1332.0 876.0,1365.6 876.0,1416.0 876.0,1536.0 888.0,1632.0 912.0,1704.0 912.0,1824.0 912.0,1920.0" fill="none" stroke="#ECBA6F" stroke-opacity="1.0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="912.0,1920.0 912.0,2076.0 912.0,2244.0" fill="none" stroke="#ECBA6F" stroke-opacity="1.0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="912.0,1824.0 1080.0,1824.0 1224.0,1800.0 1260.0,1800.0" fill="none" stroke="#ECBA6F" stroke-opacity="1.0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="912.0,1824.0 744.0,1800.0 600.0,1800.0 564.0,1800.0" fill="none" stroke="#ECBA6F" stroke-opacity="1.0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="912.0,1920.0 732.0,1968.0 540.0,2028.0 432.0,2064.0 288.0,2064.0" fill="none" stroke="#ECBA6F" stroke-opacity="1.0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="876.0" y1="1392.0" x2="912.0" y2="1704.0" stroke="#506C56" stroke-opacity="0.9" stroke-width="1.5" marker-end="url(#a)"/>
+<line x1="876.0" y1="1392.0" x2="912.0" y2="1968.0" stroke="#506C56" stroke-opacity="0.9" stroke-width="1.5" marker-end="url(#a)"/>
+<line x1="954.0" y1="1314.0" x2="520.2" y2="384.0" stroke="#506C56" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="10 7" marker-end="url(#a)"/>
+<line x1="954.0" y1="1314.0" x2="892.2" y2="384.0" stroke="#506C56" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="10 7" marker-end="url(#a)"/>
+<line x1="912.0" y1="1968.0" x2="1248.0" y2="1800.0" stroke="#506C56" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="10 7" marker-end="url(#a)"/>
+<line x1="912.0" y1="1968.0" x2="576.0" y2="1800.0" stroke="#506C56" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="10 7" marker-end="url(#a)"/>
+<line x1="912.0" y1="1968.0" x2="432.0" y2="2064.0" stroke="#506C56" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="10 7" marker-end="url(#a)"/>
+<text x="876.0" y="1476.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#506C56" text-anchor="start">S1 57 studs / 3.5 s</text>
+<circle cx="706.2" cy="384.0" r="4.2" fill="#ECBA6F"/>
+<text x="726.0" y="396.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="700" fill="#ECBA6F" text-anchor="start">Agency Tower  (proposed x = -34)</text>
+<rect x="936.0" y="1686.0" width="72.0" height="36.0" fill="#F6ECD8" fill-opacity="0.55" stroke="#B4553C" stroke-width="2"/>
+<text x="1014.0" y="1692.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="700" fill="#B4553C" text-anchor="start">proposed kiosk shift +10 studs east (clears S2)</text>
+<text x="108.0" y="1872.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="700" fill="#506C56" text-anchor="start">S3/S4 audit: approved backdrop covers 0.0 deg of the window</text>
+<text x="108.0" y="1902.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#506C56" text-anchor="start">aperture from CameraFocus (7, 5.5, 3) - see WORLD-LAYOUT 4.2</text>
+<circle cx="876.0" cy="1416.0" r="3.0" fill="#ECBA6F"/>
+<text x="890.4" y="1440.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#ECBA6F" text-anchor="start">A1</text>
+<circle cx="876.0" cy="1392.0" r="3.0" fill="#654A37"/>
+<text x="890.4" y="1416.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#654A37" text-anchor="start">A2</text>
+<circle cx="876.0" cy="1344.0" r="3.0" fill="#654A37"/>
+<text x="890.4" y="1368.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#654A37" text-anchor="start">A3</text>
+<circle cx="912.0" cy="1536.0" r="5.4" fill="none" stroke="#344451" stroke-width="1.8"/>
+<text x="938.4" y="1542.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#344451" text-anchor="start">A4</text>
+<circle cx="912.0" cy="1968.0" r="5.4" fill="none" stroke="#344451" stroke-width="1.8"/>
+<text x="938.4" y="1974.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#344451" text-anchor="start">A5</text>
+<circle cx="1320.0" cy="1944.0" r="5.4" fill="none" stroke="#344451" stroke-width="1.8"/>
+<text x="1346.4" y="1950.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#344451" text-anchor="start">A6</text>
+<circle cx="504.0" cy="1800.0" r="5.4" fill="none" stroke="#344451" stroke-width="1.8"/>
+<text x="530.4" y="1806.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#344451" text-anchor="start">A7</text>
+<circle cx="264.0" cy="2100.0" r="5.4" fill="none" stroke="#344451" stroke-width="1.8"/>
+<text x="290.4" y="2106.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#344451" text-anchor="start">A8</text>
+<circle cx="912.0" cy="2304.0" r="5.4" fill="none" stroke="#344451" stroke-width="1.8"/>
+<text x="938.4" y="2310.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#344451" text-anchor="start">A9</text>
+<circle cx="912.0" cy="1704.0" r="3.0" fill="#B4553C"/>
+<text x="926.4" y="1728.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A10</text>
+<circle cx="1320.0" cy="1800.0" r="3.0" fill="#B4553C"/>
+<text x="1334.4" y="1824.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A11</text>
+<circle cx="504.0" cy="1800.0" r="3.0" fill="#B4553C"/>
+<text x="518.4" y="1824.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A12</text>
+<circle cx="1320.0" cy="1944.0" r="3.0" fill="#B4553C"/>
+<text x="1334.4" y="1968.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A13</text>
+<circle cx="1320.0" cy="2088.0" r="3.0" fill="#B4553C"/>
+<text x="1334.4" y="2112.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A14</text>
+<circle cx="264.0" cy="1956.0" r="3.0" fill="#B4553C"/>
+<text x="278.4" y="1980.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A15</text>
+<circle cx="912.0" cy="2304.0" r="3.0" fill="#B4553C"/>
+<text x="926.4" y="2328.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A16</text>
+<circle cx="1056.0" cy="1872.0" r="3.0" fill="#6E7773"/>
+<text x="1070.4" y="1896.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#6E7773" text-anchor="start">A17</text>
+<circle cx="996.0" cy="1668.0" r="3.0" fill="#B4553C"/>
+<circle cx="828.0" cy="1728.0" r="3.0" fill="#B4553C"/>
+<circle cx="1176.0" cy="1932.0" r="3.0" fill="#B4553C"/>
+<circle cx="648.0" cy="1932.0" r="3.0" fill="#B4553C"/>
+<circle cx="408.0" cy="2136.0" r="3.0" fill="#B4553C"/>
+<circle cx="996.0" cy="2112.0" r="3.0" fill="#B4553C"/>
+<text x="108.0" y="2304.0" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700" fill="#B4553C" text-anchor="start">A18 signposts x6</text>
+<text x="912.0" y="1116.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="middle">-Z  NORTH  (skyline / window direction)</text>
+<text x="912.0" y="2388.0" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#202A2D" text-anchor="middle">+Z  SOUTH  (future district)</text>
+<text x="72.0" y="1116.0" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#202A2D" text-anchor="start">WEST  -X</text>
+<text x="1416.0" y="1116.0" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#202A2D" text-anchor="end">EAST  +X</text>
+<text x="96.0" y="2370.0" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#202A2D" text-anchor="start">BUZZER SIMULATOR  -  M2-A0 CITY MASTERPLAN</text>
+<text x="96.0" y="2400.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="400" fill="#5A606A" text-anchor="start">to scale, 1:1 studs | 216 x 200 walkable | 8-stud module, 16-stud major lines | coordinates from 02-WORLD-STRUCTURE.md, not re-derived here</text>
+<line x1="96.0" y1="2424.0" x2="96.0" y2="2436.0" stroke="#202A2D" stroke-opacity="1.0" stroke-width="1.5"/>
+<line x1="216.0" y1="2424.0" x2="216.0" y2="2436.0" stroke="#202A2D" stroke-opacity="1.0" stroke-width="1.5"/>
+<line x1="336.0" y1="2424.0" x2="336.0" y2="2436.0" stroke="#202A2D" stroke-opacity="1.0" stroke-width="1.5"/>
+<line x1="456.0" y1="2424.0" x2="456.0" y2="2436.0" stroke="#202A2D" stroke-opacity="1.0" stroke-width="1.5"/>
+<line x1="576.0" y1="2424.0" x2="576.0" y2="2436.0" stroke="#202A2D" stroke-opacity="1.0" stroke-width="1.5"/>
+<line x1="96.0" y1="2430.0" x2="576.0" y2="2430.0" stroke="#202A2D" stroke-opacity="1.0" stroke-width="2"/>
+<text x="96.0" y="2448.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#202A2D" text-anchor="start">0</text>
+<text x="576.0" y="2448.0" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="400" fill="#202A2D" text-anchor="end">80 studs</text>
+</svg>
