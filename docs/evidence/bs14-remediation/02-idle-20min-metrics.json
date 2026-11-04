@@ -1,0 +1,5717 @@
+{
+  "generated_at_utc": "2026-11-04T07:28:56Z",
+  "studio_id": "bf5358cb-f38a-4d83-bf16-beacbfc42cd7",
+  "idle_seconds_requested": 1200,
+  "idle_seconds_observed": 1201.8,
+  "sample_interval_seconds": 30,
+  "sample_count": 41,
+  "expected_rate_per_second": 3.0,
+  "expected_gross": 3600.0,
+  "baseline": {
+    "saveStatus": "healthy",
+    "workers": [
+      {
+        "slotIndex": 1,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-1"
+      },
+      {
+        "slotIndex": 2,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-2"
+      }
+    ],
+    "completedMissions": 4,
+    "ownedDesks": [
+      1,
+      2
+    ],
+    "lifetimeEarned": 1958,
+    "balance": 8,
+    "pendingWorkerCuan": 0,
+    "nextOrganicContextId": "organic_snack",
+    "revision": 101,
+    "incomePerSecond": 3,
+    "deviceId": "pc_rumah",
+    "feedVersion": 101,
+    "ownPosts": [
+      {
+        "postId": "post-42",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793776114.858029,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-41",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793776097.559602,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-40",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793776079.309448,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-39",
+        "templateId": "demo_bit",
+        "finalImpact": 300,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793776063.095006,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-38",
+        "templateId": "snack_honest",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793776048.877916,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-37",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793776032.695622,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-36",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793776018.512376,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-35",
+        "templateId": "snack_honest",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793776001.345966,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-34",
+        "templateId": "chill_spot_recs",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793775984.064014,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-33",
+        "templateId": "specs_breakdown",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793775966.864805,
+        "organicCuan": 22
+      }
+    ],
+    "pendingPost": {
+      "postId": "post-43",
+      "templateId": "local_roundup",
+      "publishedAt": 1793776132.040839,
+      "contextId": "organic_weekend",
+      "finalImpact": 300,
+      "mode": "organic",
+      "settleAt": 1793776145.040839,
+      "organicCuan": 37
+    },
+    "maxShippedTier": 2,
+    "serverTime": 1793776133.675018,
+    "tier": 2
+  },
+  "final": {
+    "pendingWorkerCuan": 21,
+    "saveStatus": "healthy",
+    "feedVersion": 141,
+    "workers": [
+      {
+        "slotIndex": 1,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-1"
+      },
+      {
+        "slotIndex": 2,
+        "roleId": "trainee",
+        "hireId": "trainee-slot-2"
+      }
+    ],
+    "completedMissions": 4,
+    "ownedDesks": [
+      1,
+      2
+    ],
+    "lifetimeEarned": 5573,
+    "deviceId": "pc_rumah",
+    "ownPosts": [
+      {
+        "postId": "post-43",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793776132.040839,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-42",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793776114.858029,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-41",
+        "templateId": "snack_thread",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793776097.559602,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-40",
+        "templateId": "local_roundup",
+        "finalImpact": 300,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793776079.309448,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-39",
+        "templateId": "demo_bit",
+        "finalImpact": 300,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793776063.095006,
+        "organicCuan": 37
+      },
+      {
+        "postId": "post-38",
+        "templateId": "snack_honest",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793776048.877916,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-37",
+        "templateId": "weekend_vlog_text",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793776032.695622,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-36",
+        "templateId": "daily_driver",
+        "finalImpact": 94,
+        "contextId": "organic_gadget",
+        "mode": "organic",
+        "publishedAt": 1793776018.512376,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-35",
+        "templateId": "snack_honest",
+        "finalImpact": 94,
+        "contextId": "organic_snack",
+        "mode": "organic",
+        "publishedAt": 1793776001.345966,
+        "organicCuan": 22
+      },
+      {
+        "postId": "post-34",
+        "templateId": "chill_spot_recs",
+        "finalImpact": 94,
+        "contextId": "organic_weekend",
+        "mode": "organic",
+        "publishedAt": 1793775984.064014,
+        "organicCuan": 22
+      }
+    ],
+    "balance": 3623,
+    "incomePerSecond": 3,
+    "tier": 2,
+    "nextOrganicContextId": "organic_snack",
+    "maxShippedTier": 2,
+    "serverTime": 1793777333.493666,
+    "revision": 141
+  },
+  "observed_lifetime_delta": 3615,
+  "observed_balance_delta": 3615,
+  "sample_lifetime_deltas": [
+    71,
+    91,
+    91,
+    91,
+    90,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    90,
+    91,
+    91,
+    91,
+    91,
+    90,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    90,
+    91,
+    91,
+    91,
+    91,
+    91,
+    91,
+    90,
+    91,
+    91,
+    91,
+    91
+  ],
+  "deltas_out_of_band": [],
+  "revision_baseline": 101,
+  "revision_final": 141,
+  "revision_increments": 40,
+  "final_save_status": "healthy",
+  "samples": [
+    {
+      "label": "baseline",
+      "wall_utc": "2026-11-04T07:08:54Z",
+      "client_snapshot": {
+        "saveStatus": "healthy",
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 1958,
+        "balance": 8,
+        "pendingWorkerCuan": 0,
+        "nextOrganicContextId": "organic_snack",
+        "revision": 101,
+        "incomePerSecond": 3,
+        "deviceId": "pc_rumah",
+        "feedVersion": 101,
+        "ownPosts": [
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-33",
+            "templateId": "specs_breakdown",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793775966.864805,
+            "organicCuan": 22
+          }
+        ],
+        "pendingPost": {
+          "postId": "post-43",
+          "templateId": "local_roundup",
+          "publishedAt": 1793776132.040839,
+          "contextId": "organic_weekend",
+          "finalImpact": 300,
+          "mode": "organic",
+          "settleAt": 1793776145.040839,
+          "organicCuan": 37
+        },
+        "maxShippedTier": 2,
+        "serverTime": 1793776133.675018,
+        "tier": 2
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      }
+    },
+    {
+      "label": "t+30.0s",
+      "wall_utc": "2026-11-04T07:09:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 54,
+        "saveStatus": "healthy",
+        "feedVersion": 102,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2029,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 79,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776163.323153,
+        "revision": 102
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 30.0
+    },
+    {
+      "label": "t+60.0s",
+      "wall_utc": "2026-11-04T07:09:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 54,
+        "saveStatus": "healthy",
+        "feedVersion": 103,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2120,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 170,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776193.588953,
+        "revision": 103
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 60.0
+    },
+    {
+      "label": "t+90.0s",
+      "wall_utc": "2026-11-04T07:10:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 54,
+        "saveStatus": "healthy",
+        "feedVersion": 104,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2211,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 261,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776223.92052,
+        "revision": 104
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 90.0
+    },
+    {
+      "label": "t+120.0s",
+      "wall_utc": "2026-11-04T07:10:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 54,
+        "saveStatus": "healthy",
+        "feedVersion": 105,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2302,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 352,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776254.153472,
+        "revision": 105
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 120.0
+    },
+    {
+      "label": "t+150.0s",
+      "wall_utc": "2026-11-04T07:11:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 49,
+        "saveStatus": "healthy",
+        "feedVersion": 106,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2392,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 442,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776282.501383,
+        "revision": 106
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 150.0
+    },
+    {
+      "label": "t+180.0s",
+      "wall_utc": "2026-11-04T07:11:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 49,
+        "saveStatus": "healthy",
+        "feedVersion": 107,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2483,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 533,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776312.833328,
+        "revision": 107
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 180.0
+    },
+    {
+      "label": "t+210.0s",
+      "wall_utc": "2026-11-04T07:12:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 49,
+        "saveStatus": "healthy",
+        "feedVersion": 108,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2574,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 624,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776343.099387,
+        "revision": 108
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 210.0
+    },
+    {
+      "label": "t+240.0s",
+      "wall_utc": "2026-11-04T07:12:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 49,
+        "saveStatus": "healthy",
+        "feedVersion": 109,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2665,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 715,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776373.348667,
+        "revision": 109
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 240.0
+    },
+    {
+      "label": "t+270.0s",
+      "wall_utc": "2026-11-04T07:13:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 45,
+        "saveStatus": "healthy",
+        "feedVersion": 110,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2756,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 806,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776402.597289,
+        "revision": 110
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 270.0
+    },
+    {
+      "label": "t+300.0s",
+      "wall_utc": "2026-11-04T07:13:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 45,
+        "saveStatus": "healthy",
+        "feedVersion": 111,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2847,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 897,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776432.929146,
+        "revision": 111
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 300.0
+    },
+    {
+      "label": "t+330.0s",
+      "wall_utc": "2026-11-04T07:14:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 45,
+        "saveStatus": "healthy",
+        "feedVersion": 112,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 2938,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 988,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776463.278096,
+        "revision": 112
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 330.0
+    },
+    {
+      "label": "t+360.0s",
+      "wall_utc": "2026-11-04T07:14:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 45,
+        "saveStatus": "healthy",
+        "feedVersion": 113,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3029,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1079,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776493.560125,
+        "revision": 113
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 360.0
+    },
+    {
+      "label": "t+390.0s",
+      "wall_utc": "2026-11-04T07:15:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 45,
+        "saveStatus": "healthy",
+        "feedVersion": 114,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3120,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1170,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776523.892327,
+        "revision": 114
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 390.0
+    },
+    {
+      "label": "t+420.0s",
+      "wall_utc": "2026-11-04T07:15:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 45,
+        "saveStatus": "healthy",
+        "feedVersion": 115,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3211,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1261,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776554.191328,
+        "revision": 115
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 420.0
+    },
+    {
+      "label": "t+450.0s",
+      "wall_utc": "2026-11-04T07:16:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 39,
+        "saveStatus": "healthy",
+        "feedVersion": 116,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3302,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1352,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776582.506128,
+        "revision": 116
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 450.0
+    },
+    {
+      "label": "t+480.0s",
+      "wall_utc": "2026-11-04T07:16:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 40,
+        "saveStatus": "healthy",
+        "feedVersion": 117,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3392,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1442,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776612.738028,
+        "revision": 117
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 480.0
+    },
+    {
+      "label": "t+510.0s",
+      "wall_utc": "2026-11-04T07:17:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 42,
+        "saveStatus": "healthy",
+        "feedVersion": 118,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3483,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1533,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776644.004188,
+        "revision": 118
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 510.0
+    },
+    {
+      "label": "t+540.0s",
+      "wall_utc": "2026-11-04T07:17:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 39,
+        "saveStatus": "healthy",
+        "feedVersion": 119,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3574,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1624,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776673.286969,
+        "revision": 119
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 540.0
+    },
+    {
+      "label": "t+570.0s",
+      "wall_utc": "2026-11-04T07:18:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 39,
+        "saveStatus": "healthy",
+        "feedVersion": 120,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3665,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1715,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776703.585434,
+        "revision": 120
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 570.0
+    },
+    {
+      "label": "t+600.0s",
+      "wall_utc": "2026-11-04T07:18:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 36,
+        "saveStatus": "healthy",
+        "feedVersion": 121,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3756,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1806,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776732.817888,
+        "revision": 121
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 600.0
+    },
+    {
+      "label": "t+630.0s",
+      "wall_utc": "2026-11-04T07:19:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 40,
+        "saveStatus": "healthy",
+        "feedVersion": 122,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3846,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1896,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776764.06651,
+        "revision": 122
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 630.0
+    },
+    {
+      "label": "t+660.0s",
+      "wall_utc": "2026-11-04T07:19:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 33,
+        "saveStatus": "healthy",
+        "feedVersion": 123,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 3937,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 1987,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776792.332046,
+        "revision": 123
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 660.0
+    },
+    {
+      "label": "t+690.0s",
+      "wall_utc": "2026-11-04T07:20:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 33,
+        "saveStatus": "healthy",
+        "feedVersion": 124,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4028,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2078,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776822.647283,
+        "revision": 124
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 690.0
+    },
+    {
+      "label": "t+720.0s",
+      "wall_utc": "2026-11-04T07:20:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 33,
+        "saveStatus": "healthy",
+        "feedVersion": 125,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4119,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2169,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776852.912112,
+        "revision": 125
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 720.0
+    },
+    {
+      "label": "t+750.0s",
+      "wall_utc": "2026-11-04T07:21:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 33,
+        "saveStatus": "healthy",
+        "feedVersion": 126,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4210,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2260,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776883.178114,
+        "revision": 126
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 750.0
+    },
+    {
+      "label": "t+780.0s",
+      "wall_utc": "2026-11-04T07:21:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 33,
+        "saveStatus": "healthy",
+        "feedVersion": 127,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4301,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2351,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776913.443457,
+        "revision": 127
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 780.0
+    },
+    {
+      "label": "t+810.0s",
+      "wall_utc": "2026-11-04T07:22:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 33,
+        "saveStatus": "healthy",
+        "feedVersion": 128,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4392,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2442,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776943.7761,
+        "revision": 128
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 810.0
+    },
+    {
+      "label": "t+840.0s",
+      "wall_utc": "2026-11-04T07:22:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 33,
+        "saveStatus": "healthy",
+        "feedVersion": 129,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4483,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2533,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793776974.107459,
+        "revision": 129
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 840.0
+    },
+    {
+      "label": "t+870.0s",
+      "wall_utc": "2026-11-04T07:23:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 28,
+        "saveStatus": "healthy",
+        "feedVersion": 130,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4573,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2623,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777002.373196,
+        "revision": 130
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 870.0
+    },
+    {
+      "label": "t+900.0s",
+      "wall_utc": "2026-11-04T07:23:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 28,
+        "saveStatus": "healthy",
+        "feedVersion": 131,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4664,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2714,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777032.688438,
+        "revision": 131
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 900.0
+    },
+    {
+      "label": "t+930.0s",
+      "wall_utc": "2026-11-04T07:24:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 27,
+        "saveStatus": "healthy",
+        "feedVersion": 132,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4755,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2805,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777062.936852,
+        "revision": 132
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 930.0
+    },
+    {
+      "label": "t+960.0s",
+      "wall_utc": "2026-11-04T07:24:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 27,
+        "saveStatus": "healthy",
+        "feedVersion": 133,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4846,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2896,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777093.203928,
+        "revision": 133
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 960.0
+    },
+    {
+      "label": "t+990.0s",
+      "wall_utc": "2026-11-04T07:25:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 27,
+        "saveStatus": "healthy",
+        "feedVersion": 134,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 4937,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 2987,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777123.518583,
+        "revision": 134
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 990.0
+    },
+    {
+      "label": "t+1020.0s",
+      "wall_utc": "2026-11-04T07:25:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 27,
+        "saveStatus": "healthy",
+        "feedVersion": 135,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 5028,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 3078,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777153.79996,
+        "revision": 135
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 1020.0
+    },
+    {
+      "label": "t+1050.0s",
+      "wall_utc": "2026-11-04T07:26:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 27,
+        "saveStatus": "healthy",
+        "feedVersion": 136,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 5119,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 3169,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777184.115526,
+        "revision": 136
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 1050.0
+    },
+    {
+      "label": "t+1080.0s",
+      "wall_utc": "2026-11-04T07:26:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 21,
+        "saveStatus": "healthy",
+        "feedVersion": 137,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 5209,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 3259,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777212.331654,
+        "revision": 137
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 1080.0
+    },
+    {
+      "label": "t+1110.0s",
+      "wall_utc": "2026-11-04T07:27:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 21,
+        "saveStatus": "healthy",
+        "feedVersion": 138,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 5300,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 3350,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777242.630357,
+        "revision": 138
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 1110.0
+    },
+    {
+      "label": "t+1140.0s",
+      "wall_utc": "2026-11-04T07:27:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 21,
+        "saveStatus": "healthy",
+        "feedVersion": 139,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 5391,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 3441,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777272.89612,
+        "revision": 139
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 1140.0
+    },
+    {
+      "label": "t+1170.0s",
+      "wall_utc": "2026-11-04T07:28:24Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 21,
+        "saveStatus": "healthy",
+        "feedVersion": 140,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 5482,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 3532,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777303.194977,
+        "revision": 140
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 1170.0
+    },
+    {
+      "label": "t+1200.0s",
+      "wall_utc": "2026-11-04T07:28:54Z",
+      "client_snapshot": {
+        "pendingWorkerCuan": 21,
+        "saveStatus": "healthy",
+        "feedVersion": 141,
+        "workers": [
+          {
+            "slotIndex": 1,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-1"
+          },
+          {
+            "slotIndex": 2,
+            "roleId": "trainee",
+            "hireId": "trainee-slot-2"
+          }
+        ],
+        "completedMissions": 4,
+        "ownedDesks": [
+          1,
+          2
+        ],
+        "lifetimeEarned": 5573,
+        "deviceId": "pc_rumah",
+        "ownPosts": [
+          {
+            "postId": "post-43",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776132.040839,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-42",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776114.858029,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-41",
+            "templateId": "snack_thread",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776097.559602,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-40",
+            "templateId": "local_roundup",
+            "finalImpact": 300,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776079.309448,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-39",
+            "templateId": "demo_bit",
+            "finalImpact": 300,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776063.095006,
+            "organicCuan": 37
+          },
+          {
+            "postId": "post-38",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776048.877916,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-37",
+            "templateId": "weekend_vlog_text",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793776032.695622,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-36",
+            "templateId": "daily_driver",
+            "finalImpact": 94,
+            "contextId": "organic_gadget",
+            "mode": "organic",
+            "publishedAt": 1793776018.512376,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-35",
+            "templateId": "snack_honest",
+            "finalImpact": 94,
+            "contextId": "organic_snack",
+            "mode": "organic",
+            "publishedAt": 1793776001.345966,
+            "organicCuan": 22
+          },
+          {
+            "postId": "post-34",
+            "templateId": "chill_spot_recs",
+            "finalImpact": 94,
+            "contextId": "organic_weekend",
+            "mode": "organic",
+            "publishedAt": 1793775984.064014,
+            "organicCuan": 22
+          }
+        ],
+        "balance": 3623,
+        "incomePerSecond": 3,
+        "tier": 2,
+        "nextOrganicContextId": "organic_snack",
+        "maxShippedTier": 2,
+        "serverTime": 1793777333.493666,
+        "revision": 141
+      },
+      "server_snapshot": {
+        "error": "no runtime"
+      },
+      "elapsed_seconds": 1200.0
+    }
+  ],
+  "income_attribution": {
+    "balance_delta": 3615,
+    "lifetime_delta": 3615,
+    "organic_post_settled": {
+      "postId": "post-43",
+      "templateId": "local_roundup",
+      "organicCuan": 37,
+      "settleAt": 1793776145.040839,
+      "baseline_serverTime": 1793776133.675018
+    },
+    "organic_post_cuan": 37,
+    "banked_worker_income": 3578,
+    "unbanked_worker_income": 21,
+    "worker_income_total": 3599,
+    "server_elapsed_seconds": 1199.818648
+  },
+  "mutations_during_window": [],
+  "server_elapsed_seconds": 1199.818648,
+  "expected_worker_income": 3599.456,
+  "expected_gross_basis": "worker accrual expectation computed from snapshot serverTime (1199.818648s x 3.0/s), not harness wall clock"
+}

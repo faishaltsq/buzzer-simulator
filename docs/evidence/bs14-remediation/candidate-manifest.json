@@ -1,0 +1,137 @@
+{
+  "manifest_version": 1,
+  "generated_at_utc": "2026-11-04T07:40:00Z",
+  "candidate": {
+    "source_sha": "fa55baa4a417097b6d4f8a032c602bcf1c1df19e",
+    "source_sha_short": "fa55baa",
+    "source_description": "merge commit of PR #9 (BS-14 closed beta candidate)",
+    "remediation_branch": "agent/BS-14-rc1-evidence-remediation",
+    "source_changes_in_remediation": "none under src/ (tools/ and docs/ only)",
+    "release_authority": "director only — this agent cannot approve a release"
+  },
+  "artifacts": [
+    {
+      "path": "build/BuzzerSimulator.rbxlx",
+      "purpose": "production place candidate",
+      "command": "rojo build default.project.json -o build/BuzzerSimulator.rbxlx",
+      "sha256": "9c8c431d28a1e2347c08cda76450a129071c7166f1bf9ab08f7b7bc30ed3e833",
+      "bytes": 1071852
+    },
+    {
+      "path": "build/BuzzerTests.rbxlx",
+      "purpose": "test harness place (specs mounted)",
+      "command": "rojo build test.project.json -o build/BuzzerTests.rbxlx",
+      "sha256": "79d72e28685216cd4035fd586284edcf4bd106615b378433a2c4bd4d1a2b1b1c",
+      "bytes": 1721756
+    }
+  ],
+  "runtime": {
+    "roblox_studio": "version-7062aec9dbe74b14",
+    "studio_place_id": null,
+    "published_universe_id": null,
+    "note": "candidate opened as a local .rbxlx file; the universe/place ids in the previous report are unverified and were not used",
+    "rojo": "7.7.1",
+    "python": "3.14.7",
+    "os": "Windows 11"
+  },
+  "persistence": {
+    "datastore_name": "PlayerData",
+    "key_namespace": "Player_{UserId}",
+    "schema_version": 1,
+    "migration": "none — non-v1 envelopes are refused as UNSUPPORTED_SCHEMA and preserved untouched",
+    "lease_seconds": 240,
+    "lease_renew_seconds": 90,
+    "worker_bank_interval_seconds": 30,
+    "offline_accrual": "none — accrual is connected-and-writable only"
+  },
+  "results": {
+    "g0_regression": {
+      "suites": "20/20",
+      "runtime_tests": 748,
+      "failures": 0,
+      "run_id": "1fbf063e-7911-4d64-845d-ae615672c283",
+      "console_sha256": "c92568d92e70bb439e44c71d05e87a924f57e915752caac3368ebdf824e32aa9",
+      "untruncated": true
+    },
+    "idle_20min": {
+      "observed_seconds": 1201.8,
+      "server_elapsed_seconds": 1199.818648,
+      "clock_note": "expectation uses snapshot serverTime, not harness wall clock",
+      "expected_worker_income": 3599.456,
+      "observed_worker_income": 3599,
+      "worker_income_difference": -0.456,
+      "banked_worker_income": 3578,
+      "unbanked_worker_income": 21,
+      "organic_post_settled_cuan": 37,
+      "organic_post": "post-43 (local_roundup) pending at baseline, settled during window",
+      "balance_delta": 3615,
+      "banking_commits": 40,
+      "save_status": "healthy in 41/41 samples",
+      "max_sample_delta": 91,
+      "mutations_during_window": "none (detect_mutations returns [])",
+      "server_probe_status": "server_snapshot error 'no runtime' in all 41 samples; no direct server-internal introspection claimed",
+      "memory_sampled": false
+    },
+    "security": {
+      "probes": 10,
+      "passed": 10,
+      "layer": "server boundary (fixtures + synthetic actors), not live client",
+      "fresh_run_utc": "2026-11-04T07:31:10Z"
+    },
+    "automated_journey": {
+      "tier2_reached": true,
+      "desks": [1, 2],
+      "workers": 2,
+      "rate_cuan_per_second": 3.0,
+      "wall_time_minutes": 15
+    },
+    "economy_sim": {
+      "invariants": "PASS",
+      "documented_target_agreement": "25/33",
+      "doc_deltas": 8
+    }
+  },
+  "gates": {
+    "G0": "PASS",
+    "G1": "PARTIAL — automated connected journey passes; no human/client-variety evidence",
+    "G2": "BLOCKED — no cloud DataStore access",
+    "G3": "PARTIAL — Studio viewport checks pass at measured viewports; no device pixels",
+    "G4": "PASS — tier 2, 2 desks, 2 workers, 3.0/s verified live",
+    "G5": "BLOCKED — no physical device, no human playtest, rollback not rehearsed"
+  },
+  "gate_subtests": {
+    "note": "subtest status is separate from full gate status; a passing subtest never promotes its gate",
+    "g0_regression": "PASS — 20/20 suites, 748 tests, 0 failures, untruncated console",
+    "connected_idle_20min": "PASS — worker income 3599 vs 3599.456 expected (server clock); sources attributed separately",
+    "security_server_boundary": "PASS — 10/10 probes; live-client security NOT covered",
+    "studio_viewport_layout": "PASS at measured viewports — but labelled resolutions did not match, so G3 stays PARTIAL",
+    "economy_sim_invariants": "PASS — model-level; 8 documented-target deltas reported, not reconciled",
+    "automated_journey": "PASS — automated client actions only; this is not human gameplay evidence",
+    "datastore_cloud": "BLOCKED — no staging universe, no API access, no publish authority",
+    "physical_mobile": "BLOCKED — no device, no adb, no published build",
+    "human_uncoached_playtest": "BLOCKED — no participants recruited",
+    "rollback_rehearsal": "BLOCKED — PLANNED, NOT VERIFIED",
+    "camera_recovery": "NOT RUN — Phase 6 item 9 still outstanding",
+    "idle_memory_growth": "NOT MEASURED — memory not sampled during the idle window"
+  },
+  "blocked_prerequisites": [
+    "published staging universe with Studio API access and director authorization",
+    "physical Android device with an authorized playable build",
+    "3-5 human participants for an uncoached usability sample",
+    "rehearsed place-version rollback on staging"
+  ],
+  "rollback": {
+    "status": "PLANNED — NOT VERIFIED",
+    "levers": [
+      "Creator Dashboard place-version rollback (unrehearsed)",
+      "git revert + rebuild + republish",
+      "Catalog.Shipped compile-time cap (requires rebuild)"
+    ],
+    "nonexistent_levers_removed": [
+      "SessionService:SetWorkerAccrualEnabled",
+      "ProfileStore:SetReadOnly"
+    ],
+    "data_compatibility_on_downgrade": "within schemaVersion 1: tolerated (no unknown-field rejection); unknown future schemaVersion: refused and preserved"
+  },
+  "verdict": "BLOCKED — CLOSED BETA NOT AUTHORIZED"
+}

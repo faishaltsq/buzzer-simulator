@@ -1,0 +1,461 @@
+{
+  "timestamp": "2026-11-04T07:32:09Z",
+  "studio_id": "bf5358cb-f38a-4d83-bf16-beacbfc42cd7",
+  "host_screen_note": "Studio window resized with MoveWindow; UI lays out against camera ViewportSize",
+  "profiles": [
+    {
+      "label": "phone-portrait-360x640",
+      "requested": {
+        "window": "360x640",
+        "tab": "Feed"
+      },
+      "actualWindowRect": {
+        "x": 545,
+        "y": 102,
+        "w": 656,
+        "h": 640
+      },
+      "measured": {
+        "isCompact": true,
+        "windowPosition": {
+          "y": -32,
+          "x": 8
+        },
+        "windowSize": {
+          "y": 240,
+          "x": 280
+        },
+        "touchFailures": [],
+        "viewport": {
+          "y": 234,
+          "x": 296
+        },
+        "mobileNavVisible": true,
+        "touchTargets": [
+          {
+            "h": 44,
+            "name": "CloseButton",
+            "w": 72
+          },
+          {
+            "h": 48,
+            "name": "CommunityClues",
+            "w": 132
+          },
+          {
+            "h": 48,
+            "name": "YourPosts",
+            "w": 132
+          },
+          {
+            "h": 48,
+            "name": "CreatePost",
+            "w": 262
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Home",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Feed",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Create",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_More",
+            "w": 67
+          }
+        ],
+        "navRailVisible": false
+      },
+      "labelMatchedActualViewport": false
+    },
+    {
+      "label": "phone-portrait-390x844",
+      "requested": {
+        "window": "390x844",
+        "tab": "Feed"
+      },
+      "actualWindowRect": {
+        "x": 545,
+        "y": 102,
+        "w": 656,
+        "h": 844
+      },
+      "measured": {
+        "isCompact": true,
+        "windowPosition": {
+          "y": 23,
+          "x": 8
+        },
+        "windowSize": {
+          "y": 334,
+          "x": 280
+        },
+        "touchFailures": [],
+        "viewport": {
+          "y": 438,
+          "x": 296
+        },
+        "mobileNavVisible": true,
+        "touchTargets": [
+          {
+            "h": 44,
+            "name": "CloseButton",
+            "w": 72
+          },
+          {
+            "h": 48,
+            "name": "CommunityClues",
+            "w": 132
+          },
+          {
+            "h": 48,
+            "name": "YourPosts",
+            "w": 132
+          },
+          {
+            "h": 48,
+            "name": "CreatePost",
+            "w": 262
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Home",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Feed",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Create",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_More",
+            "w": 67
+          }
+        ],
+        "navRailVisible": false
+      },
+      "labelMatchedActualViewport": false
+    },
+    {
+      "label": "phone-landscape-640x360",
+      "requested": {
+        "window": "640x360",
+        "tab": "Feed"
+      },
+      "actualWindowRect": {
+        "x": 545,
+        "y": 102,
+        "w": 656,
+        "h": 559
+      },
+      "measured": {
+        "isCompact": true,
+        "windowPosition": {
+          "y": -71,
+          "x": 8
+        },
+        "windowSize": {
+          "y": 240,
+          "x": 280
+        },
+        "touchFailures": [],
+        "viewport": {
+          "y": 156,
+          "x": 296
+        },
+        "mobileNavVisible": true,
+        "touchTargets": [
+          {
+            "h": 44,
+            "name": "CloseButton",
+            "w": 72
+          },
+          {
+            "h": 48,
+            "name": "CommunityClues",
+            "w": 132
+          },
+          {
+            "h": 48,
+            "name": "YourPosts",
+            "w": 132
+          },
+          {
+            "h": 48,
+            "name": "CreatePost",
+            "w": 262
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Home",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Feed",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Create",
+            "w": 67
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_More",
+            "w": 67
+          }
+        ],
+        "navRailVisible": false
+      },
+      "labelMatchedActualViewport": false
+    },
+    {
+      "label": "tablet-portrait-768x1024",
+      "requested": {
+        "window": "768x1024",
+        "tab": "Feed"
+      },
+      "actualWindowRect": {
+        "x": 545,
+        "y": 102,
+        "w": 768,
+        "h": 1024
+      },
+      "measured": {
+        "isCompact": true,
+        "windowPosition": {
+          "y": 34,
+          "x": 17
+        },
+        "windowSize": {
+          "y": 493,
+          "x": 308
+        },
+        "touchFailures": [],
+        "viewport": {
+          "y": 618,
+          "x": 342
+        },
+        "mobileNavVisible": true,
+        "touchTargets": [
+          {
+            "h": 44,
+            "name": "CloseButton",
+            "w": 72
+          },
+          {
+            "h": 48,
+            "name": "CommunityClues",
+            "w": 146
+          },
+          {
+            "h": 48,
+            "name": "YourPosts",
+            "w": 146
+          },
+          {
+            "h": 48,
+            "name": "CreatePost",
+            "w": 290
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Home",
+            "w": 74
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Feed",
+            "w": 74
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Create",
+            "w": 74
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_More",
+            "w": 74
+          }
+        ],
+        "navRailVisible": false
+      },
+      "labelMatchedActualViewport": false
+    },
+    {
+      "label": "desktop-1280x720",
+      "requested": {
+        "window": "1280x720",
+        "tab": "Feed"
+      },
+      "actualWindowRect": {
+        "x": 545,
+        "y": 102,
+        "w": 1280,
+        "h": 720
+      },
+      "measured": {
+        "isCompact": true,
+        "windowPosition": {
+          "y": 8,
+          "x": 43
+        },
+        "windowSize": {
+          "y": 240,
+          "x": 769
+        },
+        "touchFailures": [],
+        "viewport": {
+          "y": 314,
+          "x": 854
+        },
+        "mobileNavVisible": true,
+        "touchTargets": [
+          {
+            "h": 44,
+            "name": "CloseButton",
+            "w": 72
+          },
+          {
+            "h": 48,
+            "name": "CommunityClues",
+            "w": 376
+          },
+          {
+            "h": 48,
+            "name": "YourPosts",
+            "w": 376
+          },
+          {
+            "h": 48,
+            "name": "CreatePost",
+            "w": 751
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Home",
+            "w": 184
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Feed",
+            "w": 184
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_Create",
+            "w": 184
+          },
+          {
+            "h": 48,
+            "name": "MobileNav_More",
+            "w": 184
+          }
+        ],
+        "navRailVisible": false
+      },
+      "labelMatchedActualViewport": false
+    },
+    {
+      "label": "desktop-1920x1080",
+      "requested": {
+        "window": "1920x1080",
+        "tab": "Feed"
+      },
+      "actualWindowRect": {
+        "x": 545,
+        "y": 102,
+        "w": 1920,
+        "h": 1080
+      },
+      "measured": {
+        "isCompact": false,
+        "windowPosition": {
+          "y": 37,
+          "x": 197
+        },
+        "windowSize": {
+          "y": 542,
+          "x": 1100
+        },
+        "touchFailures": [],
+        "viewport": {
+          "y": 674,
+          "x": 1494
+        },
+        "mobileNavVisible": false,
+        "touchTargets": [
+          {
+            "h": 44,
+            "name": "CloseButton",
+            "w": 72
+          },
+          {
+            "h": 44,
+            "name": "Nav_Home",
+            "w": 164
+          },
+          {
+            "h": 44,
+            "name": "Nav_Feed",
+            "w": 164
+          },
+          {
+            "h": 44,
+            "name": "Nav_Create",
+            "w": 164
+          },
+          {
+            "h": 44,
+            "name": "Nav_Missions",
+            "w": 164
+          },
+          {
+            "h": 44,
+            "name": "Nav_Upgrades",
+            "w": 164
+          },
+          {
+            "h": 44,
+            "name": "Nav_Workers",
+            "w": 164
+          },
+          {
+            "h": 48,
+            "name": "CommunityClues",
+            "w": 452
+          },
+          {
+            "h": 48,
+            "name": "YourPosts",
+            "w": 452
+          },
+          {
+            "h": 48,
+            "name": "CreatePost",
+            "w": 902
+          }
+        ],
+        "navRailVisible": true
+      },
+      "labelMatchedActualViewport": false
+    }
+  ]
+}
