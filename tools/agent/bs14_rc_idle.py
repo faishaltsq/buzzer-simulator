@@ -34,13 +34,19 @@ SAMPLE_SECONDS = 30
 EXPECTED_RATE = 3.0
 
 os.makedirs(OUT_DIR, exist_ok=True)
-_log_handle = open(RAW_LOG, "w", encoding="utf-8")
+# Opened lazily on the first live log line. A module-level open(..., "w") here
+# truncated the committed evidence log on any import, including --self-test,
+# which only reads the recorded fixture.
+_log_handle = None
 
 
 def log(msg):
+    global _log_handle
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     line = f"[{stamp}] {msg}"
     print(line, flush=True)
+    if _log_handle is None:
+        _log_handle = open(RAW_LOG, "w", encoding="utf-8")
     _log_handle.write(line + "\n")
     _log_handle.flush()
 
