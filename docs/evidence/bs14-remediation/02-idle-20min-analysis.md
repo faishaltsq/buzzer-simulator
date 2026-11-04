@@ -54,6 +54,15 @@ Upper bound on the discrepancy: one banking interval (≤ 90 Cuan) plus < 1 Cuan
 
 **The rate itself is exact:** median delta of 91 per ~30.3 s = 3.00/s; over the full window, 3,615 / 1,201.8 = 3.0085/s.
 
+### Console notes during the window
+
+The console carried two recurring lines, neither caused by this run:
+
+1. `[ProfileStore:DEV_FALLBACK] … Real DataStore G2 remains OPEN` — the local store limitation, quoted in §4. Expected for an unpublished place.
+2. `ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type` (6 per console page). No file under `src/` or any `assets/world/*.rbxmx` references that ID — checked with a repo-wide search — and `assets/ASSET-MANIFEST.md:203` already records it as an engine content-type warning unrelated to the exported prefabs. It produced no script error and no gameplay effect during the 20 minutes.
+
+No other warnings appeared; in particular no `LOCKED`, `SAVE_UNAVAILABLE`, `BUSY`, or lane-timeout messages.
+
 ---
 
 ## 4. Invariant checks

@@ -25,7 +25,7 @@ What *is* true: the code is stable on its own terms. The full Luau suite passes 
 | **G0** | Static build, regression, executable assertions | **PASS** | 20/20 suites, 748 tests, runId `1fbf063e-…`, untruncated console (511 lines) |
 | **G1** | Connected client/server gameplay | **PASS** | automated journey through `StudioClientBridge → NetRouter → SessionService`: 0 → tier 2, 2 desks, 2 trainees in 15 min, plus the 20-minute idle session |
 | **G2** | Real cloud DataStore safety and rejoin | **BLOCKED** | no published staging universe, no API access, no authorization to publish; local Studio logs `DEV_FALLBACK` and states "Real DataStore G2 remains OPEN" |
-| **G3** | UI/art and Studio viewport checks | **BLOCKED** | Studio viewport checks pass at measured viewports (0 touch-target failures across 6 profiles), but no row matched its labelled resolution and no device pixels exist |
+| **G3** | UI/art and Studio viewport checks | **BLOCKED** | Studio viewport checks pass at measured viewports (0 touch-target failures across 6 profiles), but no row matched its labelled resolution and no device pixels exist. `assets/ASSET-MANIFEST.md:199-203` independently records that human art approval is still pending |
 | **G4** | M1 economy, workers, chapter completion | **PASS** | desk/hire prices and 1.5 Cuan/s per worker verified live; 3.0 Cuan/s at two workers measured over 1,201.8 s |
 | **G5** | Real device, human playtest, reliability, rollback | **BLOCKED** | no physical Android device, no participants, rollback unrehearsed |
 
