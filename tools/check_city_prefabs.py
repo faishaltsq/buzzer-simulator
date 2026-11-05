@@ -89,9 +89,7 @@ def main():
             committed = os.path.join(CITY, f)
             # Git stores LF; core.autocrlf may check out CRLF on Windows.
             check(os.path.exists(committed) and
-                  open(committed, "rb").read().replace(b"
-", b"
-") == a,
+                  open(committed, "rb").read().replace(b"\r\n", b"\n") == a,
                   f"committed bytes match regeneration (EOL-normalized) {f}")
             digests.append((f, hashlib.sha256(a).hexdigest()[:16]))
 
