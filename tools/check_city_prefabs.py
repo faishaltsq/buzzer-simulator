@@ -87,8 +87,12 @@ def main():
             a, b = open(os.path.join(t1, f), "rb").read(), open(os.path.join(t2, f), "rb").read()
             check(a == b, f"deterministic {f}")
             committed = os.path.join(CITY, f)
-            check(os.path.exists(committed) and open(committed, "rb").read() == a,
-                  f"committed bytes match regeneration {f}")
+            # Git stores LF; core.autocrlf may check out CRLF on Windows.
+            check(os.path.exists(committed) and
+                  open(committed, "rb").read().replace(b"
+", b"
+") == a,
+                  f"committed bytes match regeneration (EOL-normalized) {f}")
             digests.append((f, hashlib.sha256(a).hexdigest()[:16]))
 
     names = [n for n, _, _ in g.PREFABS]
