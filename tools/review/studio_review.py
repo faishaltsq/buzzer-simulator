@@ -40,9 +40,10 @@ def main():
         except Exception as e:  # capture still attempted; blank frames are rejected below
             print("foreground:", e)
         vec = lambda s: [float(v) for v in s.split(",")]
-        r = c.call_tool("screen_capture", {"studio_id": sid, "capture_id": sys.argv[2],
-                                          "camera_position": vec(sys.argv[4]),
-                                          "look_at_position": vec(sys.argv[5])})
+        args = {"studio_id": sid, "capture_id": sys.argv[2]}
+        if len(sys.argv) > 5:  # no camera args = capture the live (player) camera as-is
+            args.update(camera_position=vec(sys.argv[4]), look_at_position=vec(sys.argv[5]))
+        r = c.call_tool("screen_capture", args)
         for item in r.get("content", []):
             if item.get("type") == "image":
                 os.makedirs(os.path.dirname(os.path.abspath(sys.argv[3])), exist_ok=True)

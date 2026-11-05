@@ -1,0 +1,163 @@
+{
+  "device": "iPhone 7 preset with native 640x360 resolution override",
+  "captureMethod": "StudioDeviceSimulatorService ActualResolution and live screen_capture; no image resizing",
+  "portraitReviewOnlyOverride": "PlayerGui.ScreenOrientation=Portrait; production untouched",
+  "captures": [
+    {
+      "orientation": "landscape",
+      "stop": "arrival",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-arrival.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "lane",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-lane.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "kiosk",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-kiosk.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "plaza",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-plaza.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "return",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-return.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "portrait",
+      "stop": "arrival",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-portrait-arrival.jpg",
+      "size": [
+        360,
+        640
+      ],
+      "state": "360, 640 -6.01132345199585, 2.4651637077331543, 21.989322662353516"
+    },
+    {
+      "orientation": "portrait",
+      "stop": "lane",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-portrait-lane.jpg",
+      "size": [
+        360,
+        640
+      ],
+      "state": "360, 640 -5.988685607910156, 2.4651639461517334, 37.348934173583984"
+    },
+    {
+      "orientation": "portrait",
+      "stop": "kiosk",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-portrait-kiosk.jpg",
+      "size": [
+        360,
+        640
+      ],
+      "state": "360, 640 -6.0095109939575195, 2.4924192428588867, 62.8643684387207"
+    },
+    {
+      "orientation": "portrait",
+      "stop": "plaza",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-portrait-plaza.jpg",
+      "size": [
+        360,
+        640
+      ],
+      "state": "360, 640 0.00023223226889967918, 2.4924190044403076, 89.47442626953125"
+    },
+    {
+      "orientation": "portrait",
+      "stop": "return",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-portrait-return.jpg",
+      "size": [
+        360,
+        640
+      ],
+      "state": "360, 640 -5.988478660583496, 2.4969735145568848, 24.481369018554688"
+    }
+  ],
+  "performance": {
+    "landscape": {
+      "durationSeconds": 26.03095770001528,
+      "note": "Studio client timings, not physical-device or GPU profiling; viewport focus affects cadence",
+      "statsFrameTime": {
+        "p95Ms": 17.89340004324913,
+        "over100Ms": 0,
+        "p99Ms": 18.31110008060932,
+        "averageFps": 59.888884243895035,
+        "worstMs": 82.1743980050087,
+        "p50Ms": 16.673900187015533,
+        "frames": 1559,
+        "over33Ms": 1
+      },
+      "viewport": "640, 360",
+      "renderStepped": {
+        "p95Ms": 17.88949966430664,
+        "over100Ms": 0,
+        "p99Ms": 18.25609989464283,
+        "averageFps": 59.89073632907449,
+        "worstMs": 82.0636972784996,
+        "p50Ms": 16.674300655722618,
+        "frames": 1559,
+        "over33Ms": 1
+      },
+      "streamingEnabled": true,
+      "quality": "Enum.QualityLevel.Automatic"
+    },
+    "portrait": {
+      "durationSeconds": 25.61362899999949,
+      "note": "Studio client timings, not physical-device or GPU profiling; viewport focus affects cadence",
+      "statsFrameTime": {
+        "p95Ms": 17.75670051574707,
+        "over100Ms": 0,
+        "p99Ms": 18.37649941444397,
+        "averageFps": 59.88509390199554,
+        "worstMs": 59.282101690769196,
+        "p50Ms": 16.683699563145638,
+        "frames": 1534,
+        "over33Ms": 4
+      },
+      "viewport": "360, 640",
+      "renderStepped": {
+        "p95Ms": 17.749400809407234,
+        "over100Ms": 0,
+        "p99Ms": 18.402699381113052,
+        "averageFps": 59.88901414991709,
+        "worstMs": 59.227101504802704,
+        "p50Ms": 16.68109931051731,
+        "frames": 1534,
+        "over33Ms": 4
+      },
+      "streamingEnabled": true,
+      "quality": "Enum.QualityLevel.Automatic"
+    }
+  }
+}
