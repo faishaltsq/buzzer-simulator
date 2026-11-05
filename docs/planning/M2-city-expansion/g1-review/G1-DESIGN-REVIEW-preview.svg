@@ -1,0 +1,599 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="5260" viewBox="0 0 2600 5260">
+<rect width="100%" height="100%" fill="#FBF8F1"/>
+<text x="60" y="28" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="34" fill="#202A2D">BUZZER SIMULATOR | M2-G1 CITY DESIGN ACCEPTANCE</text>
+<text x="60" y="76" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#202A2D">Coordinate freeze, visual decisions D1-D8, 3D blockout readiness — director review package.</text>
+<text x="60" y="110" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Planning evidence only: a drawing, never a Roblox Studio capture. Baseline master 09eb88d626d73057543fe419a2c0925063d1df09.</text>
+<text x="60" y="142" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">Values traced to parent tables and to verified Bedroom.rbxmx anchors. North = -Z, east = +X. No approval inferred from any view.</text>
+<rect x="1660" y="39" width="26" height="18" fill="#506C56" stroke="#202A2D" stroke-width="1"/>
+<text x="1698" y="34" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">FROZEN BASELINE — merged, unchanged</text>
+<rect x="1660" y="69" width="26" height="18" fill="#AD3F35" stroke="#202A2D" stroke-width="1"/>
+<text x="1698" y="64" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">PROPOSED CHANGE — awaiting director</text>
+<rect x="1660" y="99" width="26" height="18" fill="#99704B" stroke="#202A2D" stroke-width="1"/>
+<text x="1698" y="94" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">TEST REQUIRED — not verifiable in 2D</text>
+<rect x="1660" y="129" width="26" height="18" fill="#3D5A80" stroke="#202A2D" stroke-width="1"/>
+<text x="1698" y="124" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">DIRECTOR APPROVED — none yet in this package</text>
+<text x="60" y="200" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">1 | FULL CITY TOP-DOWN — frozen baseline with overlays</text>
+<line x1="60" y1="238" x2="2540" y2="238" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="252" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Scale 4 px/stud. Zones and anchors are the parent contract; dashed red items are proposals that are NOT adopted here.</text>
+<rect x="772.0" y="284" width="192" height="160" fill="#E9DEC7" stroke="#202A2D" stroke-width="1"/>
+<rect x="772.0" y="444" width="192" height="192" fill="#DBD3BE" stroke="#202A2D" stroke-width="1"/>
+<rect x="644.0" y="636" width="448" height="384" fill="#EEE8DD" stroke="#202A2D" stroke-width="1"/>
+<rect x="1092.0" y="668" width="96" height="288" fill="#ECDBC3" stroke="#202A2D" stroke-width="1"/>
+<rect x="548.0" y="668" width="96" height="96" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<rect x="324.0" y="796" width="224" height="240" fill="#DCE5D9" stroke="#202A2D" stroke-width="1"/>
+<rect x="820.0" y="636" width="96" height="32" fill="#F6ECD8" stroke="#202A2D" stroke-width="1"/>
+<rect x="836.0" y="1020" width="64" height="64" fill="#D1D6DA" stroke="#202A2D" stroke-width="1"/>
+<rect x="814.6" y="326.6" width="106.8" height="106.8" fill="#DBD3BE" stroke="#202A2D" stroke-width="1"/>
+<rect x="834.0" y="433.4" width="20.0" height="10.600000000000001" fill="#99704B" stroke="#202A2D" stroke-width="1"/>
+<rect x="804.0" y="444" width="128" height="192" fill="#6E7773" stroke="#202A2D" stroke-width="1"/>
+<ellipse cx="868.0" cy="828.0" rx="160.0" ry="160.0" fill="#E9DEC7" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="868.0" cy="828.0" rx="32.0" ry="32.0" fill="#96B2B1" stroke="#202A2D" stroke-width="2"/>
+<rect x="1096.0" y="672" width="88" height="88" fill="#B48B60" stroke="#202A2D" stroke-width="1"/>
+<rect x="1096.0" y="864" width="88" height="88" fill="#B48B60" stroke="#202A2D" stroke-width="1"/>
+<rect x="552.0" y="672" width="88" height="88" fill="#B48B60" stroke="#202A2D" stroke-width="1"/>
+<line x1="1092.0" y1="764.0" x2="1102.0" y2="764.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1110.0" y1="764.0" x2="1120.0" y2="764.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1128.0" y1="764.0" x2="1138.0" y2="764.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1146.0" y1="764.0" x2="1156.0" y2="764.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1164.0" y1="764.0" x2="1174.0" y2="764.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1182.0" y1="764.0" x2="1188.0" y2="764.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1188.0" y1="764.0" x2="1188.0" y2="774.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1188.0" y1="782.0" x2="1188.0" y2="792.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1188.0" y1="800.0" x2="1188.0" y2="810.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1188.0" y1="818.0" x2="1188.0" y2="828.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1188.0" y1="836.0" x2="1188.0" y2="846.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1188.0" y1="854.0" x2="1188.0" y2="860.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1188.0" y1="860.0" x2="1178.0" y2="860.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1170.0" y1="860.0" x2="1160.0" y2="860.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1152.0" y1="860.0" x2="1142.0" y2="860.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1134.0" y1="860.0" x2="1124.0" y2="860.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1116.0" y1="860.0" x2="1106.0" y2="860.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1098.0" y1="860.0" x2="1092.0" y2="860.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1092.0" y1="860.0" x2="1092.0" y2="850.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1092.0" y1="842.0" x2="1092.0" y2="832.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1092.0" y1="824.0" x2="1092.0" y2="814.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1092.0" y1="806.0" x2="1092.0" y2="796.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1092.0" y1="788.0" x2="1092.0" y2="778.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1092.0" y1="770.0" x2="1092.0" y2="764.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="817.6" y1="329.6" x2="827.6" y2="329.6" stroke="#506C56" stroke-width="2"/>
+<line x1="835.6" y1="329.6" x2="845.6" y2="329.6" stroke="#506C56" stroke-width="2"/>
+<line x1="853.6" y1="329.6" x2="863.6" y2="329.6" stroke="#506C56" stroke-width="2"/>
+<line x1="871.6" y1="329.6" x2="881.6" y2="329.6" stroke="#506C56" stroke-width="2"/>
+<line x1="889.6" y1="329.6" x2="899.6" y2="329.6" stroke="#506C56" stroke-width="2"/>
+<line x1="907.6" y1="329.6" x2="917.6" y2="329.6" stroke="#506C56" stroke-width="2"/>
+<line x1="918.4" y1="329.6" x2="918.4" y2="339.6" stroke="#506C56" stroke-width="2"/>
+<line x1="918.4" y1="347.6" x2="918.4" y2="357.6" stroke="#506C56" stroke-width="2"/>
+<line x1="918.4" y1="365.6" x2="918.4" y2="375.6" stroke="#506C56" stroke-width="2"/>
+<line x1="918.4" y1="383.6" x2="918.4" y2="393.6" stroke="#506C56" stroke-width="2"/>
+<line x1="918.4" y1="401.6" x2="918.4" y2="411.6" stroke="#506C56" stroke-width="2"/>
+<line x1="918.4" y1="419.6" x2="918.4" y2="429.6" stroke="#506C56" stroke-width="2"/>
+<line x1="918.4" y1="430.4" x2="908.4" y2="430.4" stroke="#506C56" stroke-width="2"/>
+<line x1="900.4" y1="430.4" x2="890.4" y2="430.4" stroke="#506C56" stroke-width="2"/>
+<line x1="882.4" y1="430.4" x2="872.4" y2="430.4" stroke="#506C56" stroke-width="2"/>
+<line x1="864.4" y1="430.4" x2="854.4" y2="430.4" stroke="#506C56" stroke-width="2"/>
+<line x1="846.4" y1="430.4" x2="836.4" y2="430.4" stroke="#506C56" stroke-width="2"/>
+<line x1="828.4" y1="430.4" x2="818.4" y2="430.4" stroke="#506C56" stroke-width="2"/>
+<line x1="817.6" y1="430.4" x2="817.6" y2="420.4" stroke="#506C56" stroke-width="2"/>
+<line x1="817.6" y1="412.4" x2="817.6" y2="402.4" stroke="#506C56" stroke-width="2"/>
+<line x1="817.6" y1="394.4" x2="817.6" y2="384.4" stroke="#506C56" stroke-width="2"/>
+<line x1="817.6" y1="376.4" x2="817.6" y2="366.4" stroke="#506C56" stroke-width="2"/>
+<line x1="817.6" y1="358.4" x2="817.6" y2="348.4" stroke="#506C56" stroke-width="2"/>
+<line x1="817.6" y1="340.4" x2="817.6" y2="330.4" stroke="#506C56" stroke-width="2"/>
+<rect x="844.0" y="636" width="48" height="32" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<line x1="884.0" y1="640.0" x2="894.0" y2="640.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="902.0" y1="640.0" x2="912.0" y2="640.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="920.0" y1="640.0" x2="930.0" y2="640.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="932.0" y1="640.0" x2="932.0" y2="650.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="932.0" y1="658.0" x2="932.0" y2="664.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="932.0" y1="664.0" x2="922.0" y2="664.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="914.0" y1="664.0" x2="904.0" y2="664.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="896.0" y1="664.0" x2="886.0" y2="664.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="884.0" y1="664.0" x2="884.0" y2="654.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="884.0" y1="646.0" x2="884.0" y2="640.0" stroke="#AD3F35" stroke-width="2"/>
+<rect x="836.0" y="1020" width="64" height="64" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<line x1="844.0" y1="460" x2="844.0" y2="540" stroke="#99704B" stroke-width="4"/>
+<line x1="844.0" y1="540" x2="852.0" y2="604" stroke="#99704B" stroke-width="4"/>
+<line x1="852.0" y1="604" x2="812.0" y2="636" stroke="#99704B" stroke-width="4"/>
+<line x1="812.0" y1="636" x2="804.0" y2="700" stroke="#99704B" stroke-width="4"/>
+<line x1="804.0" y1="700" x2="868.0" y2="732" stroke="#99704B" stroke-width="4"/>
+<line x1="868.0" y1="732" x2="796.0" y2="780" stroke="#99704B" stroke-width="4"/>
+<line x1="796.0" y1="780" x2="796.0" y2="876" stroke="#99704B" stroke-width="4"/>
+<line x1="796.0" y1="876" x2="868.0" y2="940" stroke="#99704B" stroke-width="4"/>
+<line x1="868.0" y1="940" x2="868.0" y2="1012" stroke="#99704B" stroke-width="4"/>
+<line x1="868.0" y1="732" x2="980.0" y2="732" stroke="#99704B" stroke-width="4"/>
+<line x1="980.0" y1="732" x2="1084.0" y2="716" stroke="#99704B" stroke-width="4"/>
+<line x1="868.0" y1="732" x2="748.0" y2="732" stroke="#99704B" stroke-width="4"/>
+<line x1="748.0" y1="732" x2="652.0" y2="716" stroke="#99704B" stroke-width="4"/>
+<line x1="796.0" y1="876" x2="628.0" y2="892" stroke="#99704B" stroke-width="4"/>
+<line x1="628.0" y1="892" x2="452.0" y2="892" stroke="#99704B" stroke-width="4"/>
+<ellipse cx="844.0" cy="460.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="844.0" cy="444.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="844.0" cy="412.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="868.0" cy="652.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="1140.0" cy="716.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="596.0" cy="716.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="1140.0" cy="812.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="1140.0" cy="908.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="436.0" cy="820.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="868.0" cy="1052.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="964.0" cy="764.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="868.0" cy="540.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="868.0" cy="828.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="1140.0" cy="812.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="596.0" cy="716.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="436.0" cy="916.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="868.0" cy="1052.0" rx="2.6" ry="2.6" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="924.0" cy="628.0" rx="2.0" ry="2.0" fill="#506C56" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="812.0" cy="668.0" rx="2.0" ry="2.0" fill="#506C56" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="1044.0" cy="804.0" rx="2.0" ry="2.0" fill="#506C56" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="692.0" cy="804.0" rx="2.0" ry="2.0" fill="#506C56" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="532.0" cy="940.0" rx="2.0" ry="2.0" fill="#506C56" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="924.0" cy="924.0" rx="2.0" ry="2.0" fill="#506C56" stroke="#202A2D" stroke-width="2"/>
+<text x="716.0" y="316" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z0</text>
+<text x="700.0" y="508" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z1</text>
+<text x="652.0" y="980" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z2</text>
+<text x="1208.0" y="668" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z3</text>
+<text x="420.0" y="692" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z4</text>
+<text x="332.0" y="996" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z5</text>
+<text x="748.0" y="612" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z6</text>
+<text x="932.0" y="1040" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Z7</text>
+<text x="1180" y="300" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#506C56">WALKABLE ENVELOPE</text>
+<text x="1180" y="332" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">X -136 .. +80 | Z -24 .. +176</text>
+<text x="1180" y="356" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">216 x 200 studs, architecture-derived</text>
+<text x="1180" y="380" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Grade Y = 0; no elevation change in A/B</text>
+<text x="1180" y="404" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Frozen bedroom 24x24 at origin</text>
+<text x="1180" y="428" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City grows south from the Door plane</text>
+<text x="1180" y="700" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#202A2D">PARENT ANCHOR CONTRACT (17 PARTS)</text>
+<text x="1180" y="732" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_HomeDoor (-6, 3.65, 16)  physical</text>
+<text x="1180" y="756" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Spawn (-6, 0.6, 20)</text>
+<text x="1180" y="780" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_DoorPromptInterior (-6, 3.65, 8)</text>
+<text x="1180" y="804" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Prompt_Boards (0, 3, 68)</text>
+<text x="1180" y="828" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Prompt_ElectroMart (68, 3, 84)</text>
+<text x="1180" y="852" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Prompt_RumahRapi (-68, 3, 84)</text>
+<text x="1180" y="876" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Prompt_Cosmetics (68, 3, 108)</text>
+<text x="1180" y="900" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Prompt_Utility (68, 3, 132)</text>
+<text x="1180" y="924" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Prompt_EventPlaza (-108, 3, 110)</text>
+<text x="1180" y="948" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Prompt_FutureGate (0, 3, 168)</text>
+<text x="1180" y="972" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_TransitStop (24, 0, 96)</text>
+<text x="1180" y="996" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">5 zone roots + City_LightGroup (Folder)</text>
+<text x="1180" y="1020" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Never reuse the bedroom's 12 names</text>
+<text x="1180" y="1140" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#99704B">OVERLAYS SHOWN HERE</text>
+<text x="1180" y="1172" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Amber: illustrative route; no passage</text>
+<text x="1180" y="1196" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  through the closed room wall</text>
+<text x="1180" y="1220" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Dashed green: 0.6-offset house shell</text>
+<text x="1180" y="1244" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Dashed red x 4..16 z 65..71: M2-A0</text>
+<text x="1180" y="1268" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  kiosk proposal — exceeds frozen Z6</text>
+<text x="1180" y="1292" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  x -12..+12; NOT adopted (view 3)</text>
+<text x="1180" y="1316" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Dashed red z 96..120: future cosmetics</text>
+<text x="1180" y="1340" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  lot, a later-phase reservation</text>
+<text x="1180" y="1364" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Red dots: baseline anchors (frozen)</text>
+<text x="1180" y="1388" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Green dots: 6 suggested signposts</text>
+<text x="60" y="1870" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">2 | D1 SKYLINE / BACKDROP ALIGNMENT — baseline X=16..160 versus proposed X=-120..120</text>
+<line x1="60" y1="1908" x2="2540" y2="1908" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="1922" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Same Z extent -192..-112 in both candidates. Rays are the true desk-camera projection of the frozen window aperture.</text>
+<rect x="1092.0" y="1586" width="288.0" height="160" fill="#344451" stroke="#202A2D" stroke-width="1"/>
+<line x1="820.0" y1="1586.0" x2="830.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="838.0" y1="1586.0" x2="848.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="856.0" y1="1586.0" x2="866.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="874.0" y1="1586.0" x2="884.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="892.0" y1="1586.0" x2="902.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="910.0" y1="1586.0" x2="920.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="928.0" y1="1586.0" x2="938.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="946.0" y1="1586.0" x2="956.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="964.0" y1="1586.0" x2="974.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="982.0" y1="1586.0" x2="992.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1000.0" y1="1586.0" x2="1010.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1018.0" y1="1586.0" x2="1028.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1036.0" y1="1586.0" x2="1046.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1054.0" y1="1586.0" x2="1064.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1072.0" y1="1586.0" x2="1082.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1090.0" y1="1586.0" x2="1100.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1108.0" y1="1586.0" x2="1118.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1126.0" y1="1586.0" x2="1136.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1144.0" y1="1586.0" x2="1154.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1162.0" y1="1586.0" x2="1172.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1180.0" y1="1586.0" x2="1190.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1198.0" y1="1586.0" x2="1208.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1216.0" y1="1586.0" x2="1226.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1234.0" y1="1586.0" x2="1244.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1252.0" y1="1586.0" x2="1262.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1270.0" y1="1586.0" x2="1280.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1288.0" y1="1586.0" x2="1298.0" y2="1586.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1586.0" x2="1300.0" y2="1596.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1604.0" x2="1300.0" y2="1614.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1622.0" x2="1300.0" y2="1632.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1640.0" x2="1300.0" y2="1650.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1658.0" x2="1300.0" y2="1668.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1676.0" x2="1300.0" y2="1686.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1694.0" x2="1300.0" y2="1704.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1712.0" x2="1300.0" y2="1722.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1730.0" x2="1300.0" y2="1740.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1300.0" y1="1746.0" x2="1290.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1282.0" y1="1746.0" x2="1272.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1264.0" y1="1746.0" x2="1254.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1246.0" y1="1746.0" x2="1236.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1228.0" y1="1746.0" x2="1218.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1210.0" y1="1746.0" x2="1200.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1192.0" y1="1746.0" x2="1182.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1174.0" y1="1746.0" x2="1164.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1156.0" y1="1746.0" x2="1146.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1138.0" y1="1746.0" x2="1128.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1120.0" y1="1746.0" x2="1110.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1102.0" y1="1746.0" x2="1092.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1084.0" y1="1746.0" x2="1074.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1066.0" y1="1746.0" x2="1056.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1048.0" y1="1746.0" x2="1038.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1030.0" y1="1746.0" x2="1020.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1012.0" y1="1746.0" x2="1002.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="994.0" y1="1746.0" x2="984.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="976.0" y1="1746.0" x2="966.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="958.0" y1="1746.0" x2="948.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="940.0" y1="1746.0" x2="930.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="922.0" y1="1746.0" x2="912.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="904.0" y1="1746.0" x2="894.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="886.0" y1="1746.0" x2="876.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="868.0" y1="1746.0" x2="858.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="850.0" y1="1746.0" x2="840.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="832.0" y1="1746.0" x2="822.0" y2="1746.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1746.0" x2="820.0" y2="1736.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1728.0" x2="820.0" y2="1718.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1710.0" x2="820.0" y2="1700.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1692.0" x2="820.0" y2="1682.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1674.0" x2="820.0" y2="1664.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1656.0" x2="820.0" y2="1646.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1638.0" x2="820.0" y2="1628.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1620.0" x2="820.0" y2="1610.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="820.0" y1="1602.0" x2="820.0" y2="1592.0" stroke="#AD3F35" stroke-width="2"/>
+<line x1="1074.0" y1="1976.0" x2="932.1564986737401" y2="1666.0" stroke="#506C56" stroke-width="2"/>
+<line x1="1074.0" y1="1976.0" x2="1051.3872679045094" y2="1666.0" stroke="#506C56" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1666.0" x2="1051.3872679045094" y2="1666.0" stroke="#506C56" stroke-width="5"/>
+<ellipse cx="991.7718832891246" cy="1666.0" rx="3.0" ry="3.0" fill="#ECBA6F" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="1074.0" cy="1976.0" rx="3.0" ry="3.0" fill="#506C56" stroke="#202A2D" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1586.0" x2="942.1564986737401" y2="1586.0" stroke="#99704B" stroke-width="2"/>
+<line x1="950.1564986737401" y1="1586.0" x2="960.1564986737401" y2="1586.0" stroke="#99704B" stroke-width="2"/>
+<line x1="968.1564986737401" y1="1586.0" x2="978.1564986737401" y2="1586.0" stroke="#99704B" stroke-width="2"/>
+<line x1="986.1564986737401" y1="1586.0" x2="996.1564986737401" y2="1586.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1004.1564986737401" y1="1586.0" x2="1014.1564986737401" y2="1586.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1022.1564986737401" y1="1586.0" x2="1032.15649867374" y2="1586.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1040.15649867374" y1="1586.0" x2="1050.15649867374" y2="1586.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1586.0" x2="1051.3872679045094" y2="1596.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1604.0" x2="1051.3872679045094" y2="1614.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1622.0" x2="1051.3872679045094" y2="1632.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1640.0" x2="1051.3872679045094" y2="1650.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1658.0" x2="1051.3872679045094" y2="1668.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1676.0" x2="1051.3872679045094" y2="1686.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1694.0" x2="1051.3872679045094" y2="1704.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1712.0" x2="1051.3872679045094" y2="1722.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1730.0" x2="1051.3872679045094" y2="1740.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1051.3872679045094" y1="1746.0" x2="1041.3872679045094" y2="1746.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1033.3872679045094" y1="1746.0" x2="1023.3872679045094" y2="1746.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1015.3872679045094" y1="1746.0" x2="1005.3872679045094" y2="1746.0" stroke="#99704B" stroke-width="2"/>
+<line x1="997.3872679045094" y1="1746.0" x2="987.3872679045094" y2="1746.0" stroke="#99704B" stroke-width="2"/>
+<line x1="979.3872679045094" y1="1746.0" x2="969.3872679045094" y2="1746.0" stroke="#99704B" stroke-width="2"/>
+<line x1="961.3872679045094" y1="1746.0" x2="951.3872679045094" y2="1746.0" stroke="#99704B" stroke-width="2"/>
+<line x1="943.3872679045094" y1="1746.0" x2="933.3872679045094" y2="1746.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1746.0" x2="932.1564986737401" y2="1736.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1728.0" x2="932.1564986737401" y2="1718.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1710.0" x2="932.1564986737401" y2="1700.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1692.0" x2="932.1564986737401" y2="1682.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1674.0" x2="932.1564986737401" y2="1664.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1656.0" x2="932.1564986737401" y2="1646.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1638.0" x2="932.1564986737401" y2="1628.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1620.0" x2="932.1564986737401" y2="1610.0" stroke="#99704B" stroke-width="2"/>
+<line x1="932.1564986737401" y1="1602.0" x2="932.1564986737401" y2="1592.0" stroke="#99704B" stroke-width="2"/>
+<text x="60" y="1970" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#506C56">CameraFocus</text>
+<text x="1180" y="1970" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#506C56">WINDOW PROJECTION (recomputed)</text>
+<text x="1180" y="2002" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">CameraFocus part (7, 5.5, 3.0)</text>
+<text x="1180" y="2026" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">WindowGlass aperture x 0.10 .. 5.90</text>
+<text x="1180" y="2050" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  at z = -12.08, y 3.10 .. 7.90</text>
+<text x="1180" y="2074" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">projects to x -63.92 .. -4.31</text>
+<text x="1180" y="2098" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  at the reference plane z = -152</text>
+<text x="1180" y="2122" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Green band = the only sky visible</text>
+<text x="1180" y="2146" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  from the desk; all else occluded</text>
+<text x="1180" y="2210" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#AD3F35">COVERAGE AT z = -152</text>
+<text x="1180" y="2242" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Baseline X=16..160 covers 0% of the slice</text>
+<text x="1180" y="2266" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Proposed X=-120..120 covers 100%</text>
+<text x="1180" y="2290" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Slice width 59.6 studs at that depth</text>
+<text x="1180" y="2314" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">House shell z -12.6..+12.6 is 124.6 studs</text>
+<text x="1180" y="2338" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  clear of the backdrop: no intersection</text>
+<text x="1180" y="2362" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Proposed X stays inside the -136..+80</text>
+<text x="1180" y="2386" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  city envelope, so no background breach</text>
+<text x="60" y="2180" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#99704B">D1 RECOMMENDATION</text>
+<text x="60" y="2212" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Adopt the proposed centred extent X=-120..120 as the candidate for isolated Studio verification;</text>
+<text x="60" y="2236" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">keep X=16..160 as the frozen baseline until a real camera view confirms the candidate.</text>
+<text x="60" y="2260" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Director guidance is explicit: do not freeze new coordinates on a 2D projection alone.</text>
+<text x="60" y="2380" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">3 | D2 KIOSK — standard solid versus narrow open-frame, both inside frozen Z6</text>
+<line x1="60" y1="2418" x2="2540" y2="2418" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="2432" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Zone Z6 stays x -12..+12, z +64..+72. The prompt anchor (0, 3, 68) is not moved by either candidate.</text>
+<rect x="304.0" y="3268" width="288" height="96" fill="transparent" stroke="#3D5A80" stroke-width="1"/>
+<rect x="256.0" y="3460" width="384" height="96" fill="transparent" stroke="#99704B" stroke-width="1"/>
+<rect x="388.0" y="3280" width="120" height="72" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<rect x="430.0" y="3280" width="36.0" height="72" fill="#6E7773" stroke="#202A2D" stroke-width="1"/>
+<ellipse cx="448.0" cy="3316.0" rx="7.800000000000001" ry="7.800000000000001" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<line x1="448.0" y1="3316" x2="448.0" y2="3556" stroke="#506C56" stroke-width="2"/>
+<line x1="448.0" y1="3556" x2="448.0" y2="3748" stroke="#506C56" stroke-width="2"/>
+<ellipse cx="448.0" cy="3844.0" rx="96.0" ry="96.0" fill="#96B2B1" stroke="#202A2D" stroke-width="2"/>
+<line x1="448.0" y1="3748.0" x2="448.0" y2="3758.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3766.0" x2="448.0" y2="3776.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3784.0" x2="448.0" y2="3794.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3802.0" x2="448.0" y2="3812.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3820.0" x2="448.0" y2="3830.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3838.0" x2="448.0" y2="3848.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3856.0" x2="448.0" y2="3866.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3874.0" x2="448.0" y2="3884.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3892.0" x2="448.0" y2="3902.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3910.0" x2="448.0" y2="3920.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3928.0" x2="448.0" y2="3938.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3940.0" x2="448.0" y2="3930.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3922.0" x2="448.0" y2="3912.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3904.0" x2="448.0" y2="3894.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3886.0" x2="448.0" y2="3876.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3868.0" x2="448.0" y2="3858.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3850.0" x2="448.0" y2="3840.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3832.0" x2="448.0" y2="3822.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3814.0" x2="448.0" y2="3804.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3796.0" x2="448.0" y2="3786.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3778.0" x2="448.0" y2="3768.0" stroke="#99704B" stroke-width="2"/>
+<line x1="448.0" y1="3760.0" x2="448.0" y2="3750.0" stroke="#99704B" stroke-width="2"/>
+<text x="60" y="2500" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="22" fill="#99704B">A | STANDARD SOLID KIOSK</text>
+<text x="60" y="2532" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#99704B">Solid 10-stud panel blocks the plaza sightline from the stoop</text>
+<text x="60" y="2560" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#202A2D">Width 6 studs (B) vs 10 (A) | height 6.0 | posts 5 studs apart</text>
+<text x="60" y="2592" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#202A2D">Route clearance 6 studs each side | BaseParts ~10 | prompt at (0, 3, 68)</text>
+<text x="60" y="2618" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#506C56">Fountain visible from the stoop: A NO / B YES</text>
+<text x="60" y="2644" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#506C56">Sign readable on a 360x640 phone: A YES / B YES</text>
+<text x="60" y="2670" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#506C56">Mobile camera obstruction: A HIGH / B LOW</text>
+<rect x="1554.0" y="3268" width="288" height="96" fill="transparent" stroke="#3D5A80" stroke-width="1"/>
+<rect x="1506.0" y="3460" width="384" height="96" fill="transparent" stroke="#99704B" stroke-width="1"/>
+<rect x="1668.0" y="3280" width="12.0" height="72" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<rect x="1716.0" y="3280" width="12.0" height="72" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<rect x="1662.0" y="3334.0" width="72" height="12.0" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<ellipse cx="1698.0" cy="3316.0" rx="7.800000000000001" ry="7.800000000000001" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<line x1="1698.0" y1="3316" x2="1698.0" y2="3556" stroke="#506C56" stroke-width="2"/>
+<line x1="1698.0" y1="3556" x2="1698.0" y2="3748" stroke="#506C56" stroke-width="2"/>
+<ellipse cx="1698.0" cy="3844.0" rx="96.0" ry="96.0" fill="#96B2B1" stroke="#202A2D" stroke-width="2"/>
+<line x1="1698.0" y1="3748.0" x2="1698.0" y2="3758.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3766.0" x2="1698.0" y2="3776.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3784.0" x2="1698.0" y2="3794.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3802.0" x2="1698.0" y2="3812.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3820.0" x2="1698.0" y2="3830.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3838.0" x2="1698.0" y2="3848.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3856.0" x2="1698.0" y2="3866.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3874.0" x2="1698.0" y2="3884.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3892.0" x2="1698.0" y2="3902.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3910.0" x2="1698.0" y2="3920.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3928.0" x2="1698.0" y2="3938.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3940.0" x2="1698.0" y2="3930.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3922.0" x2="1698.0" y2="3912.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3904.0" x2="1698.0" y2="3894.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3886.0" x2="1698.0" y2="3876.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3868.0" x2="1698.0" y2="3858.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3850.0" x2="1698.0" y2="3840.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3832.0" x2="1698.0" y2="3822.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3814.0" x2="1698.0" y2="3804.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3796.0" x2="1698.0" y2="3786.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3778.0" x2="1698.0" y2="3768.0" stroke="#99704B" stroke-width="2"/>
+<line x1="1698.0" y1="3760.0" x2="1698.0" y2="3750.0" stroke="#99704B" stroke-width="2"/>
+<text x="1310" y="2500" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="22" fill="#506C56">B | NARROW OPEN-FRAME KIOSK</text>
+<text x="1310" y="2532" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#506C56">Two 1-stud posts and a 5-stud band; fountain stays visible</text>
+<text x="1310" y="2560" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#202A2D">Width 6 studs (B) vs 10 (A) | height 6.0 | posts 5 studs apart</text>
+<text x="1310" y="2592" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#202A2D">Route clearance 6 studs each side | BaseParts ~10 | prompt at (0, 3, 68)</text>
+<text x="1310" y="2618" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#506C56">Fountain visible from the stoop: A NO / B YES</text>
+<text x="1310" y="2644" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#506C56">Sign readable on a 360x640 phone: A YES / B YES</text>
+<text x="1310" y="2670" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="15" fill="#506C56">Mobile camera obstruction: A HIGH / B LOW</text>
+<text x="60" y="2700" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Blue = frozen Z6 extent. Amber = 8-stud plaza edge band. Green rays = stoop -&gt; kiosk -&gt; fountain sightlines.</text>
+<text x="60" y="2730" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#506C56">D2 RECOMMENDATION: build candidate B (narrow open-frame) first. It keeps fountain visibility, walking clearance and mobile</text>
+<text x="60" y="2760" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#506C56">readability simultaneously; the solid panel only wins on sign area, which candidate B can recover with a taller band.</text>
+<text x="60" y="2820" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">4 | D3 HOUSE EXTERIOR — front facade and side elevation</text>
+<line x1="60" y1="2858" x2="2540" y2="2858" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="2872" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Shell wraps the frozen 24x24 room at a 0.6-stud offset (x/z -12.6..+12.6). Grade begins at z=+16. No roof plane in A1.</text>
+<rect x="214.0" y="2950" width="144" height="72" fill="#E9DEC7" stroke="#202A2D" stroke-width="1"/>
+<rect x="214.0" y="3021.4" width="144" height="0.5999999999999979" fill="#DBD3BE" stroke="#202A2D" stroke-width="1"/>
+<rect x="238.9" y="2950" width="22.199999999999996" height="43.8" fill="#99704B" stroke="#202A2D" stroke-width="1"/>
+<rect x="286.6" y="2968.6" width="34.800000000000004" height="28.800000000000004" fill="#96B2B1" stroke="#506C56" stroke-width="1"/>
+<text x="200" y="2950" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" fill="#202A2D">FRONT FACADE (from the street)</text>
+<rect x="696.0" y="2950" width="60" height="72" fill="#E9DEC7" stroke="#202A2D" stroke-width="1"/>
+<rect x="696.0" y="3021.4" width="60" height="0.5999999999999979" fill="#DBD3BE" stroke="#202A2D" stroke-width="1"/>
+<rect x="678.9" y="2950" width="22.199999999999996" height="43.8" fill="#99704B" stroke="#202A2D" stroke-width="1"/>
+<rect x="672.0" y="2934.4" width="108" height="15.600000000000001" fill="#99704B" stroke="#202A2D" stroke-width="1"/>
+<text x="620" y="2950" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" fill="#202A2D">SIDE ELEVATION (stoop)</text>
+<text x="1040" y="2950" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#506C56">D3 EXTERIOR CONTRACT</text>
+<text x="1040" y="2982" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Doorway cut x -7.85..-4.15, y 0..7.3, aligned to the</text>
+<text x="1040" y="3006" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  frozen Door part (-6, 3.65, 11.6), never resized</text>
+<text x="1040" y="3030" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Window aperture (blue) is frozen glass; cladding</text>
+<text x="1040" y="3054" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  must never cover it (V-03 / window projection)</text>
+<text x="1040" y="3078" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Parapet at y = 11.9, no roof plane, no interior</text>
+<text x="1040" y="3102" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  ceiling; roof waits for a camera-collision test</text>
+<text x="1040" y="3126" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">4-stud stoop between Door plane z=11.69 and grade</text>
+<text x="1040" y="3150" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  z=+16; City_HomeDoor on the exterior face</text>
+<text x="1040" y="3174" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_DoorPromptInterior stays inside at z=+8</text>
+<text x="1040" y="3198" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Spawn (-6, 0.6, 20) is 4 studs clear of the shell</text>
+<text x="1040" y="3222" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Wall returns bridge HomeDoor to the shell</text>
+<text x="1040" y="3246" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">No physical passage through the frozen Door</text>
+<text x="60" y="3260" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">5 | MAIN ROUTE CLEARANCES — stoop to kiosk to fountain to gate</text>
+<line x1="60" y1="3298" x2="2540" y2="3298" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="3312" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Scale 2 px/stud. Blue guides mark the 6-stud corridor; the green ring is the 8-stud fountain clearance.</text>
+<rect x="1140.0" y="3392" width="96" height="96" fill="transparent" stroke="#3D5A80" stroke-width="1"/>
+<rect x="1156.0" y="3392" width="64" height="96" fill="#6E7773" stroke="#202A2D" stroke-width="1"/>
+<rect x="1076.0" y="3488" width="224" height="192" fill="#E9DEC7" stroke="#202A2D" stroke-width="1"/>
+<ellipse cx="1188.0" cy="3584.0" rx="96.0" ry="96.0" fill="transparent" stroke="#506C56" stroke-width="2"/>
+<ellipse cx="1188.0" cy="3584.0" rx="16.0" ry="16.0" fill="#96B2B1" stroke="#202A2D" stroke-width="2"/>
+<rect x="1176.0" y="3488" width="24" height="16" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<rect x="1172.0" y="3680" width="32" height="32" fill="#84977E" stroke="#202A2D" stroke-width="1"/>
+<line x1="1162.8" y1="3334.8" x2="1172.8" y2="3334.8" stroke="#506C56" stroke-width="2"/>
+<line x1="1180.8" y1="3334.8" x2="1190.8" y2="3334.8" stroke="#506C56" stroke-width="2"/>
+<line x1="1198.8" y1="3334.8" x2="1208.8" y2="3334.8" stroke="#506C56" stroke-width="2"/>
+<line x1="1213.2" y1="3334.8" x2="1213.2" y2="3344.8" stroke="#506C56" stroke-width="2"/>
+<line x1="1213.2" y1="3352.8" x2="1213.2" y2="3362.8" stroke="#506C56" stroke-width="2"/>
+<line x1="1213.2" y1="3370.8" x2="1213.2" y2="3380.8" stroke="#506C56" stroke-width="2"/>
+<line x1="1213.2" y1="3385.2" x2="1203.2" y2="3385.2" stroke="#506C56" stroke-width="2"/>
+<line x1="1195.2" y1="3385.2" x2="1185.2" y2="3385.2" stroke="#506C56" stroke-width="2"/>
+<line x1="1177.2" y1="3385.2" x2="1167.2" y2="3385.2" stroke="#506C56" stroke-width="2"/>
+<line x1="1162.8" y1="3385.2" x2="1162.8" y2="3375.2" stroke="#506C56" stroke-width="2"/>
+<line x1="1162.8" y1="3367.2" x2="1162.8" y2="3357.2" stroke="#506C56" stroke-width="2"/>
+<line x1="1162.8" y1="3349.2" x2="1162.8" y2="3339.2" stroke="#506C56" stroke-width="2"/>
+<line x1="1176.0" y1="3400" x2="1176.0" y2="3440" stroke="#99704B" stroke-width="4"/>
+<line x1="1176.0" y1="3440" x2="1176.0" y2="3480" stroke="#99704B" stroke-width="4"/>
+<line x1="1176.0" y1="3480" x2="1176.0" y2="3496" stroke="#99704B" stroke-width="4"/>
+<line x1="1176.0" y1="3496" x2="1188.0" y2="3520" stroke="#99704B" stroke-width="4"/>
+<line x1="1188.0" y1="3520" x2="1188.0" y2="3568" stroke="#99704B" stroke-width="4"/>
+<line x1="1188.0" y1="3568" x2="1188.0" y2="3600" stroke="#99704B" stroke-width="4"/>
+<line x1="1188.0" y1="3600" x2="1188.0" y2="3676" stroke="#99704B" stroke-width="4"/>
+<ellipse cx="1188.0" cy="3496.0" rx="1.3" ry="1.3" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="1176.0" cy="3400.0" rx="1.3" ry="1.3" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<text x="1180" y="3360" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#3D5A80">CLEARANCE CONTRACT</text>
+<text x="1180" y="3392" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Walkable clear width &gt;= 6 studs on every path</text>
+<text x="1180" y="3416" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">&gt;= 8-stud ring around the fountain</text>
+<text x="1180" y="3440" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Road x -16..+16 (32) + 8-stud sidewalks</text>
+<text x="1180" y="3464" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Lane x -24..+24 is the walkable corridor</text>
+<text x="1180" y="3488" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Kiosk inside Z6 leaves both lanes open</text>
+<text x="1180" y="3512" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Door -&gt; kiosk ~56 studs ~3.5 s (estimate)</text>
+<text x="1180" y="3536" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Door -&gt; fountain ~100 studs ~6.3 s (estimate)</text>
+<text x="1180" y="3560" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Estimates only; A1 must measure on foot</text>
+<text x="60" y="3760" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Red dots: City_Spawn and City_Prompt_Boards. Amber: the single spine route. Estimates, not measured walk times.</text>
+<text x="60" y="3820" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">6 | D4 SHOP PROMPT APPROACH — baseline hosts, 10-stud activation, 12-stud validation</text>
+<line x1="60" y1="3858" x2="2540" y2="3858" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="3872" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Scale 2.5 px/stud. Hosts stay at baseline +/-68; relocation would be a documented amendment, never a silent edit.</text>
+<rect x="1240.0" y="4110.0" width="60.0" height="60.0" fill="#B48B60" stroke="#202A2D" stroke-width="1"/>
+<rect x="900.0" y="4110.0" width="60.0" height="60.0" fill="#B48B60" stroke="#202A2D" stroke-width="1"/>
+<rect x="1260.0" y="4130.0" width="20.0" height="10.0" fill="transparent" stroke="#506C56" stroke-width="1"/>
+<rect x="920.0" y="4130.0" width="20.0" height="10.0" fill="transparent" stroke="#506C56" stroke-width="1"/>
+<ellipse cx="1270.0" cy="4140.0" rx="1.625" ry="1.625" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<ellipse cx="930.0" cy="4140.0" rx="1.625" ry="1.625" fill="#AD3F35" stroke="#202A2D" stroke-width="2"/>
+<line x1="1245.0" y1="4115.0" x2="1255.0" y2="4115.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1263.0" y1="4115.0" x2="1273.0" y2="4115.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1281.0" y1="4115.0" x2="1291.0" y2="4115.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1295.0" y1="4115.0" x2="1295.0" y2="4125.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1295.0" y1="4133.0" x2="1295.0" y2="4143.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1295.0" y1="4151.0" x2="1295.0" y2="4161.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1295.0" y1="4165.0" x2="1285.0" y2="4165.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1277.0" y1="4165.0" x2="1267.0" y2="4165.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1259.0" y1="4165.0" x2="1249.0" y2="4165.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1245.0" y1="4165.0" x2="1245.0" y2="4155.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1245.0" y1="4147.0" x2="1245.0" y2="4137.0" stroke="#3D5A80" stroke-width="2"/>
+<line x1="1245.0" y1="4129.0" x2="1245.0" y2="4119.0" stroke="#3D5A80" stroke-width="2"/>
+<ellipse cx="1270.0" cy="4140.0" rx="30.0" ry="30.0" fill="transparent" stroke="#99704B" stroke-width="2"/>
+<ellipse cx="930.0" cy="4140.0" rx="30.0" ry="30.0" fill="transparent" stroke="#99704B" stroke-width="2"/>
+<text x="1180" y="3930" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#3D5A80">APPROACH CONTRACT</text>
+<text x="1180" y="3962" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Blue square = 10-stud ProximityPrompt radius</text>
+<text x="1180" y="3986" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Amber circle = 12-stud server validation radius</text>
+<text x="1180" y="4010" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  (WorldService.MAX_PROMPT_DISTANCE = 12)</text>
+<text x="1180" y="4034" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Counter face 4 studs inside the lot edge</text>
+<text x="1180" y="4058" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Standing position ~6 studs from the host</text>
+<text x="1180" y="4082" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Avatar root clearance &gt;= 4 studs required</text>
+<text x="1180" y="4106" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Open-front counter: no closed interior, so no</text>
+<text x="1180" y="4130" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  camera clipping and no interior lighting cost</text>
+<text x="1180" y="4154" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">No prop may sit between lane and prompt host</text>
+<text x="60" y="4150" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#506C56">D4 CONCLUSION: baseline hosts are reachable inside the existing 10/12 constraints with an open-front counter. No coordinate amendment is</text>
+<text x="60" y="4180" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#506C56">requested. All distances are pre-production estimates until measured in the A1 blockout.</text>
+<text x="60" y="4240" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">7 | D6 CAMERA EXPERIENCE — nine compositions for M2-A1 Studio capture</text>
+<line x1="60" y1="4278" x2="2540" y2="4278" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="4292" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Existing camera controller only; no new controller is introduced by M2-G1. None of these is verified without a Studio capture.</text>
+<text x="60" y="4340" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#506C56">1 Bedroom window -&gt; skyline</text>
+<text x="540" y="4342" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">desk CameraFocus (7, 5.5, 3.0) looking -Z</text>
+<text x="1310" y="4340" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#506C56">2 Interior door approach</text>
+<text x="1790" y="4342" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">room centre looking +Z at the Door</text>
+<text x="60" y="4386" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#99704B">3 First exterior arrival</text>
+<text x="540" y="4388" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">City_Spawn (-6, 0.6, 20) facing +Z</text>
+<text x="1310" y="4386" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#99704B">4 Residential lane</text>
+<text x="1790" y="4388" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">street centre z ~40 looking +Z</text>
+<text x="60" y="4432" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#99704B">5 Mission kiosk</text>
+<text x="540" y="4434" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">z ~60 looking +Z at Z6</text>
+<text x="1310" y="4432" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#99704B">6 Town centre fountain</text>
+<text x="1790" y="4434" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">plaza edge z ~96 looking +Z</text>
+<text x="60" y="4478" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#99704B">7 Shops</text>
+<text x="540" y="4480" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">lane centre z ~84 looking east/west</text>
+<text x="1310" y="4478" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#99704B">8 Future district gate</text>
+<text x="1790" y="4480" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">z ~150 looking +Z at Z7</text>
+<text x="60" y="4524" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" fill="#99704B">9 Return home</text>
+<text x="540" y="4526" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">stoop z ~18 looking -Z</text>
+<text x="60" y="4560" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Acceptance criteria per view are defined in M2-A1-READINESS.md; screenshot positions must be recorded with pose, aspect and mode.</text>
+<text x="60" y="4620" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="30" fill="#202A2D">8 | D7 BASEPART ALLOCATION — allocation ledger, not a measured Studio count</text>
+<line x1="60" y1="4658" x2="2540" y2="4658" stroke="#202A2D" stroke-width="3"/>
+<text x="60" y="4672" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#99704B">Counting contract: every BasePart once in assembled Workspace.City, invisible markers included inside the allocation.</text>
+<text x="60" y="4710" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" fill="#202A2D">Pool</text>
+<text x="520" y="4710" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" fill="#202A2D">BaseParts</text>
+<text x="700" y="4710" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" fill="#202A2D">Phase</text>
+<text x="60" y="4740" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">HouseExterior shell</text>
+<text x="520" y="4740" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">90</text>
+<text x="700" y="4740" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-A</text>
+<rect x="800" y="4743" width="52" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4766" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">StreetBlock</text>
+<text x="520" y="4766" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">80</text>
+<text x="700" y="4766" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-A</text>
+<rect x="800" y="4769" width="47" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4792" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">TownCenter shell</text>
+<text x="520" y="4792" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">140</text>
+<text x="700" y="4792" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-A</text>
+<rect x="800" y="4795" width="82" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4818" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">CityBoards</text>
+<text x="520" y="4818" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">40</text>
+<text x="700" y="4818" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-A</text>
+<rect x="800" y="4821" width="23" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4844" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">CityGate</text>
+<text x="520" y="4844" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">30</text>
+<text x="700" y="4844" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-A</text>
+<rect x="800" y="4847" width="17" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4870" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">North backdrop</text>
+<text x="520" y="4870" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">8</text>
+<text x="700" y="4870" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-A</text>
+<rect x="800" y="4873" width="4" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4896" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">Shared props instances</text>
+<text x="520" y="4896" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">60</text>
+<text x="700" y="4896" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-A</text>
+<rect x="800" y="4899" width="35" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4922" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#AD3F35">M2-A TOTAL</text>
+<text x="520" y="4922" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#AD3F35">448</text>
+<text x="700" y="4922" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#AD3F35">A</text>
+<rect x="800" y="4925" width="263" height="14" fill="#AD3F35" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4948" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">TownCenter props</text>
+<text x="520" y="4948" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">80</text>
+<text x="700" y="4948" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-B</text>
+<rect x="800" y="4951" width="47" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="4974" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">ElectroMart</text>
+<text x="520" y="4974" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">120</text>
+<text x="700" y="4974" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-B</text>
+<rect x="800" y="4977" width="70" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="5000" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">Rumah Rapi (conditional)</text>
+<text x="520" y="5000" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">100</text>
+<text x="700" y="5000" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-B</text>
+<rect x="800" y="5003" width="58" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="5026" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">Event plaza permanent</text>
+<text x="520" y="5026" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">160</text>
+<text x="700" y="5026" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-B</text>
+<rect x="800" y="5029" width="94" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="5052" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">Utility</text>
+<text x="520" y="5052" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">50</text>
+<text x="700" y="5052" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-B</text>
+<rect x="800" y="5055" width="29" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="5078" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#AD3F35">M2-B ADDITION</text>
+<text x="520" y="5078" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#AD3F35">510</text>
+<text x="700" y="5078" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#AD3F35">B</text>
+<rect x="800" y="5081" width="300" height="14" fill="#AD3F35" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="5104" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">Cumulative city</text>
+<text x="520" y="5104" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">958</text>
+<text x="700" y="5104" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">A+B</text>
+<rect x="800" y="5107" width="563" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="5130" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">City hard cap</text>
+<text x="520" y="5130" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">1200</text>
+<text x="700" y="5130" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">cap</text>
+<rect x="800" y="5133" width="705" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="60" y="5156" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">Unallocated headroom</text>
+<text x="520" y="5156" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">242</text>
+<text x="700" y="5156" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">cap</text>
+<rect x="800" y="5159" width="142" height="14" fill="#D8C2A8" stroke="#202A2D" stroke-width="1"/>
+<text x="1180" y="4710" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" fill="#202A2D">COUNTING CONTRACT</text>
+<text x="1180" y="4742" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Count each BasePart once in the assembled</text>
+<text x="1180" y="4766" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  Workspace.City, including invisible markers,</text>
+<text x="1180" y="4790" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  the physical HomeDoor, pivot parts and every</text>
+<text x="1180" y="4814" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  placed copy of a shared-kit prop</text>
+<text x="1180" y="4838" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Marker inventory: 22 invisible parts (17</text>
+<text x="1180" y="4862" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  positioned + 5 signpost positions); only the</text>
+<text x="1180" y="4886" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">  authored subset is charged, enumerated</text>
+<text x="1180" y="4910" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Library prototypes reported separately</text>
+<text x="1180" y="4934" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Temporary review helpers removed before evidence</text>
+<text x="1180" y="4958" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">A1 blockout ceiling 450; allocation 448</text>
+<text x="1180" y="4982" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Bedroom stays on its own &lt;= 350 budget</text>
+<text x="1180" y="5006" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Bars are relative allocation, not measurements</text>
+<text x="60" y="5184" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="16" fill="#202A2D">Bedroom (155 parts) is excluded here — it lives on its own budget. No exact Studio count exists until a generator produces one.</text>
+<text x="60" y="5210" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" fill="#202A2D">M2-G1 planning evidence | no approval, FPS, streaming or runtime behaviour is inferred from this drawing.</text>
+</svg>
