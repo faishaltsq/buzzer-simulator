@@ -161,13 +161,13 @@
 ---
 
 ### Case C-14: Unsupported Schema Preservation
-- **Setup:** Key `Player_{testUserId}` seeded with an artificial envelope: `{ schemaVersion: 99, customField: "future_data", revision: 10 }`.
+- **Setup:** Dedicated isolated test key partition `Player_{isolatedTestUserId}` (e.g., `Player_9999999` in reserved boundary range) seeded with an artificial future-schema envelope: `{ schemaVersion: 99, customField: "future_data", revision: 10 }`.
 - **Actor & Environment:** Studio Play Session, Staging Universe.
 - **Operation:** Call `SessionService:Start()`.
 - **Expected Result:** `ProfileStore:Load()` inspects `schemaVersion == 99`. Refuses load with `code = "UNSUPPORTED_SCHEMA"`. Session fails closed; starter profile is NOT seeded; key in cloud is preserved byte-for-byte.
-- **Exact Evidence:** Cloud `GetAsync` confirms `customField == "future_data"` and `schemaVersion == 99` untouched.
-- **Cleanup Procedure:** Overwrite key with test tombstone after verification.
-- **Recovery from Partial Execution:** Restore envelope if corrupted.
+- **Exact Evidence:** Cloud `GetAsync(..., UseCache=false)` confirms `customField == "future_data"`, `schemaVersion == 99`, and payload SHA-256 unchanged.
+- **Cleanup Procedure:** Do NOT overwrite with a tombstone and do NOT execute `RemoveAsync`. The isolated test key is quarantined and retained as immutable cloud evidence of schema preservation. It is never reused for normal tests. Explicit cleanup is permitted only via an authorized teardown procedure that re-verifies key name and payload hash before any modification.
+- **Recovery from Partial Execution:** Re-read cloud backend; assert payload matches seeded test envelope byte-for-byte.
 
 ---
 

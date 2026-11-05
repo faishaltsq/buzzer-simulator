@@ -7,14 +7,23 @@
 
 ---
 
-## 1. Context and Objective
+## 1. Context and Authoritative Gate Verdict Baseline
 
-BS-14 remediation closed with an authoritative verdict of **BLOCKED — CLOSED BETA NOT AUTHORIZED** (`docs/evidence/bs14-remediation/09-release-gate-verdict.md`). The primary technical blocker for release readiness is Gate **G2 (Real Cloud DataStore Safety and Rejoin)**. Prior certifications relied upon local in-memory mock adapters (`DEV_FALLBACK`) and unit test doubles, which cannot prove:
-- Roblox cloud service latency and timeout distribution.
-- Real DataStore `UpdateAsync` throttling (Request Budget 301).
-- Multi-server lease CAS handoff and foreign lease lockouts across real network boundaries.
-- Engine cache invalidation behavior (`DataStoreGetOptions.UseCache = false`).
-- Cloud place rollback and forward schema resilience.
+BS-14 remediation closed with an authoritative verdict of **BLOCKED — CLOSED BETA NOT AUTHORIZED** (`docs/evidence/bs14-remediation/09-release-gate-verdict.md` and `docs/evidence/bs14-remediation/candidate-manifest.json`).
+
+The authoritative status across all release gates is:
+
+| Gate | Scope | Authoritative Status | Rationale / Detail |
+| :---: | :--- | :---: | :--- |
+| **G0** | Static build, regression, executable assertions | **PASS** | 20/20 suites, 748 tests, 0 failures; clean deterministic build artifacts |
+| **G1** | Connected client/server gameplay | **PARTIAL** | Automated connected journey & 20-min idle pass; no human or physical client-variety evidence |
+| **G2** | Real cloud DataStore safety and rejoin | **BLOCKED** | No published staging universe, no cloud API access; offline Studio logs `DEV_FALLBACK` |
+| **G3** | UI/art and Studio viewport checks | **PARTIAL** | Studio viewport checks pass at measured viewports; no device pixels; human art review pending |
+| **G4** | M1 economy, workers, chapter completion | **PASS** | Desk/worker progression & 1.5 Cuan/s verified live; worker income 3,599 vs 3,599.456 expected |
+| **G5** | Real device, human playtest, reliability, rollback | **BLOCKED** | No physical device evidence, no participants, rollback unrehearsed on staging |
+| **OVERALL** | **Closed Beta Authorization** | **BLOCKED** | **CLOSED BETA NOT AUTHORIZED** |
+
+A passing subtest never promotes its gate. Prior certifications improperly reported G2 as passing based on local in-memory mock adapters (`DEV_FALLBACK`) and unit test doubles. Real cloud persistence remains unverified.
 
 **BS-15A covers preflight and test planning only.** No publish, place creation, cloud setting modification, DataStore write, key deletion, or cloud mutation tests have been or will be executed in this phase.
 

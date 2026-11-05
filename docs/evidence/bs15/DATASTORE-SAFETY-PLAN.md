@@ -16,7 +16,7 @@ Every guardrail is classified according to its verified operational status:
 
 | # | Threat Vector | Risk / Failure Mode | Enforced Safety Guardrail | Implementation & Evidence Basis | Verification Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1** | **Accidental Writes to Production** | Overwriting real player data or consuming production DataStore budgets | **Fail-Closed Luau Assertion:** Test harness asserts `game.GameId == StagingConfig.EXPECTED_STAGING_UNIVERSE_ID` and `game.GameId ~= FORBIDDEN_PRODUCTION_UNIVERSE_ID` before invoking `ProfileStore`. | Script designed for BS-15B pre-execution in `ServerStorage.StagingConfig`; aborts on mismatch. | **PLANNED** |
+| **1** | **Accidental Writes to Production** | Overwriting real player data or consuming production DataStore budgets | **Fail-Closed Luau Assertion:** Test harness asserts `game.GameId == StagingConfig.EXPECTED_STAGING_UNIVERSE_ID`, `game.GameId ~= StagingConfig.FORBIDDEN_PRODUCTION_UNIVERSE_ID`, and `game.PlaceId == StagingConfig.EXPECTED_STAGING_PLACE_ID`. Both Universe IDs must be verified positive integers; production universe ID is mandatory and cannot default to 0. | Script designed for BS-15B pre-execution in `ServerStorage.StagingConfig`; aborts immediately on mismatch or unverified config. | **PLANNED** |
 | **2** | **Shared Universe Identity** | Reusing production PlaceId/UniverseId under a staging label | **Platform-Level Scoping:** Roblox partitions DataStores strictly by Universe ID. Staging universe must be provisioned under a separate Creator Dashboard Universe ID. | Universe isolation enforced by Roblox engine backend; dedicated staging ID not yet provisioned. | **BLOCKED** |
 | **3** | **Wrong Profile Key** | Mutating unrelated keys or misformatting user keys | **Strict Regex & Key Partition:** Keys must strictly match `^Player_%d+$`. In testing, keys are restricted to designated disposable test user ranges (e.g., `Player_9999901` to `Player_9999999`). | `ProfileStore.luau:666` hardcodes `Player_{userId}`. Validated in `ProfileStore.spec`. Test range partitioning is scheduled for BS-15B. | **IMPLEMENTED & VERIFIED (Unit)** / **PLANNED (Partition)** |
 | **4** | **Partial Test Cleanup** | Residual test state corrupting subsequent test runs | **Run-Scoped Identifiers & Clean Release:** Tests use distinct test UserIds per test run. Cleanup executes standard `SessionService:Stop()` to clear leases. No arbitrary or unvalidated key deletion. | Lifecycle cleanup protocol authored in preflight; no cloud execution yet. | **PLANNED** |
@@ -53,34 +53,43 @@ end
 
 local expectedUniverse = StagingConfig.EXPECTED_STAGING_UNIVERSE_ID
 local expectedPlace = StagingConfig.EXPECTED_STAGING_PLACE_ID
-local forbiddenUniverse = StagingConfig.FORBIDDEN_PRODUCTION_UNIVERSE_ID or 0
+local forbiddenUniverse = StagingConfig.FORBIDDEN_PRODUCTION_UNIVERSE_ID
 
+-- Mandatory verified positive integer checks: production universe CANNOT be 0, nil, or unverified
+assert(typeof(forbiddenUniverse) == "number" and forbiddenUniverse > 0,
+    "[SAFETY GATE] Critical: StagingConfig.FORBIDDEN_PRODUCTION_UNIVERSE_ID must be a verified positive number (cannot be 0 or unverified)")
 assert(typeof(expectedUniverse) == "number" and expectedUniverse > 0,
-    "[SAFETY GATE] StagingConfig.EXPECTED_STAGING_UNIVERSE_ID must be a positive number")
+    "[SAFETY GATE] Critical: StagingConfig.EXPECTED_STAGING_UNIVERSE_ID must be a verified positive number")
 assert(typeof(expectedPlace) == "number" and expectedPlace > 0,
-    "[SAFETY GATE] StagingConfig.EXPECTED_STAGING_PLACE_ID must be a positive number")
+    "[SAFETY GATE] Critical: StagingConfig.EXPECTED_STAGING_PLACE_ID must be a verified positive number")
+
+-- Mandate strict separation between staging and production universes
+assert(expectedUniverse ~= forbiddenUniverse,
+    `[SAFETY GATE] Configuration error: Staging Universe ID ({expectedUniverse}) cannot equal Production Universe ID ({forbiddenUniverse})`)
+
+-- Runtime environment assertions against current Roblox DataModel
 assert(game.GameId == expectedUniverse,
     `[SAFETY GATE] Aborted! Current GameId ({game.GameId}) does not match staging universe ({expectedUniverse})`)
+assert(game.GameId ~= forbiddenUniverse,
+    `[SAFETY GATE] CRITICAL: Current GameId matches PRODUCTION universe ({forbiddenUniverse})! Immediate halt.`)
 assert(game.PlaceId == expectedPlace,
     `[SAFETY GATE] Aborted! Current PlaceId ({game.PlaceId}) does not match staging place ({expectedPlace})`)
-assert(forbiddenUniverse == 0 or game.GameId ~= forbiddenUniverse,
-    "[SAFETY GATE] CRITICAL: Current GameId matches PRODUCTION universe! Immediate halt.")
 
 local DataStoreService = game:GetService("DataStoreService")
 local ok, store = pcall(function()
     return DataStoreService:GetDataStore("PlayerData")
 end)
 assert(ok and store ~= nil, "[SAFETY GATE] Failed to obtain DataStore handle 'PlayerData'")
-print(`[SAFETY GATE] Passed: Running in verified Staging Universe {game.GameId}, Place {game.PlaceId}`)
+print(`[SAFETY GATE] Passed: Running in verified Staging Universe {game.GameId}, Place {game.PlaceId} (Production Universe {forbiddenUniverse} locked out)`)
 ```
 
 ### StagingConfig Template (`ServerStorage/StagingConfig.luau`)
 ```lua
 --!strict
 local StagingConfig = table.freeze({
-    EXPECTED_STAGING_UNIVERSE_ID = 0, -- Director must populate with staging universe ID
-    EXPECTED_STAGING_PLACE_ID = 0,    -- Director must populate with staging place ID
-    FORBIDDEN_PRODUCTION_UNIVERSE_ID = 0, -- Optional explicit production universe block
+    EXPECTED_STAGING_UNIVERSE_ID = 0,     -- Director must populate with confirmed staging universe ID (> 0)
+    EXPECTED_STAGING_PLACE_ID = 0,        -- Director must populate with confirmed staging place ID (> 0)
+    FORBIDDEN_PRODUCTION_UNIVERSE_ID = 0, -- Director must populate with verified production universe ID (> 0; mandatory, cannot default to 0)
     IS_STAGING_ENVIRONMENT = true,
 })
 return StagingConfig
@@ -109,7 +118,7 @@ The production persistence envelope is strictly frozen and governed by `ProfileS
   - Format: `Player_{testUserId}` where `testUserId` belongs to an authorized test account or allocated disposable test range (e.g., `9999901` through `9999999`).
   - Fresh tests (Case C-01) operate against a previously unused `testUserId` to observe true fresh-key acquisition without requiring key deletion.
 - **Safe Teardown via Clean Lease Release:** When a test scenario completes, cleanup is achieved by invoking `SessionService:Stop()` or `ProfileStore:Release()`. This writes the legitimate released state (`lease.token = ""`, `lease.expiresAt = 0`) and leaves a valid, uncorrupted schema v1 envelope in storage.
-- **Tombstones:** Artificial tombstone payloads are restricted exclusively to negative boundary tests (e.g., Case C-14, which intentionally tests preservation of non-v1 schemas). Tombstones are never used as standard cleanup mechanisms.
+- **Zero Tombstone Overwrite Policy:** Overwriting keys with tombstones or arbitrary payloads is forbidden. In Case C-14 (unsupported future schema preservation), the dedicated isolated test key (e.g., `Player_9999999`) is verified for hash/state invariance and permanently quarantined as immutable cloud evidence. It is never overwritten with a tombstone or reused for subsequent tests. Cleanup can only be performed via an explicit director-authorized procedure that re-verifies key prefix and payload hash prior to any action.
 
 ---
 
