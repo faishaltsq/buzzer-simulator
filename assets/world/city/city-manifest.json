@@ -1,0 +1,165 @@
+{
+  "assembled": [
+    "HouseExterior",
+    "StreetBlock",
+    "TownCenter",
+    "CityBoards",
+    "CityGate",
+    "CityBackdrop",
+    "CityAnchors"
+  ],
+  "assembled_city_baseparts": 289,
+  "assembled_point_lights": 7,
+  "backdrop_variants": {
+    "CityBackdrop": "FROZEN baseline X 16..160",
+    "CityBackdrop_CenteredReview": "PROPOSED D1 X -120..120, review copy"
+  },
+  "generator": "tools/gen_city_prefabs.py",
+  "marker_deferred": [
+    "City_Zone_ShopEast",
+    "City_Zone_ShopWest",
+    "City_Zone_EventPlaza",
+    "City_Prompt_ElectroMart",
+    "City_Prompt_RumahRapi",
+    "City_Prompt_Cosmetics",
+    "City_Prompt_Utility",
+    "City_Prompt_EventPlaza",
+    "City_Signpost_03",
+    "City_Signpost_04",
+    "City_Signpost_05",
+    "City_Signpost_06"
+  ],
+  "marker_subset_a1": [
+    "City_HomeDoor",
+    "City_Spawn",
+    "City_DoorPromptInterior",
+    "City_Zone_Street",
+    "City_Zone_TownCenter",
+    "City_Zone_FutureGate",
+    "City_Prompt_Boards",
+    "City_Prompt_FutureGate",
+    "City_TransitStop",
+    "City_Signpost_01",
+    "City_Signpost_02"
+  ],
+  "prefabs": {
+    "CityAnchors": {
+      "baseparts": 10,
+      "markers": [
+        "City_Spawn",
+        "City_DoorPromptInterior",
+        "City_Zone_Street",
+        "City_Zone_TownCenter",
+        "City_Zone_FutureGate",
+        "City_Prompt_Boards",
+        "City_Prompt_FutureGate",
+        "City_TransitStop",
+        "City_Signpost_01",
+        "City_Signpost_02"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "point_lights": 0,
+      "root": "Folder",
+      "scripts": 0,
+      "surface_guis": 0
+    },
+    "CityBackdrop": {
+      "baseparts": 8,
+      "markers": [],
+      "origin": [
+        88.0,
+        0,
+        -152
+      ],
+      "point_lights": 0,
+      "root": "Model/Persistent",
+      "scripts": 0,
+      "surface_guis": 0
+    },
+    "CityBackdrop_CenteredReview": {
+      "baseparts": 8,
+      "markers": [],
+      "origin": [
+        0.0,
+        0,
+        -152
+      ],
+      "point_lights": 0,
+      "root": "Model/Persistent",
+      "scripts": 0,
+      "surface_guis": 0
+    },
+    "CityBoards": {
+      "baseparts": 21,
+      "markers": [],
+      "origin": [
+        0,
+        0,
+        68
+      ],
+      "point_lights": 0,
+      "root": "Model/Atomic",
+      "scripts": 0,
+      "surface_guis": 4
+    },
+    "CityGate": {
+      "baseparts": 19,
+      "markers": [],
+      "origin": [
+        0,
+        0,
+        168
+      ],
+      "point_lights": 0,
+      "root": "Model/Atomic",
+      "scripts": 0,
+      "surface_guis": 1
+    },
+    "HouseExterior": {
+      "baseparts": 73,
+      "markers": [
+        "City_HomeDoor"
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "point_lights": 1,
+      "root": "Model/Atomic",
+      "scripts": 0,
+      "surface_guis": 1
+    },
+    "StreetBlock": {
+      "baseparts": 62,
+      "markers": [],
+      "origin": [
+        0,
+        0,
+        40
+      ],
+      "point_lights": 2,
+      "root": "Model/Atomic",
+      "scripts": 0,
+      "surface_guis": 4
+    },
+    "TownCenter": {
+      "baseparts": 96,
+      "markers": [],
+      "origin": [
+        0,
+        0,
+        112
+      ],
+      "point_lights": 4,
+      "root": "Model/Atomic",
+      "scripts": 0,
+      "surface_guis": 4
+    }
+  },
+  "status": "M2-A1 isolated review blockout"
+}

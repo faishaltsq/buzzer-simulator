@@ -1,0 +1,93 @@
+{
+  "method": "StreamingEnabled=true in Edit before fresh Play; client snapshots during native mobile traversal",
+  "landscapeCheckpoints": [
+    {
+      "orientation": "landscape",
+      "stop": "arrival",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-arrival.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "lane",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-lane.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "kiosk",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-kiosk.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "plaza",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-plaza.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    },
+    {
+      "orientation": "landscape",
+      "stop": "return",
+      "image": "docs\\evidence\\m2a1\\g2\\mobile-landscape-return.jpg",
+      "size": [
+        640,
+        360
+      ],
+      "zones": "CityBackdrop=8 Enum.ModelStreamingMode.Persistent; TownCenter=96 Enum.ModelStreamingMode.Atomic; StreetBlock=62 Enum.ModelStreamingMode.Atomic; HouseExterior=73 Enum.ModelStreamingMode.Atomic; CityBoards=21 Enum.ModelStreamingMode.Atomic; CityGate=19 Enum.ModelStreamingMode.Atomic"
+    }
+  ],
+  "bedroomClient": {
+    "enabled": true,
+    "targetRadius": 1024,
+    "zones": [
+      {
+        "mode": "Enum.ModelStreamingMode.Atomic",
+        "name": "StreetBlock",
+        "parts": 62
+      },
+      {
+        "mode": "Enum.ModelStreamingMode.Atomic",
+        "name": "HouseExterior",
+        "parts": 73
+      },
+      {
+        "mode": "Enum.ModelStreamingMode.Atomic",
+        "name": "TownCenter",
+        "parts": 96
+      },
+      {
+        "mode": "Enum.ModelStreamingMode.Atomic",
+        "name": "CityBoards",
+        "parts": 21
+      },
+      {
+        "mode": "Enum.ModelStreamingMode.Atomic",
+        "name": "CityGate",
+        "parts": 19
+      },
+      {
+        "mode": "Enum.ModelStreamingMode.Persistent",
+        "name": "CityBackdrop",
+        "parts": 8
+      }
+    ],
+    "minRadius": 64
+  },
+  "limitations": "TargetRadius=1024; no forced stream-out stress or impaired network run"
+}
