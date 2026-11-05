@@ -4,10 +4,10 @@ Planning evidence only — a drawing, never a Roblox Studio capture. One pixel-s
 scene feeds PNG, SVG and native Excalidraw. Requires Pillow. No game asset or
 runtime setting is modified; run from any working directory.
 
-Every coordinate below is either read from the parent tables
-(`02-WORLD-STRUCTURE.md`, `03-ZONE-SPECIFICATIONS.md`) or derived arithmetically
-from verified `Bedroom.rbxmx` anchors. `verify_g1_review.py` re-derives the
-arithmetic and asserts layout invariants.
+Frozen coordinates come from the parent tables (`02-WORLD-STRUCTURE.md`,
+`03-ZONE-SPECIFICATIONS.md`) or verified `Bedroom.rbxmx` anchors. Proposed
+kiosk and shop dimensions are read from their canonical review documents.
+`verify_g1_review.py` checks arithmetic, semantic consistency and layout.
 """
 import json
 import math
@@ -45,8 +45,8 @@ class Panel:
     def __init__(self, shapes, ox, oy, scale, span=None, fit=False, band=None):
         self.sh, self.ox, self.oy, self.s = shapes, ox, oy, scale
         if fit and span:
-            x0, x1 = band or (60, WIDTH - 60)
-            self.ox = x0 + ((x1 - x0) - (span[1] - span[0]) * scale) / 2
+            x0, x1 = band or (60, 1100)
+            self.ox = (x0 + x1) / 2 - (span[0] + span[1]) * scale / 2
 
     def px(self, x, z):
         return self.ox + x * self.s, self.oy + z * self.s
@@ -92,7 +92,7 @@ def rule(sh, y):
 
 def section(sh, y, heading, note=None):
     text(sh, 60, y, heading, 30)
-    rule(sh, y + 38)
+    rule(sh, y + 44)
     if note:
         text(sh, 60, y + 52, note, 17, TESTREQ)
 
@@ -125,6 +125,18 @@ DOOR = (-6.0, 3.65, 11.6)                                  # frozen collidable D
 HOMEDOOR = (-6.0, 3.65, 16.0)                              # City_HomeDoor (exterior face)
 CITY_SPAWN = (-6.0, 0.6, 20.0)                             # City_Spawn
 BOARDS = (0.0, 3.0, 68.0)                                  # City_Prompt_Boards
+
+
+def canonical_spec(filename, heading):
+    """Read the numeric contract from its owning review document."""
+    import re
+    source = (HERE / filename).read_text(encoding="utf-8").split(heading, 1)[1]
+    return json.loads(re.search(r"```json\s*(.*?)\s*```", source, re.S).group(1))
+
+
+KIOSKS = canonical_spec("KIOSK-VISIBILITY-COMPARISON.md", "## Canonical kiosk specification")
+SHOP = canonical_spec("SHOP-APPROACH-PLAN.md", "## Canonical shop approach")
+SIGNPOSTS = [(14, 62), (-14, 72), (44, 106), (-44, 106), (-84, 140), (14, 136)]
 
 # Parent table values.
 ZONES = [("Z0 Home plot", -24, 24, -24, 16), ("Z1 Street", -24, 24, 16, 64),
@@ -186,7 +198,7 @@ def scene():
         p.rect(x0 + 1, z0 + 1, x1 - 1, z1 - 1, "#B48B60")
     p.dashed(56, 96, 80, 120)
     p.dashed(-12.6, -12.6, 12.6, 12.6, FROZEN)
-    p.rect(-6, 64, 6, 72, "#84977E")
+    p.rect(-KIOSKS['B']['width'] / 2, 65, KIOSKS['B']['width'] / 2, 71, "#84977E")
     p.dashed(4, 65, 16, 71)
     p.rect(-8, 160, 8, 176, "#84977E")
     for path in [[(-6, 20), (-6, 40), (-4, 56), (-14, 64), (-16, 80), (0, 88)],
@@ -197,18 +209,17 @@ def scene():
             p.line(a, b, AMBER, 4)
     for _, x, z in ANCHORS:
         p.circle(x, z, 0.65, RED)
-    for x, z in [(14, 62), (-14, 72), (44, 106), (-44, 106), (-84, 140), (14, 136)]:
+    for x, z in SIGNPOSTS:
         p.circle(x, z, 0.5, FROZEN)
-    for (name, *_), (x, z) in zip(ZONES, [(-38, -16), (-42, 32), (-54, 150), (85, 72),
-                                          (-112, 78), (-134, 154), (-30, 58), (16, 165)]):
-        text(sh, *p.px(x, z), name.split()[0], 16)
+    for i, (name, x0, x1, z0, z1) in enumerate(ZONES):
+        text(sh, 60, 1180 + i * 30, f"{name}: X {x0}..{x1}, Z {z0}..{z1}", 17)
     block(sh, 1180, 300, "WALKABLE ENVELOPE", [
         "X -136 .. +80 | Z -24 .. +176",
         "216 x 200 studs, architecture-derived",
         "Grade Y = 0; no elevation change in A/B",
         "Frozen bedroom 24x24 at origin",
         "City grows south from the Door plane"], FROZEN)
-    block(sh, 1180, 700, "PARENT ANCHOR CONTRACT (17 PARTS)", [
+    block(sh, 1180, 700, "PARENT ANCHOR CONTRACT (17 POSITIONED IDENTITIES)", [
         "City_HomeDoor (-6, 3.65, 16)  physical",
         "City_Spawn (-6, 0.6, 20)",
         "City_DoorPromptInterior (-6, 3.65, 8)",
@@ -220,7 +231,7 @@ def scene():
         "City_Prompt_EventPlaza (-108, 3, 110)",
         "City_Prompt_FutureGate (0, 3, 168)",
         "City_TransitStop (24, 0, 96)",
-        "5 zone roots + City_LightGroup (Folder)",
+        "6 zone roots + City_LightGroup (Folder)",
         "Never reuse the bedroom's 12 names"], INK)
     block(sh, 1180, 1140, "OVERLAYS SHOWN HERE", [
         "Amber: illustrative route; no passage",
@@ -237,7 +248,7 @@ def scene():
     # ==================================================== 2 | D1 skyline audit
     section(sh, 1870, "2 | D1 SKYLINE / BACKDROP ALIGNMENT — baseline X=16..160 versus proposed X=-120..120",
             "Same Z extent -192..-112 in both candidates. Rays are the true desk-camera projection of the frozen window aperture.")
-    p = Panel(sh, 200, 1970, 2, span=(-120, 120), fit=True)
+    p = Panel(sh, 200, 2205, 1.2, span=(-120, 160), fit=True)
     p.rect(BASE_BACK[0], -192, BASE_BACK[1], -112, NAVY)
     p.dashed(PROP_BACK[0], -192, PROP_BACK[1], -112)
     p.line(CAMERA[:1] + (CAMERA[2],), (SLICE_X[0], BACK_Z), FROZEN, 2)
@@ -263,7 +274,7 @@ def scene():
         "  clear of the backdrop: no intersection",
         "Proposed X stays inside the -136..+80",
         "  city envelope, so no background breach"], RED)
-    block(sh, 60, 2180, "D1 RECOMMENDATION", [
+    block(sh, 60, 2250, "D1 RECOMMENDATION", [
         "Adopt the proposed centred extent X=-120..120 as the candidate for isolated Studio verification;",
         "keep X=16..160 as the frozen baseline until a real camera view confirms the candidate.",
         "Director guidance is explicit: do not freeze new coordinates on a 2D projection alone."], TESTREQ)
@@ -272,19 +283,20 @@ def scene():
     section(sh, 2380, "3 | D2 KIOSK — standard solid versus narrow open-frame, both inside frozen Z6",
             "Zone Z6 stays x -12..+12, z +64..+72. The prompt anchor (0, 3, 68) is not moved by either candidate.")
     for i, (name, note, color) in enumerate((
-            ("A | STANDARD SOLID KIOSK", "Solid 10-stud panel blocks the plaza sightline from the stoop", TESTREQ),
-            ("B | NARROW OPEN-FRAME KIOSK", "Two 1-stud posts and a 5-stud band; fountain stays visible", FROZEN))):
+            ("A | STANDARD SOLID KIOSK", "Higher occlusion risk; Studio test pending P2", TESTREQ),
+            ("B | NARROW OPEN-FRAME KIOSK", "Lower occlusion risk; Studio test pending P2", TESTREQ))):
+        spec = KIOSKS["AB"[i]]
         ox = 60 + i * 1250
-        p = Panel(sh, ox, 2500, 12, span=(-16, 16), fit=True,
-                  band=(60 + i * 1250, 60 + i * 1250 + 1160))
+        p = Panel(sh, ox, 2432, 2, span=(-16, 16), fit=True,
+                  band=(ox, ox + 420))
         p.rect(-12, 64, 12, 72, "transparent", BLUE)
         p.rect(-16, 80, 16, 88, "transparent", TESTREQ)
         if i == 0:
-            p.rect(-5, 65, 5, 71, "#84977E")
-            p.rect(-1.5, 65, 1.5, 71, "#6E7773")
+            p.rect(-spec['width'] / 2, 65, spec['width'] / 2, 71, "#84977E")
         else:
-            p.rect(-2.5, 65, -1.5, 71, "#84977E")
-            p.rect(1.5, 65, 2.5, 71, "#84977E")
+            half = spec['width'] / 2
+            p.rect(-half, 65, -half + spec['post_width'], 71, "#84977E")
+            p.rect(half - spec['post_width'], 65, half, 71, "#84977E")
             p.rect(-3, 69.5, 3, 70.5, "#84977E")
         p.circle(0, 68, 0.65, RED)
         p.line((0, 68), (0, 88), FROZEN, 2)
@@ -293,29 +305,29 @@ def scene():
         p.dashed(0, 104, 0, 120, TESTREQ)
         text(sh, ox, 2500, name, 22, color)
         text(sh, ox, 2532, note, 16, color)
-        text(sh, ox, 2560, "Width 6 studs (B) vs 10 (A) | height 6.0 | posts 5 studs apart", 15)
-        text(sh, ox, 2566 + 26, "Route clearance 6 studs each side | BaseParts ~10 | prompt at (0, 3, 68)", 15)
-        text(sh, ox, 2566 + 52, "Fountain visible from the stoop: A NO / B YES", 15, FROZEN)
-        text(sh, ox, 2566 + 78, "Sign readable on a 360x640 phone: A YES / B YES", 15, FROZEN)
-        text(sh, ox, 2566 + 104, "Mobile camera obstruction: A HIGH / B LOW", 15, FROZEN)
+        block(sh, ox + 470, 2560, f"{spec['width']} x {spec['depth']} footprint | height {spec['height']}", [
+            f"{spec['post_count']} supports, width {spec['post_width']}, centres {spec['post_spacing']} apart",
+            f"Estimated BaseParts ~{spec['parts']} (inside allocation 40)",
+            "Z 65..71; prompt (0, 3, 68) unchanged",
+            "Visibility / mobile readability: TEST REQUIRED"], TESTREQ, tsize=18, bsize=15)
     text(sh, 60, 2700, "Blue = frozen Z6 extent. Amber = 8-stud plaza edge band. Green rays = stoop -> kiosk -> fountain sightlines.", 16)
-    text(sh, 60, 2730, "D2 RECOMMENDATION: build candidate B (narrow open-frame) first. It keeps fountain visibility, walking clearance and mobile", 17, FROZEN)
-    text(sh, 60, 2760, "readability simultaneously; the solid panel only wins on sign area, which candidate B can recover with a taller band.", 17, FROZEN)
+    text(sh, 60, 2730, "D2 RECOMMENDATION: candidate B first, only after director authorisation. Visibility and readability remain 3D hypotheses (P2).", 17, TESTREQ)
+    text(sh, 60, 2760, "Canonical dimensions: KIOSK-VISIBILITY-COMPARISON.md. B rear band Y 6..9; both candidates remain inside frozen Z6.", 17)
 
     # ================================================ 4 | D3 house exterior
     section(sh, 2820, "4 | D3 HOUSE EXTERIOR — front facade and side elevation",
             "Shell wraps the frozen 24x24 room at a 0.6-stud offset (x/z -12.6..+12.6). Grade begins at z=+16. No roof plane in A1.")
-    p = Panel(sh, 200, 2950, 6, span=(-9, 9), fit=True, band=(120, 560))
-    p.rect(-12, 0, 12, 12, "#E9DEC7")
-    p.rect(-12, 11.9, 12, 12, "#DBD3BE")
-    p.rect(-7.85, 0, -4.15, 7.3, "#99704B")
-    p.rect(0.1, 3.1, 5.9, 7.9, "#96B2B1", FROZEN)
+    p = Panel(sh, 200, 3160, 12, span=(-12, 12), fit=True, band=(120, 520))
+    p.rect(-12, -12, 12, 0, "#E9DEC7")
+    p.rect(-12, -12, 12, -11.9, "#DBD3BE")
+    p.rect(-7.85, -7.3, -4.15, 0, "#99704B")
+    p.rect(0.1, -7.9, 5.9, -3.1, "#96B2B1", FROZEN)
     text(sh, 200, 2950, "FRONT FACADE (from the street)", 18)
-    p2 = Panel(sh, 620, 2950, 6, span=(-9, 9), fit=True, band=(560, 1000))
-    p2.rect(-5, 0, 5, 12, "#E9DEC7")
-    p2.rect(-5, 11.9, 5, 12, "#DBD3BE")
-    p2.rect(-7.85, 0, -4.15, 7.3, "#99704B")
-    p2.rect(-9, -2.6, 9, 0, "#99704B")
+    p2 = Panel(sh, 620, 3160, 12, span=(-9, 9), fit=True, band=(560, 1000))
+    p2.rect(-5, -12, 5, 0, "#E9DEC7")
+    p2.rect(-5, -12, 5, -11.9, "#DBD3BE")
+    p2.rect(-7.85, -7.3, -4.15, 0, "#99704B")
+    p2.rect(-9, 0, 9, 0.6, "#99704B")
     text(sh, 620, 2950, "SIDE ELEVATION (stoop)", 18)
     block(sh, 1040, 2950, "D3 EXTERIOR CONTRACT", [
         "Doorway cut x -7.85..-4.15, y 0..7.3, aligned to the",
@@ -334,18 +346,18 @@ def scene():
     # ============================================ 5 | main route clearances
     section(sh, 3260, "5 | MAIN ROUTE CLEARANCES — stoop to kiosk to fountain to gate",
             "Scale 2 px/stud. Blue guides mark the 6-stud corridor; the green ring is the 8-stud fountain clearance.")
-    p = Panel(sh, 200, 3360, 2, span=(-56, 56), fit=True)
+    p = Panel(sh, 200, 3380, 2, span=(-56, 56), fit=True)
     p.rect(-24, 16, 24, 64, "transparent", BLUE)
     p.rect(-16, 16, 16, 64, "#6E7773")
     p.rect(-56, 64, 56, 160, "#E9DEC7")
-    p.circle(0, 112, 48, "transparent", FROZEN)
+    p.circle(0, 112, 16, "transparent", FROZEN)
     p.circle(0, 112, 8, "#96B2B1")
-    p.rect(-6, 64, 6, 72, "#84977E")
+    p.rect(-3, 65, 3, 71, "#84977E")
     p.rect(-8, 160, 8, 176, "#84977E")
     p.dashed(-12.6, -12.6, 12.6, 12.6, FROZEN)
-    for a, b in [((-6, 20), (-6, 40)), ((-6, 40), (-6, 60)), ((-6, 60), (-6, 68)),
-                 ((-6, 68), (0, 80)), ((0, 80), (0, 104)), ((0, 104), (0, 120)),
-                 ((0, 120), (0, 158))]:
+    for a, b in [((-6, 20), (-6, 40)), ((-6, 40), (-6, 60)), ((-6, 60), (-9, 68)),
+                 ((-9, 68), (0, 80)), ((0, 80), (-20, 96)), ((-20, 96), (-20, 132)),
+                 ((-20, 132), (0, 140)), ((0, 140), (0, 158))]:
         p.line(a, b, AMBER, 4)
     p.circle(0, 68, 0.65, RED)
     p.circle(-6, 20, 0.65, RED)
@@ -354,7 +366,7 @@ def scene():
         ">= 8-stud ring around the fountain",
         "Road x -16..+16 (32) + 8-stud sidewalks",
         "Lane x -24..+24 is the walkable corridor",
-        "Kiosk inside Z6 leaves both lanes open",
+        "Kiosk flank / fountain detour are illustrative",
         "Door -> kiosk ~56 studs ~3.5 s (estimate)",
         "Door -> fountain ~100 studs ~6.3 s (estimate)",
         "Estimates only; A1 must measure on foot"], BLUE)
@@ -362,48 +374,55 @@ def scene():
 
     # ============================================== 6 | D4 shop approach
     section(sh, 3820, "6 | D4 SHOP PROMPT APPROACH — baseline hosts, 10-stud activation, 12-stud validation",
-            "Scale 2.5 px/stud. Hosts stay at baseline +/-68; relocation would be a documented amendment, never a silent edit.")
-    p = Panel(sh, 200, 3930, 2.5, span=(-80, 80), fit=True)
+            "Scale 5.5 px/stud. Hosts stay at baseline +/-68; relocation would be a documented amendment, never a silent edit.")
+    p = Panel(sh, 200, 3505, 5.5, span=(-80, 80), fit=True)
     p.rect(56, 72, 80, 96, "#B48B60")
     p.rect(-80, 72, -56, 96, "#B48B60")
-    p.rect(64, 80, 72, 84, "transparent", FROZEN)
-    p.rect(-72, 80, -64, 84, "transparent", FROZEN)
+    for side in (-1, 1):
+        face = side * SHOP['counter_face']
+        back = side * (SHOP['counter_face'] + SHOP['counter_depth'])
+        p.rect(min(face, back), 78, max(face, back), 90, "#84977E", FROZEN)
+        p.circle(side * SHOP['avatar_root'], 84, 0.65, BLUE)
     p.circle(68, 84, 0.65, RED)
     p.circle(-68, 84, 0.65, RED)
-    p.dashed(58, 74, 78, 94, BLUE)
+    p.circle(68, 84, 10, "transparent", BLUE)
+    p.circle(-68, 84, 10, "transparent", BLUE)
     p.circle(68, 84, 12, "transparent", AMBER)
     p.circle(-68, 84, 12, "transparent", AMBER)
+    text(sh, 60, 4060, "WEST: edge -56 | root -59 | face -60 | host -68", 16)
+    text(sh, 640, 4060, "EAST: edge +56 | root +59 | face +60 | host +68", 16)
     block(sh, 1180, 3930, "APPROACH CONTRACT", [
-        "Blue square = 10-stud ProximityPrompt radius",
+        "Blue circle = 10-stud XZ activation projection",
         "Amber circle = 12-stud server validation radius",
         "  (WorldService.MAX_PROMPT_DISTANCE = 12)",
-        "Counter face 4 studs inside the lot edge",
-        "Standing position ~6 studs from the host",
-        "Avatar root clearance >= 4 studs required",
-        "Open-front counter: no closed interior, so no",
-        "  camera clipping and no interior lighting cost",
-        "No prop may sit between lane and prompt host"], BLUE)
-    text(sh, 60, 4150, "D4 CONCLUSION: baseline hosts are reachable inside the existing 10/12 constraints with an open-front counter. No coordinate amendment is", 17, FROZEN)
-    text(sh, 60, 4180, "requested. All distances are pre-production estimates until measured in the A1 blockout.", 17, FROZEN)
+        f"Lot edge X=+/-{SHOP['lot_edge']}; counter face X=+/-{SHOP['counter_face']}",
+        f"Candidate avatar root X=+/-{SHOP['avatar_root']}; host X=+/-{SHOP['host']}",
+        "Same Z: avatar-host 9; face-host 8; edge-host 12",
+        "Avatar is 1 stud plaza-side of the counter face",
+        "HRP Y, collision and line of sight: TEST REQUIRED",
+        "No Studio reachability proof; pending P5"], BLUE)
+    text(sh, 60, 4150, "D4: red = frozen host, blue dot = candidate avatar root, green = counter. Canonical contract: SHOP-APPROACH-PLAN.md.", 17)
+    text(sh, 60, 4180, "XZ estimates only, not Studio reachability proof. Hosts unchanged; any coordinate amendment requires explicit director approval.", 17, TESTREQ)
 
     # ============================================== 7 | D6 camera sightlines
     section(sh, 4240, "7 | D6 CAMERA EXPERIENCE — nine compositions for M2-A1 Studio capture",
             "Existing camera controller only; no new controller is introduced by M2-G1. None of these is verified without a Studio capture.")
-    views = [("1 Bedroom window -> skyline", "desk CameraFocus (7, 5.5, 3.0) looking -Z", FROZEN),
-             ("2 Interior door approach", "room centre looking +Z at the Door", FROZEN),
-             ("3 First exterior arrival", "City_Spawn (-6, 0.6, 20) facing +Z", TESTREQ),
-             ("4 Residential lane", "street centre z ~40 looking +Z", TESTREQ),
-             ("5 Mission kiosk", "z ~60 looking +Z at Z6", TESTREQ),
-             ("6 Town centre fountain", "plaza edge z ~96 looking +Z", TESTREQ),
-             ("7 Shops", "lane centre z ~84 looking east/west", TESTREQ),
-             ("8 Future district gate", "z ~150 looking +Z at Z7", TESTREQ),
-             ("9 Return home", "stoop z ~18 looking -Z", TESTREQ)]
+    views = [("C1 Bedroom window -> skyline", "CameraFocus (7, 5.5, 3), north through aperture", TESTREQ),
+             ("C2 Interior door approach", "(0, 5.5, 6) -> Door (-6, 3.65, 11.6)", TESTREQ),
+             ("C3 First exterior arrival", "camera (-6, 4.5, 20), looking +Z", TESTREQ),
+             ("C4 Residential lane", "camera (0, 5, 44), looking +Z", TESTREQ),
+             ("C5 Mission kiosk", "10 studs north of (0, 3, 68), kiosk face", TESTREQ),
+             ("C6 Town centre fountain", "(0, 5, 84) -> (0, 0, 112)", TESTREQ),
+             ("C7 Shops", "(50, 5, 108) -> (68, 0, 108)", TESTREQ),
+             ("C8 Future district gate", "(0, 5, 150) -> (0, 0, 168)", TESTREQ),
+             ("C9 Return home", "(-6, 4.5, 16.5), north face", TESTREQ)]
     for i, (name, pose, color) in enumerate(views):
         x = 60 + (i % 2) * 1250
         y = 4340 + (i // 2) * 46
         text(sh, x, y, name, 19, color)
         text(sh, x + 480, y + 2, pose, 16)
-    text(sh, 60, 4560, "Acceptance criteria per view are defined in M2-A1-READINESS.md; screenshot positions must be recorded with pose, aspect and mode.", 16)
+    text(sh, 60, 4560, "C1-C9 criteria: CAMERA-AND-STREAMING-CHECKLIST.md. Requests / pending: DIRECTOR-APPROVAL-REQUEST.md.", 16)
+    text(sh, 60, 4588, "Review register: R1 R2 R3 R4 R5 | P1 P2 P3 P4 P5. Eight board panels; no request or capture is approved here.", 16)
 
     # ================================================= 8 | D7 part budget
     section(sh, 4620, "8 | D7 BASEPART ALLOCATION — allocation ledger, not a measured Studio count",
@@ -435,9 +454,9 @@ def scene():
         "  Workspace.City, including invisible markers,",
         "  the physical HomeDoor, pivot parts and every",
         "  placed copy of a shared-kit prop",
-        "Marker inventory: 22 invisible parts (17",
-        "  positioned + 5 signpost positions); only the",
-        "  authored subset is charged, enumerated",
+        "17 positioned identities = 16 invisible +",
+        "  1 physical HomeDoor; plus 6 signpost markers",
+        "22 invisible + 1 physical = 23 BaseParts",
         "Library prototypes reported separately",
         "Temporary review helpers removed before evidence",
         "A1 blockout ceiling 450; allocation 448",

@@ -32,11 +32,15 @@ not proof of live-camera visibility, so the coordinate is **PROPOSED**.
 |---|---|
 | Baseline | Z6 `X -12…+12`, `Z +64…+72`; prompt `City_Prompt_Boards (0, 3, 68)` |
 | Options | A solid board kiosk · B narrow open-frame kiosk |
+| Option A dimensions | 12 × 6 × 9 studs; 2 supports, width 1, centre spacing 11; ~32 parts |
+| Option B dimensions | 6 × 6 × 9 studs; 2 supports, width 1, centre spacing 5; ~30 parts |
 | Recommendation | **Option B** — narrow open-frame inside the frozen Z6 extent |
 | Frozen | Zone extent, prompt anchor, prompt identity |
-| Approval | None required for option B (stays inside approved zone); any extent change does |
+| Approval | Director design acceptance and explicit later M2-A1 assignment; any extent change also needs a coordinate decision |
 
-Full comparison: [`KIOSK-VISIBILITY-COMPARISON.md`](KIOSK-VISIBILITY-COMPARISON.md).
+Dimensions above are derived from the single source of truth:
+[`KIOSK-VISIBILITY-COMPARISON.md`](KIOSK-VISIBILITY-COMPARISON.md) § Canonical kiosk specification.
+Visibility and readability remain hypotheses pending Studio proof (P2).
 
 ## D3 — House exterior and porch
 
@@ -53,12 +57,15 @@ Full spec: [`HOUSE-EXTERIOR-SPEC.md`](HOUSE-EXTERIOR-SPEC.md).
 
 | Item | Value |
 |---|---|
-| Baseline | Prompt hosts at `±68` (east row), 10-stud activation, ≤ 12-stud server validation |
-| Recommendation | Keep hosts at baseline; prototype counters whose plaza-facing face sits at the lot edge `X = ±56` and move to `±58` **only** if a real walk-up fails |
+| Baseline | Prompt hosts east `+68`, west `-68`; 10-stud activation, ≤ 12-stud server validation |
+| Recommendation | Lot edge `X = ±56`; counter face `X = ±60`; candidate avatar root `X = ±59`; baseline host `X = ±68`. Same-Z horizontal avatar-host estimate 9 studs; face-host reference 8; edge-host reference 12 |
 | Frozen | Host coordinates until an explicit amendment is accepted |
 | Approval | Explicit coordinate amendment for any host move |
 
 Full plan: [`SHOP-APPROACH-PLAN.md`](SHOP-APPROACH-PLAN.md).
+Its canonical shop approach owns these derived values. Reachability is
+**TEST REQUIRED (P5)**: actual HRP height, collision and line of sight are not
+proven in Studio. No automatic host relocation is proposed.
 
 ## D5 — Streaming readiness
 
@@ -123,12 +130,12 @@ grade `Y = 0` unless noted.
 | Plaza disc | Z2 | — | center `(0,0,112)`, r 40 | 80 × 80 | plaza center | — | walkable | zone-local | PROPOSED | hub | 6-stud ring kept clear |
 | Fountain | Z2 | — | cylinder r 8 at center | r 8 | plaza center | — | collide | zone-local | PROPOSED | landmark | 8-stud clearance, no new prompt |
 | `City_Prompt_Boards` | Z6 | `(0, 3, 68)` | — | invisible host | kiosk face | +Z | none | zone-local | FROZEN | mission surface | prompt identity + distance |
-| `CityBoards` kiosk | Z6 | — | open-frame, X -6…+6 | ≤ 40 parts | zone origin | +Z | supports only | zone-local | PROPOSED | option B | fountain visibility 3D test |
+| `CityBoards` kiosk | Z6 | — | option B, X -3…+3, Z 65…71, height 9 | 6 × 6 footprint; ~30 parts within allocation 40 | zone origin | +Z | supports only | zone-local | PROPOSED | canonical D2 spec above | fountain visibility 3D test |
 | `City_Zone_ShopEast` | Z3 | `(68, 0, 108)` | — | invisible | row root | — | none | zone-local | FROZEN | telemetry | name uniqueness |
-| `City_Prompt_ElectroMart` | Z3 | `(68, 3, 84)` | keep at ±68 | invisible host | counter face | -X (plaza) | none | zone-local | FROZEN | existing Upgrades | real HRP distance ≤ 12 |
-| `City_Prompt_RumahRapi` | Z4 | `(-68, 3, 84)` | keep at ±68 | invisible host | counter face | +X (plaza) | none | zone-local | FROZEN | cosmetic shop | real HRP distance ≤ 12 |
-| `City_Prompt_Cosmetics` | Z3 | `(68, 3, 108)` | — | invisible host | counter face | -X (plaza) | none | zone-local | FROZEN | future shop (M2-C) | host only in A1 |
-| `City_Prompt_Utility` | Z3 | `(68, 3, 132)` | — | invisible host | counter face | -X (plaza) | none | zone-local | FROZEN | map/return | host only in A1 |
+| `City_Prompt_ElectroMart` | Z3 | `(68, 3, 84)` | keep at +68 | invisible host | behind face X +60 | -X (plaza) | none | zone-local | FROZEN | existing Upgrades | real HRP distance ≤ 12 |
+| `City_Prompt_RumahRapi` | Z4 | `(-68, 3, 84)` | keep at -68 | invisible host | behind face X -60 | +X (plaza) | none | zone-local | FROZEN | cosmetic shop | real HRP distance ≤ 12 |
+| `City_Prompt_Cosmetics` | Z3 | `(68, 3, 108)` | — | invisible host | behind face X +60 | -X (plaza) | none | zone-local | FROZEN | future shop (M2-C) | host only in A1 |
+| `City_Prompt_Utility` | Z3 | `(68, 3, 132)` | — | invisible host | behind face X +60 | -X (plaza) | none | zone-local | FROZEN | map/return | host only in A1 |
 | `City_Zone_ShopWest` | Z4 | `(-68, 0, 84)` | — | invisible | row root | — | none | zone-local | FROZEN | telemetry | name uniqueness |
 | `City_Zone_EventPlaza` | Z5 | `(-108, 0, 134)` | — | invisible | plaza center | — | none | zone-local | FROZEN | telemetry | name uniqueness |
 | `City_Prompt_EventPlaza` | Z5 | `(-108, 3, 110)` | — | invisible host | board face | +X | none | zone-local | FROZEN | read-only schedule | host only in A1 |

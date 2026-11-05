@@ -10,8 +10,8 @@ frozen until it lands. **No item in this package is approved by the agent.**
 | R1 | **D1 backdrop extent** | Adopt the centred candidate `X = -120…+120` for the A1 review copy; freeze only after the C1 Studio capture | baseline `X = +16…+160` remains canonical; V-03 stays open |
 | R2 | **D2 kiosk design** | Build option B (narrow open-frame) first inside the frozen Z6 | zone extent and `City_Prompt_Boards (0, 3, 68)` unchanged; no extent change is requested |
 | R3 | **D3 porch treatment** | Option B1 — flush slab + return walls bridging the 2.56-stud recess; no roof plane | `City_HomeDoor (-6, 3.65, 16)`, frozen `Door`, camera anchors, window aperture |
-| R4 | **D4 shop hosts** | Keep hosts at `±68`; counters face the plaza at `X = ±60`; amend to `±58` only if a real walk-up fails | host coordinates and the 10/12-stud contract |
-| R5 | **D1 verification pose** | Accept the nine capture poses (C1–C9) as the M2-A1 evidence set | no camera override is shipped |
+| R4 | **D4 shop hosts** | Lot edge `X = ±56`; counter face `X = ±60`; candidate avatar root `X = ±59`; baseline host `X = ±68`. Derived from `SHOP-APPROACH-PLAN.md`; actual reachability pending P5; no fallback move | host coordinates and the 10/12-stud contract |
+| R5 | **D6 verification poses** | Accept the nine capture poses (C1–C9) as the M2-A1 evidence set | no camera override is shipped |
 
 ## Pending — test required (cannot be closed in 2D planning)
 

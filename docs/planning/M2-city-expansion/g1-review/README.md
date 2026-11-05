@@ -34,7 +34,7 @@ merge. No changes to Agent 1's BS-15 branch.
 | `PART-BUDGET-LEDGER.md` | D7 allocation ledger and reduction strategy |
 | `M2-A1-READINESS.md` | Phase 5 blockout order and objective acceptance tests |
 | `DIRECTOR-APPROVAL-REQUEST.md` | The explicit decisions requested, with what stays frozen until each lands |
-| `G1-DESIGN-REVIEW-preview.png` / `.svg` | Visual review boards (8 views) |
+| `G1-DESIGN-REVIEW-preview.png` / `.svg` | Visual review board (8 panels) |
 | `G1-DESIGN-REVIEW.excalidraw` | Editable source of the boards |
 | `gen_g1_boards.py` | Deterministic generator for the three exports |
 | `verify_g1_review.py` | Focused checks on the new tables and the board exports |
@@ -46,15 +46,20 @@ to them and only restates the values a decision depends on.
 
 **READY FOR DIRECTOR M2-G1 REVIEW** — the coordinate contract is build-ready,
 every open decision has a recommendation with an explicit approval requirement,
-and nothing is marked approved by the agent. Four items remain
+and nothing is marked approved by the agent. Five items (P1–P5) remain
 **TEST REQUIRED** because they cannot be proven in 2D planning (see
 `DIRECTOR-APPROVAL-REQUEST.md` § Pending).
 
+The review register is R1–R5, P1–P5 and C1–C9. Canonical kiosk dimensions live
+in `KIOSK-VISIBILITY-COMPARISON.md`; canonical shop approach coordinates live
+in `SHOP-APPROACH-PLAN.md`. The matrix and board derive their values there.
+
 ## Evidence discipline
 
-- Every number in this package is either quoted from a parent/M2-A0 table or
-  derived arithmetically from the verified `Bedroom.rbxmx` anchors
-  (`CameraFocus`, `WindowGlass`, `Door`).
+- Frozen numbers are quoted from parent/M2-A0 tables or derived from verified
+  `Bedroom.rbxmx` anchors (`CameraFocus`, `WindowGlass`, `Door`). Proposed
+  kiosk dimensions and avatar/counter positions are planning candidates,
+  not existing asset measurements.
 - No number here is a measured Roblox Studio count, frame time, or live camera
   capture. `PART-BUDGET-LEDGER.md` keeps allocations distinct from emitted counts.
 - The boards are **planning drawings**, not Roblox Studio screenshots, and are

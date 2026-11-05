@@ -28,6 +28,14 @@ runs; it grants no authorisation.
 | 9 | City anchors | only the 17 parent identities, exact positions, under `City_Anchors` |
 | 10 | Review-scene assembly | one translation per zone; no doubles, scripts or external asset references |
 
+For later shop approach review, derive values from `SHOP-APPROACH-PLAN.md`:
+lot edge `X = ±56`; counter face `X = ±60`; candidate avatar root `X = ±59`;
+baseline host `X = ±68`. These are XZ planning positions, not Studio
+reachability proof (P5). Kiosk step 6 uses the canonical Option B specification
+in `KIOSK-VISIBILITY-COMPARISON.md` (6 × 6 × 9, two 1-stud posts, centres 5 apart).
+Full marker inventory: 17 positioned identities (16 invisible + physical
+`City_HomeDoor`) plus 6 signpost markers = 22 invisible + 1 physical = 23 BaseParts.
+
 ## Objective acceptance tests
 
 | # | Test | Objective |
