@@ -42,7 +42,7 @@ This document defines the 7-step procedure to rehearse place rollback on the ded
 ### Step 3: Establish and Verify Durable Profile State
 - Connect authorized test player `Tester_A` (`Player_{testUserId}`) to the candidate server.
 - Execute standard gameplay progression:
-  - Acquire `phone_fast` (60 Cuan).
+  - Acquire `phone_fast` (50 Cuan).
   - Unlock Desk 1 and hire Trainee 1.
   - Complete 2 missions, reaching confirmed balance `B_checkpoint`.
 - Trigger clean session stop (`SessionService:Stop()`) to flush final worker bank and release lease.
@@ -70,14 +70,25 @@ This document defines the 7-step procedure to rehearse place rollback on the ded
 - This creates `Version N_restored = N_rollback + 1`, with contents matching the approved candidate build.
 - Shut down all staging servers.
 
-### Step 7: Final Data Invariance Verification
+### Step 7: Final Data Invariance and Metadata Verification
 - Launch Roblox client and connect `Tester_A` to the restored candidate server.
 - Call `SessionService:Start()`.
-- Query profile snapshot:
-  - Assert `wallet.balance == B_checkpoint`.
-  - Assert `profile.revision >= R_checkpoint`.
-  - Assert all devices, desks, and trainees remain owned and configured.
-- Assert zero data truncation, corruption, or loss occurred across the dual rollback cycle.
+- Query profile snapshot and perform decoupled validation:
+  1. **Business-State Invariance (Strict Equality):**
+     - `profile.wallet.balance == B_checkpoint` (zero balance loss or inflation).
+     - `profile.wallet.lifetimeEarnings == L_checkpoint`.
+     - `profile.devices` strictly equals `["phone_cheap", "phone_fast"]`.
+     - `profile.studio.desks` and `profile.studio.workers` retain exact acquired configurations.
+     - `profile.missions.completed` retains all completed missions.
+     - Diff on business state between post-restore and pre-rollback seed is strictly `0`.
+  2. **Permitted / Expected Metadata Progression:**
+     - `envelope.revision >= R_checkpoint` (revision monotonically advances upon session start/stop; never regresses).
+     - `envelope.lease.token` contains a valid newly assigned lease token for the active session.
+     - `envelope.lease.jobId` reflects the new active server instance JobId.
+     - `envelope.lease.expiresAt` reflects forward lease TTL (`now + 240s`).
+     - `envelope.updatedAt` reflects forward timestamp of the restored session.
+     - `envelope.lastSaveOpId` advances to the last operation ID of the restored session.
+- Assert zero business data truncation, corruption, or loss occurred across the dual rollback cycle.
 
 ---
 
@@ -85,9 +96,9 @@ This document defines the 7-step procedure to rehearse place rollback on the ded
 
 | Step | Verification Check | Success Standard | Evidence Artifact |
 | :--- | :--- | :--- | :--- |
-| **Publish** | Place Version Increment | Version increments monotonically | Dashboard screenshot / API response |
+| **Publish** | Place Version Increment | Version increments monotonically (`N_base + 1`) | Dashboard screenshot / API response |
 | **Seed** | Cloud Write Confirmation | Balance & assets confirmed in cloud | Raw JSON snapshot `pre-rollback-state.json` |
 | **Rollback** | Server Code Reversion | Place runs older code | Server console log showing baseline version |
 | **Compatibility** | Schema Preservation | No starter reset; zero field deletion | Cloud DataStore inspect `rolled-back-inspect.json` |
 | **Restore** | Candidate Reinstatement | Candidate logic active | Server console log showing candidate build |
-| **Invariance** | Bit-for-bit Data Continuity | Final state strictly matches seed | Diff comparison: `final-vs-seed.diff == 0` |
+| **Invariance** | Business State Invariance | Business fields strictly identical (`business_diff == 0`); metadata monotonically advanced (`rev >= R_seed`) | Structured comparison `business-state-comparison.json` |

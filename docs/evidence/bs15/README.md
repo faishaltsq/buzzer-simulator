@@ -55,7 +55,7 @@ The BS-15A preflight package contains six operational planning artifacts:
 1. [`STAGING-READINESS.md`](STAGING-READINESS.md)  
    Comprehensive audit of 9 mandatory staging environment properties (Verified vs. Unknown vs. Blocked).
 2. [`G2-CLOUD-TEST-MATRIX.md`](G2-CLOUD-TEST-MATRIX.md)  
-   Complete 17-case executable test specification across Layer C (Studio with Real Cloud APIs) and Layer D (Published Two-Server Staging).
+   Complete 22 executable test scenarios across Layer C (15 scenarios in Studio with Real Cloud APIs) and Layer D (7 scenarios in Published Two-Server Staging), with bidirectional traceability mapping to the 17 G2 requirements.
 3. [`TWO-SERVER-TEST-PLAN.md`](TWO-SERVER-TEST-PLAN.md)  
    Operational topology, orchestration protocol, and failure injection scenarios for multi-server concurrency verification.
 4. [`DATASTORE-SAFETY-PLAN.md`](DATASTORE-SAFETY-PLAN.md)  

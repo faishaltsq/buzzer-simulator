@@ -2,7 +2,9 @@
 
 **Document Status:** Operational Test Protocol (Preflight Only — Awaiting Authorization)  
 **Execution Context:** Real Published Roblox Staging Servers (Two Independent Server Instances)  
-**Target Gate:** Gate G2 — Multi-Server Safety, Lease Concurrency, and Rejoin Resilience
+**Target Gate:** Gate G2 — Multi-Server Safety, Lease Concurrency, and Rejoin Resilience  
+**Traceability:** Implements Scenarios D-01 through D-07 mapped to G2 Requirements in `G2-CLOUD-TEST-MATRIX.md` §4  
+**Schema Governance:** Strict Schema v1 immutability (`ProfileStore._validateEnvelope`). Zero schema pollution; `runId` logged externally.
 
 ---
 

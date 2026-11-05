@@ -73,10 +73,10 @@
 ---
 
 ### Case C-06: Device Persistence
-- **Setup:** Profile has balance >= 60 Cuan and Tier 0 requirements.
+- **Setup:** Profile has balance >= 50 Cuan and Tier 0 requirements.
 - **Actor & Environment:** Studio Play Session, Staging Universe.
-- **Operation:** Execute `BuyDevice` for `phone_fast` (60 Cuan). Verify durable commit. Stop session, restart session.
-- **Expected Result:** Reconnected profile has `phone_fast` in `profile.devices`, `profile.activeDevice == "phone_fast"`, and wallet deducted by exactly 60 Cuan.
+- **Operation:** Execute `BuyDevice` for `phone_fast` (50 Cuan). Verify durable commit. Stop session, restart session.
+- **Expected Result:** Reconnected profile has `phone_fast` in `profile.devices`, `profile.activeDevice == "phone_fast"`, and wallet deducted by exactly 50 Cuan.
 - **Exact Evidence:** Cloud snapshot shows `devices = ["phone_cheap", "phone_fast"]`.
 - **Cleanup Procedure:** None required; device state is persistent.
 - **Recovery from Partial Execution:** Re-read backend; ensure idempotency check handles repeated purchase attempts.
@@ -194,3 +194,58 @@
 - **Case D-05: Concurrent Operation Safety:** Server A and Server B race to acquire expired lease -> exactly one server acquires, second receives `LOCKED`.
 - **Case D-06: Real Published-Server Rejoin:** Player teleports between live published staging servers -> profile loads seamlessly with zero rollback.
 - **Case D-07: Persistence After Server Restart:** Creator Dashboard shuts down all running servers -> player rejoins new server -> all assets and balances intact.
+
+---
+
+## 4. Bidirectional Traceability Matrix
+
+This matrix establishes complete mapping between the 17 authoritative Gate G2 requirements defined in `docs/evidence/bs14-remediation/03-datastore-g2-matrix.md` and the 22 executable cloud test scenarios (15 Layer C + 7 Layer D).
+
+### 4.1 Requirement to Test Scenario Mapping (17 G2 Requirements)
+
+| G2 Req # | G2 Requirement (`03-datastore-g2-matrix.md`) | Primary Cloud Test Case(s) | Layer | Verification Scope |
+| :---: | :--- | :--- | :---: | :--- |
+| **1** | Fresh profile created and durably saved | **C-01**, **C-02** | C | Initial load returns `NOT_READY`; `InitializeStarter` writes starter profile envelope with `schemaVersion = 1`, `balance = 0`. |
+| **2** | Real server exit and new server join | **C-03**, **D-03**, **D-06**, **D-07** | C, D | Clean release handoff transfers lease immediately (`expiresAt = 0`); new server acquires without waiting 240s TTL. |
+| **3** | Currency survives rejoin | **C-04**, **D-06** | C, D | Wallet balance invariance across disconnect and live server rejoin; zero inflation or loss. |
+| **4** | Mission claims survive rejoin | **C-05**, **D-06** | C, D | Completed missions array and reward payouts durably retained in profile. |
+| **5** | Device persistence (`phone_fast`, `pc_rumah`) | **C-06**, **D-06** | C, D | Owned devices array and active device selection preserved after server reconnect. |
+| **6** | Both desks survive rejoin | **C-07**, **D-06** | C, D | Desk 1 and Desk 2 ownership retained in `profile.ownedDesks` after rejoin. |
+| **7** | Both workers survive rejoin | **C-07**, **D-06** | C, D | Slot 1 and Slot 2 trainee assignments retained in `profile.workers` across sessions. |
+| **8** | Worker rate recomputed after rejoin | **C-08** | C | Derived economy rate (1.5 Cuan/s per worker) computed dynamically upon startup, never read from static store field. |
+| **9** | Confirmed banking survives rejoin | **C-02**, **C-09**, **D-07** | C, D | 30s banking commits durably saved; unbanked accrual safely recovered on rejoin. |
+| **10** | No income earned while offline | **C-10** | C | 10-minute offline period yields 0 balance increase and empty pending accrual queue. |
+| **11** | Lease conflicts handled safely | **C-03**, **D-01**, **D-02**, **D-04**, **D-05** | C, D | Foreign active lease returns `LOCKED`; crash forces waiting full 240s TTL; simultaneous start races serialize via atomic CAS. |
+| **12** | Stale revisions rejected | **C-11**, **D-02** | C, D | Conditional CAS checks `stored.revision == expectedRevision`; lower/equal revisions rejected without mutation. |
+| **13** | Ambiguous writes reconciled | **C-13** | C | Network drop re-reads backend with `UseCache = false`; matches `lastSaveOpId` without double-applying write. |
+| **14** | Duplicate operation IDs never double-credit | **C-12** | C | Idempotency guard matches `stored.lastSaveOpId == operationId`, short-circuiting with 0 revision bump or payout. |
+| **15** | Failed read never overwrites with starter data | **C-15** | C | DataStore read error returns `SAVE_UNAVAILABLE`; fails closed without seeding starter envelope. |
+| **16** | Corrupt / future-schema envelopes preserved | **C-14** | C | `schemaVersion ~= 1` returns `UNSUPPORTED_SCHEMA`; raw data preserved byte-for-byte in cloud storage. |
+| **17** | Shutdown and reconnect lose no confirmed transactions | **D-03**, **D-04**, **D-07** | D | `BindToClose` flushes worker accrual before termination; clean rejoin confirms all committed states. |
+
+### 4.2 Scenario to Requirement Traceability (22 Test Scenarios)
+
+| Scenario ID | Layer | Scenario Title | Target G2 Requirements |
+| :--- | :---: | :--- | :--- |
+| **C-01** | C | Fresh-Profile Creation | Requirement 1 |
+| **C-02** | C | Durable Write Verification | Requirements 1, 9 |
+| **C-03** | C | Session Close and Reconnect | Requirements 2, 11 |
+| **C-04** | C | Confirmed Balance Persistence | Requirement 3 |
+| **C-05** | C | Mission Persistence | Requirement 4 |
+| **C-06** | C | Device Persistence (`phone_fast`) | Requirement 5 |
+| **C-07** | C | Desk and Worker Persistence | Requirements 6, 7 |
+| **C-08** | C | Derived Worker-Rate Reconstruction | Requirement 8 |
+| **C-09** | C | Confirmed Worker Banking Persistence | Requirement 9 |
+| **C-10** | C | No Offline Accrual | Requirement 10 |
+| **C-11** | C | Stale Revision Rejection | Requirement 12 |
+| **C-12** | C | Duplicate Operation Idempotency | Requirement 14 |
+| **C-13** | C | Ambiguous Write Reconciliation | Requirement 13 |
+| **C-14** | C | Unsupported Schema Preservation | Requirement 16 |
+| **C-15** | C | Failed Read Safety | Requirement 15 |
+| **D-01** | D | Foreign Lease Conflict | Requirement 11 |
+| **D-02** | D | Cross-Server Write Exclusion | Requirements 11, 12 |
+| **D-03** | D | Clean Server Exit and Lease Handoff | Requirements 2, 17 |
+| **D-04** | D | Abnormal Disconnect Recovery | Requirements 11, 17 |
+| **D-05** | D | Concurrent Operation Safety (Race) | Requirement 11 |
+| **D-06** | D | Real Published-Server Rejoin | Requirements 2, 3, 4, 5, 6, 7 |
+| **D-07** | D | Persistence After Server Restart | Requirements 2, 9, 17 |
