@@ -1,0 +1,28 @@
+bg_1 [bash] — completed — Recording corrected six-stop camera pass — python tools/review/player_camera_pass.py porch,lane,arch,kiosk,plaza,return
+== porch: house entrance and porch
+CAMERA_INSIDE_SOLID_frames=141 WallSouthRightx2,DoorReturnWestx1,City_HomeDoorx138 maxPenetration=0.1275 studs | NEAR_PLANE_TOUCH_frames=216 DoorReturnEastx5,DoorReturnWestx3,City_HomeDoorx141,WallSouthLeftx27,WallSouthRightx41 | frames=606 avg_fps=60.0 p50=16.7ms p95=18.0ms p99=27.4ms worst=36.0ms >33ms=2 | camDist 2.0..13.0 | yaw -178..176 (12/12 bins) pitch -15..-15
+INSIDE_SOLID_AT: City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0) ; City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0) ; City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0) ; City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0) ; City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0) ; City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0) ; City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0) ; City_HomeDoor boundsDepth=0.0727 studs cam=(-6.1,4.3,16.0)
+NEAR_PLANE_AT: City_HomeDoor@(-6.1,4.3,16.0) ; City_HomeDoor@(-6.1,4.3,16.0) ; City_HomeDoor@(-6.1,4.3,16.0) ; City_HomeDoor@(-6.1,4.3,16.0) ; City_HomeDoor@(-6.1,4.3,16.0) ; City_HomeDoor@(-6.1,4.3,16.0)
+== lane: narrow residential lane
+CAMERA_INSIDE_SOLID_frames=66 WallSouthRightx66 maxPenetration=0.0430 studs | NEAR_PLANE_TOUCH_frames=67 WallSouthRightx67 | frames=621 avg_fps=60.0 p50=16.6ms p95=18.0ms p99=20.1ms worst=33.6ms >33ms=1 | camDist 2.1..25.9 | yaw -180..178 (12/12 bins) pitch -15..-15
+INSIDE_SOLID_AT: WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3) ; WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3) ; WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3) ; WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3) ; WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3) ; WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3) ; WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3) ; WallSouthRight boundsDepth=0.0430 studs cam=(-0.9,10.0,13.3)
+NEAR_PLANE_AT: WallSouthRight@(-1.0,9.9,13.5) ; WallSouthRight@(-0.9,10.0,13.3) ; WallSouthRight@(-0.9,10.0,13.3) ; WallSouthRight@(-0.9,10.0,13.3) ; WallSouthRight@(-0.9,10.0,13.3) ; WallSouthRight@(-0.9,10.0,13.3)
+== arch: street entrance arch (gapura)
+CAMERA_INSIDE_SOLID_frames=58 KioskPostx58 maxPenetration=0.1096 studs | NEAR_PLANE_TOUCH_frames=59 KioskPostx59 | frames=613 avg_fps=60.0 p50=16.6ms p95=17.9ms p99=20.6ms worst=31.4ms >33ms=0 | camDist 2.1..27.7 | yaw -180..178 (12/12 bins) pitch -15..-15
+INSIDE_SOLID_AT: KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0) ; KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0) ; KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0) ; KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0) ; KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0) ; KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0) ; KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0) ; KioskPost boundsDepth=0.0315 studs cam=(-2.9,6.0,65.0)
+NEAR_PLANE_AT: KioskPost@(-2.9,6.0,65.0) ; KioskPost@(-2.9,6.0,65.0) ; KioskPost@(-2.9,6.0,65.0) ; KioskPost@(-2.9,6.0,65.0) ; KioskPost@(-2.9,6.0,65.0) ; KioskPost@(-2.9,6.0,65.0)
+== kiosk: kiosk interaction distance
+CAMERA_INSIDE_SOLID_frames=21 KioskPostx21 maxPenetration=0.0089 studs | NEAR_PLANE_TOUCH_frames=22 KioskPostx22 | frames=610 avg_fps=60.0 p50=16.7ms p95=18.0ms p99=18.9ms worst=28.7ms >33ms=0 | camDist 2.1..27.7 | yaw -179..179 (12/12 bins) pitch -15..-15
+INSIDE_SOLID_AT: KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0) ; KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0) ; KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0) ; KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0) ; KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0) ; KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0) ; KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0) ; KioskPost boundsDepth=0.0089 studs cam=(-2.8,5.4,70.0)
+NEAR_PLANE_AT: KioskPost@(-2.8,5.4,70.0) ; KioskPost@(-2.8,5.4,70.0) ; KioskPost@(-2.8,5.4,70.0) ; KioskPost@(-2.8,5.4,70.0) ; KioskPost@(-2.8,5.4,70.0) ; KioskPost@(-2.8,5.4,70.0)
+== plaza: plaza and fountain
+CAMERA_INSIDE_SOLID_frames=0  maxPenetration=0.0000 studs | NEAR_PLANE_TOUCH_frames=0  | frames=580 avg_fps=60.0 p50=16.7ms p95=17.9ms p99=29.6ms worst=40.5ms >33ms=3 | camDist 2.1..27.6 | yaw -179..179 (12/12 bins) pitch -15..-15
+INSIDE_SOLID_AT: none
+NEAR_PLANE_AT: none
+== return: return toward the house
+CAMERA_INSIDE_SOLID_frames=23 WallSouthLeftx15,DoorReturnWestx1,WallSouthRightx7 maxPenetration=0.0815 studs | NEAR_PLANE_TOUCH_frames=104 DoorReturnEastx2,WallSouthRightx78,City_HomeDoorx1,WallSouthLeftx20,DoorReturnWestx5 | frames=615 avg_fps=60.0 p50=16.7ms p95=18.0ms p99=18.9ms worst=29.6ms >33ms=0 | camDist 2.0..14.2 | yaw -178..180 (12/12 bins) pitch -15..-15
+INSIDE_SOLID_AT: WallSouthRight boundsDepth=0.0043 studs cam=(-1.0,6.6,13.3) ; WallSouthRight boundsDepth=0.0105 studs cam=(-1.4,6.6,13.3) ; WallSouthRight boundsDepth=0.0171 studs cam=(-1.9,6.5,13.3) ; WallSouthRight boundsDepth=0.0232 studs cam=(-2.3,6.5,13.3) ; WallSouthRight boundsDepth=0.0297 studs cam=(-2.8,6.5,13.3) ; WallSouthRight boundsDepth=0.0356 studs cam=(-3.2,6.4,13.3) ; WallSouthRight boundsDepth=0.0815 studs cam=(-3.6,6.4,13.2) ; DoorReturnWest boundsDepth=0.0368 studs cam=(-8.1,5.7,15.9)
+NEAR_PLANE_AT: WallSouthRight@(-0.6,6.6,13.5) ; WallSouthRight@(-1.0,6.6,13.3) ; WallSouthRight@(-1.4,6.6,13.3) ; WallSouthRight@(-1.9,6.5,13.3) ; WallSouthRight@(-2.3,6.5,13.3) ; WallSouthRight@(-2.8,6.5,13.3)
+
+
+Wall time: 98.13 seconds

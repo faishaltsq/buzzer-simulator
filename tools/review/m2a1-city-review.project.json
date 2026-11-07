@@ -1,0 +1,24 @@
+{
+  "name": "M2A1CityReview",
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "ReviewBedroom": { "$path": "../../assets/world/Bedroom.rbxmx" }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "CityPrefabs": {
+        "$className": "Folder",
+        "HouseExterior": { "$path": "../../assets/world/city/HouseExterior.rbxmx" },
+        "StreetBlock": { "$path": "../../assets/world/city/StreetBlock.rbxmx" },
+        "TownCenter": { "$path": "../../assets/world/city/TownCenter.rbxmx" },
+        "CityBoards": { "$path": "../../assets/world/city/CityBoards.rbxmx" },
+        "CityGate": { "$path": "../../assets/world/city/CityGate.rbxmx" },
+        "CityBackdrop": { "$path": "../../assets/world/city/CityBackdrop.rbxmx" },
+        "CityBackdrop_CenteredReview": { "$path": "../../assets/world/city/CityBackdrop_CenteredReview.rbxmx" },
+        "CityAnchors": { "$path": "../../assets/world/city/CityAnchors.rbxmx" }
+      }
+    }
+  }
+}
