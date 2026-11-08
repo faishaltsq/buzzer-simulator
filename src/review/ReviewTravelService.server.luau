@@ -1,10 +1,10 @@
 --!strict
 -- ReviewTravelService.server.luau  —  STUDIO-ONLY.
 -- Wires ProximityPrompts for seamless room <-> city exploration:
--- 1. Front door inside bedroom: "Keluar ke Kota" -> Teleport to City_Spawn (-6, 4.5, 20)
--- 2. House door in Gang Melati: "Masuk Rumah"    -> Teleport to Bedroom (-6, 3.65, 8)
--- 3. Mission Board in Gang Melati: "Periksa Papan Misi" -> Info interaction
--- Safety: checks character alive and implements a 1.5s travel debounce.
+-- 1. Front door inside bedroom: "Keluar ke Kota" -> Dynamic teleport to City_Spawn
+-- 2. House door in City: "Masuk Rumah"          -> Dynamic teleport to BuzzerRoom_<UserId>.Spawn
+-- 3. Mission Kiosk in City: "Periksa Misi"        -> Info interaction
+-- Safety: checks character alive, implements a 1.5s travel debounce, cleans on PlayerRemoving.
 
 local RunService = game:GetService("RunService")
 if not RunService:IsStudio() then
@@ -15,8 +15,6 @@ local Players   = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local CITY_SPAWN_CF  = CFrame.new(-6, 4.5, 20)
-local HOME_SPAWN_CF  = CFrame.new(-6, 3.65, 8)
 local PROMPT_DIST    = 8
 local DEBOUNCE_SEC   = 1.5
 local debounce: { [number]: number } = {}
@@ -37,6 +35,44 @@ local function teleportCharacter(player: Player, cf: CFrame)
 	local hum = char:FindFirstChildOfClass("Humanoid")
 	if hrp == nil or hum == nil or hum.Health <= 0 then return end
 	hrp.CFrame = cf
+end
+
+local function getCity(): Instance?
+	local city = Workspace:FindFirstChild("CityRuko") or Workspace:FindFirstChild("City")
+	if city == nil then
+		warn("[ReviewTravelService] Instance not found: Workspace.CityRuko (or Workspace.City)")
+	end
+	return city
+end
+
+local function teleportToCity(player: Player)
+	local city = getCity()
+	if city == nil then return end
+
+	local spawnPart = city:FindFirstChild("City_Spawn", true) :: BasePart?
+	if spawnPart == nil or not spawnPart:IsA("BasePart") then
+		warn(`[ReviewTravelService] Instance not found: City_Spawn in {city:GetFullName()}`)
+		return
+	end
+
+	teleportCharacter(player, spawnPart.CFrame + Vector3.new(0, 3, 0))
+end
+
+local function teleportHome(player: Player)
+	local roomPath = `Workspace.BuzzerRoom_{player.UserId}`
+	local room = Workspace:FindFirstChild(`BuzzerRoom_{player.UserId}`)
+	if room == nil then
+		warn(`[ReviewTravelService] Instance not found: {roomPath}`)
+		return
+	end
+
+	local spawnPart = room:FindFirstChild("Spawn", true) :: BasePart?
+	if spawnPart == nil or not spawnPart:IsA("BasePart") then
+		warn(`[ReviewTravelService] Instance not found: Spawn in {roomPath}`)
+		return
+	end
+
+	teleportCharacter(player, spawnPart.CFrame + Vector3.new(0, 3, 0))
 end
 
 local function makePrompt(parent: Instance, action: string, object: string): ProximityPrompt
@@ -60,7 +96,10 @@ local function wireRoom(player: Player)
 		roomFolder = Workspace:FindFirstChild(`BuzzerRoom_{player.UserId}`)
 		if roomFolder == nil then task.wait(0.25) end
 	end
-	if roomFolder == nil then return end
+	if roomFolder == nil then
+		warn(`[ReviewTravelService] Instance not found: Workspace.BuzzerRoom_{player.UserId}`)
+		return
+	end
 
 	local doorPart: BasePart? = nil
 	for _, d in roomFolder:GetDescendants() do
@@ -69,14 +108,17 @@ local function wireRoom(player: Player)
 			break
 		end
 	end
-	if doorPart == nil then return end
+	if doorPart == nil then
+		warn(`[ReviewTravelService] Instance not found: Door in Workspace.BuzzerRoom_{player.UserId}`)
+		return
+	end
 
 	local exitPrompt = makePrompt(doorPart, "Keluar ke Kota", "Pintu Rumah")
 	exitPrompt.Triggered:Connect(function(triggerPlayer: Player)
 		if triggerPlayer ~= player then return end
 		if not canTravel(player.UserId) then return end
 		markTravel(player.UserId)
-		teleportCharacter(player, CITY_SPAWN_CF)
+		teleportToCity(player)
 	end)
 end
 
@@ -85,17 +127,26 @@ local function wireCity()
 	local city: Instance? = nil
 	local t0 = os.clock()
 	while city == nil and (os.clock() - t0) < 15 do
-		city = Workspace:FindFirstChild("City")
+		city = Workspace:FindFirstChild("CityRuko") or Workspace:FindFirstChild("City")
 		if city == nil then task.wait(0.5) end
 	end
-	if city == nil then return end
+	if city == nil then
+		warn("[ReviewTravelService] Instance not found: Workspace.CityRuko (or Workspace.City)")
+		return
+	end
 
-	-- 1. City_HomeDoor return prompt
+	-- 1. City_HomeDoor return prompt (fallback to Door_A1 in CityRuko)
 	local homeDoor: BasePart? = nil
-	for _, desc in city:GetDescendants() do
-		if desc.Name == "City_HomeDoor" and desc:IsA("BasePart") then
-			homeDoor = desc :: BasePart
-			break
+	local targetDoor = city:FindFirstChild("City_HomeDoor", true)
+	if targetDoor and targetDoor:IsA("BasePart") then
+		homeDoor = targetDoor :: BasePart
+	else
+		warn(`[ReviewTravelService] Instance not found: City_HomeDoor in {city:GetFullName()}. Using fallback Door_A1 for return prompt.`)
+		local fallbackDoor = city:FindFirstChild("Door_A1", true)
+		if fallbackDoor and fallbackDoor:IsA("BasePart") then
+			homeDoor = fallbackDoor :: BasePart
+		else
+			warn(`[ReviewTravelService] Instance not found: Door_A1 in {city:GetFullName()}`)
 		end
 	end
 
@@ -104,16 +155,21 @@ local function wireCity()
 		returnPrompt.Triggered:Connect(function(player: Player)
 			if not canTravel(player.UserId) then return end
 			markTravel(player.UserId)
-			teleportCharacter(player, HOME_SPAWN_CF)
+			teleportHome(player)
 		end)
 	end
 
 	-- 2. Mission kiosk prompt
 	local kioskAnchor: BasePart? = nil
-	for _, desc in city:GetDescendants() do
-		if (desc.Name == "City_Prompt_Boards" or desc.Name == "BoardCork") and desc:IsA("BasePart") then
-			kioskAnchor = desc :: BasePart
-			break
+	local missionMarker = city:FindFirstChild("Prompt_CityMissions", true)
+	if missionMarker and missionMarker:IsA("BasePart") then
+		kioskAnchor = missionMarker :: BasePart
+	else
+		local fallbackMarker = city:FindFirstChild("City_Prompt_Boards", true) or city:FindFirstChild("BoardCork", true)
+		if fallbackMarker and fallbackMarker:IsA("BasePart") then
+			kioskAnchor = fallbackMarker :: BasePart
+		else
+			warn(`[ReviewTravelService] Instance not found: Prompt_CityMissions in {city:GetFullName()}`)
 		end
 	end
 
@@ -125,7 +181,11 @@ local function wireCity()
 				local notify = remotes:FindFirstChild("ReviewNotify") :: RemoteEvent?
 				if notify then
 					notify:FireClient(player, "📋 Papan Misi Gang Melati: Buka dashboard di PC/Phone untuk kelola campaign.")
+				else
+					warn("[ReviewTravelService] Instance not found: ReplicatedStorage.ReviewRemotes.ReviewNotify")
 				end
+			else
+				warn("[ReviewTravelService] Instance not found: ReplicatedStorage.ReviewRemotes")
 			end
 		end)
 	end
@@ -143,6 +203,10 @@ end
 
 Players.PlayerAdded:Connect(function(player: Player)
 	player.CharacterAdded:Connect(function(char) onCharacter(player, char) end)
+end)
+
+Players.PlayerRemoving:Connect(function(player: Player)
+	debounce[player.UserId] = nil
 end)
 
 task.spawn(wireCity)

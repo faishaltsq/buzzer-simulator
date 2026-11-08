@@ -83,7 +83,7 @@ pillCorner.Parent = pill
 -- ===== Main Panel Frame =====
 local frame = Instance.new("Frame")
 frame.Name = "PanelFrame"
-frame.Size = UDim2.new(0, 230, 0, 360)
+frame.Size = UDim2.new(0, 230, 0, 280)
 frame.Position = UDim2.new(1, -240, 0, 42)
 frame.BackgroundColor3 = Color3.fromRGB(20, 24, 32)
 frame.BackgroundTransparency = 0.08
@@ -184,19 +184,10 @@ makeBtn("Reset Local Profile", Color3.fromRGB(180, 50, 50), function()
 end)
 
 -- Section: Navigation
-makeBtn("Teleport → Gang Melati", Color3.fromRGB(40, 140, 150), function()
+makeBtn("Teleport → City (Ruko)", Color3.fromRGB(40, 140, 150), function()
 	send("teleport:city")
 end)
 
 makeBtn("Return Home → Bedroom", Color3.fromRGB(40, 140, 150), function()
 	send("teleport:home")
-end)
-
--- Section: Skyline Variants
-makeBtn("Backdrop: Baseline", Color3.fromRGB(120, 60, 180), function()
-	send("backdrop:baseline")
-end)
-
-makeBtn("Backdrop: Centered (D1)", Color3.fromRGB(150, 60, 180), function()
-	send("backdrop:centered")
 end)

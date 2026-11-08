@@ -55,47 +55,77 @@ local function hideEditPreview()
 		warn("[ReviewBootstrap] ReviewBedroom moved to ServerStorage (play-mode hidden).")
 	end
 	-- Also assemble the city in Workspace if not already present.
-	local existing = Workspace:FindFirstChild("City")
+	local existing = Workspace:FindFirstChild("CityRuko") or Workspace:FindFirstChild("City")
 	if existing == nil then
-		local prefabs = ServerStorage:FindFirstChild("CityPrefabs")
-		if prefabs == nil then
-			warn("[ReviewBootstrap] CityPrefabs not found in ServerStorage — skipping city assembly.")
+		local prefabsRuko = ServerStorage:FindFirstChild("CityRukoPrefabs")
+		local prefabsLegacy = ServerStorage:FindFirstChild("CityPrefabs")
+
+		if prefabsRuko ~= nil then
+			local ORIGINS_RUKO: { [string]: CFrame } = {
+				Intersection      = CFrame.new(0, 0, 0),
+				RukoBlockWest     = CFrame.new(-55, 0, -60),
+				RukoBlockEast     = CFrame.new(55, 0, -60),
+				CityFacilities    = CFrame.new(0, 0, 60),
+				CityBackdrop_Ruko = CFrame.new(0, 0, -180),
+			}
+			local city = Instance.new("Folder")
+			city.Name = "CityRuko"
+			for _, name in { "Intersection", "RukoBlockWest", "RukoBlockEast", "CityFacilities", "CityBackdrop_Ruko" } do
+				local prefab: any = prefabsRuko:FindFirstChild(name)
+				if prefab then
+					local m = prefab:Clone()
+					m:PivotTo(ORIGINS_RUKO[name])
+					m.Parent = city
+				else
+					warn(`[ReviewBootstrap] Instance not found: ServerStorage.CityRukoPrefabs.{name}`)
+				end
+			end
+			city.Parent = Workspace
+		elseif prefabsLegacy ~= nil then
+			local ORIGINS_LEGACY: { [string]: CFrame } = {
+				HouseExterior = CFrame.new(0, 0, 0),
+				StreetBlock   = CFrame.new(0, 0, 40),
+				TownCenter    = CFrame.new(0, 0, 112),
+				CityBoards    = CFrame.new(0, 0, 68),
+				CityGate      = CFrame.new(0, 0, 168),
+				CityBackdrop  = CFrame.new(88, 0, -152),
+			}
+			local city = Instance.new("Folder")
+			city.Name = "City"
+			for _, name in { "HouseExterior", "StreetBlock", "TownCenter", "CityBoards", "CityGate", "CityBackdrop" } do
+				local prefab: any = prefabsLegacy:FindFirstChild(name)
+				if prefab then
+					local m = prefab:Clone()
+					m:PivotTo(ORIGINS_LEGACY[name])
+					m.Parent = city
+				else
+					warn(`[ReviewBootstrap] Instance not found: ServerStorage.CityPrefabs.{name}`)
+				end
+			end
+			local anchors: any = prefabsLegacy:FindFirstChild("CityAnchors")
+			if anchors then
+				local a = anchors:Clone()
+				a.Name = "City_Anchors"
+				a.Parent = city
+			end
+			city.Parent = Workspace
+		else
+			warn("[ReviewBootstrap] Instance not found: ServerStorage.CityRukoPrefabs")
 			return
 		end
-		local ORIGINS: { [string]: CFrame } = {
-			HouseExterior = CFrame.new(0, 0, 0),
-			StreetBlock    = CFrame.new(0, 0, 40),
-			TownCenter     = CFrame.new(0, 0, 112),
-			CityBoards     = CFrame.new(0, 0, 68),
-			CityGate       = CFrame.new(0, 0, 168),
-			CityBackdrop   = CFrame.new(88, 0, -152),
-		}
-		local city = Instance.new("Folder")
-		city.Name = "City"
-		for _, name in { "HouseExterior", "StreetBlock", "TownCenter", "CityBoards", "CityGate", "CityBackdrop" } do
-			local prefab: any = prefabs:FindFirstChild(name)
-			if prefab then
-				local m = prefab:Clone()
-				m:PivotTo(ORIGINS[name])
-				m.Parent = city
-			end
+
+		-- Outer review ground (if not already in Workspace)
+		if Workspace:FindFirstChild("ReviewOuterGround") == nil then
+			local ground = Instance.new("Part")
+			ground.Name  = "ReviewOuterGround"
+			ground.Size  = Vector3.new(600, 1, 600)
+			ground.CFrame = CFrame.new(0, -1.6, -30)
+			ground.Anchored = true
+			ground.CanCollide = true
+			ground.Color    = Color3.fromRGB(92, 90, 86)
+			ground.Material = Enum.Material.Slate
+			ground.Parent   = Workspace
 		end
-		local anchors: any = prefabs:FindFirstChild("CityAnchors")
-		if anchors then
-			local a = anchors:Clone()
-			a.Name = "City_Anchors"
-			a.Parent = city
-		end
-		city.Parent = Workspace
-		-- Outer review ground
-		local ground = Instance.new("Part")
-		ground.Name  = "ReviewOuterGround"
-		ground.Size  = Vector3.new(600, 1, 600)
-		ground.CFrame = CFrame.new(0, -1.6, 60)
-		ground.Anchored = true
-		ground.Color    = Color3.fromRGB(112, 134, 88)
-		ground.Material = Enum.Material.Grass
-		ground.Parent   = Workspace
 	end
 end
 hideEditPreview()

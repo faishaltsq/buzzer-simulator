@@ -94,13 +94,13 @@ end
 local function applyPresetDirect(player: Player, presetProfile: any?)
 	local runtime = getRuntime()
 	if runtime == nil then
-		warn("[ReviewPanelRelay] Runtime not ready.")
+		warn("[ReviewPanelRelay] Instance not found: shared.BuzzerReviewRuntime")
 		return
 	end
 
 	local record = runtime._records[player]
 	if record == nil or record.session == nil then
-		warn("[ReviewPanelRelay] Player session record not found.")
+		warn(`[ReviewPanelRelay] Instance not found: Session record for {player.Name}`)
 		return
 	end
 
@@ -142,11 +142,16 @@ local function applyPresetDirect(player: Player, presetProfile: any?)
 end
 
 -- ===== Backdrop switching =====
-local function setBackdrop(variant: "baseline" | "centered")
-	local city = Workspace:FindFirstChild("City")
-	local prefabs = ServerStorage:FindFirstChild("CityPrefabs")
-	if city == nil or prefabs == nil then
-		warn("[ReviewPanelRelay] City or CityPrefabs not found.")
+local function setBackdrop(variant: string)
+	local city = Workspace:FindFirstChild("CityRuko") or Workspace:FindFirstChild("City")
+	if city == nil then
+		warn("[ReviewPanelRelay] Instance not found: Workspace.CityRuko (or Workspace.City)")
+		return
+	end
+
+	local prefabs = ServerStorage:FindFirstChild("CityRukoPrefabs") or ServerStorage:FindFirstChild("CityPrefabs")
+	if prefabs == nil then
+		warn("[ReviewPanelRelay] Instance not found: ServerStorage.CityRukoPrefabs (or ServerStorage.CityPrefabs)")
 		return
 	end
 
@@ -157,17 +162,30 @@ local function setBackdrop(variant: "baseline" | "centered")
 		end
 	end
 
-	local prefabName = if variant == "centered" then "CityBackdrop_CenteredReview" else "CityBackdrop"
-	local origin = if variant == "centered" then Vector3.new(0, 0, -152) else Vector3.new(88, 0, -152)
-	local template: any = prefabs:FindFirstChild(prefabName)
+	local template: Instance? = prefabs:FindFirstChild("CityBackdrop_Ruko")
+	local origin = CFrame.new(0, 0, -180)
+	local label = "CityBackdrop_Ruko"
+
+	-- Fallback for legacy CityPrefabs
+	if template == nil then
+		local prefabName = if variant == "centered" then "CityBackdrop_CenteredReview" else "CityBackdrop"
+		origin = if variant == "centered" then CFrame.new(0, 0, -152) else CFrame.new(88, 0, -152)
+		template = prefabs:FindFirstChild(prefabName)
+		label = prefabName
+	end
+
 	if template then
 		local clone = template:Clone()
-		clone.Name = "CityBackdrop"
-		clone:PivotTo(CFrame.new(origin))
+		clone.Name = template.Name
+		if clone:IsA("Model") then
+			clone:PivotTo(origin)
+		elseif clone:IsA("BasePart") then
+			clone.CFrame = origin
+		end
 		clone.Parent = city
-		warn(`[ReviewPanelRelay] Backdrop switched to: {variant} ({prefabName} at {origin})`)
+		warn(`[ReviewPanelRelay] Backdrop updated to: {label} at {origin}`)
 	else
-		warn(`[ReviewPanelRelay] Prefab {prefabName} not found in CityPrefabs.`)
+		warn(`[ReviewPanelRelay] Instance not found: CityBackdrop_Ruko in {prefabs:GetFullName()}`)
 	end
 end
 
@@ -192,15 +210,32 @@ commandRemote.OnServerEvent:Connect(function(player: Player, cmd: string)
 	elseif cmd == "preset:reset" then
 		applyPresetDirect(player, nil)
 	elseif cmd == "teleport:city" then
-		teleportPlayer(player, CFrame.new(-6, 4.5, 20))
+		local city = Workspace:FindFirstChild("CityRuko") or Workspace:FindFirstChild("City")
+		if city == nil then
+			warn("[ReviewPanelRelay] Instance not found: Workspace.CityRuko (or Workspace.City)")
+			return
+		end
+		local spawnPart = city:FindFirstChild("City_Spawn", true) :: BasePart?
+		if spawnPart and spawnPart:IsA("BasePart") then
+			teleportPlayer(player, spawnPart.CFrame + Vector3.new(0, 3, 0))
+		else
+			warn(`[ReviewPanelRelay] Instance not found: City_Spawn in {city:GetFullName()}`)
+		end
 	elseif cmd == "teleport:home" then
-		teleportPlayer(player, CFrame.new(-6, 3.65, 8))
-	elseif cmd == "backdrop:baseline" then
-		setBackdrop("baseline")
-		notifyRemote:FireClient(player, "Backdrop: Baseline (X 16..160)")
-	elseif cmd == "backdrop:centered" then
-		setBackdrop("centered")
-		notifyRemote:FireClient(player, "Backdrop: Centered (X -120..120)")
+		local room = Workspace:FindFirstChild(`BuzzerRoom_{player.UserId}`)
+		if room == nil then
+			warn(`[ReviewPanelRelay] Instance not found: Workspace.BuzzerRoom_{player.UserId}`)
+			return
+		end
+		local spawnPart = room:FindFirstChild("Spawn", true) :: BasePart?
+		if spawnPart and spawnPart:IsA("BasePart") then
+			teleportPlayer(player, spawnPart.CFrame + Vector3.new(0, 3, 0))
+		else
+			warn(`[ReviewPanelRelay] Instance not found: Spawn in Workspace.BuzzerRoom_{player.UserId}`)
+		end
+	elseif cmd == "backdrop:baseline" or cmd == "backdrop:centered" or cmd == "backdrop:ruko" then
+		setBackdrop(cmd)
+		notifyRemote:FireClient(player, "Backdrop: CityBackdrop_Ruko active")
 	else
 		warn("[ReviewPanelRelay] Unknown command: " .. tostring(cmd))
 	end
