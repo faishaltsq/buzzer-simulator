@@ -1,0 +1,100 @@
+{
+  "name": "BuzzerSimulator_RUKO_REVIEW",
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": false
+      },
+      "ReviewBedroom": {
+        "$path": "../../assets/world/Bedroom.rbxmx"
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "../../src/shared"
+      },
+      "WorkerPrefabs": {
+        "$className": "Folder",
+        "Trainee1": { "$path": "../../assets/world/Trainee1.rbxmx" },
+        "Trainee2": { "$path": "../../assets/world/Trainee2.rbxmx" }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "ReviewBootstrap": {
+        "$path": "../../src/review/ReviewBootstrap.server.luau"
+      },
+      "ReviewTravelService": {
+        "$path": "../../src/review/ReviewTravelService.server.luau"
+      },
+      "ReviewPanelRelay": {
+        "$path": "../../src/review/ReviewPanelRelay.server.luau"
+      },
+      "BootstrapRuntime": {
+        "$path": "../../src/server/BootstrapRuntime.luau"
+      },
+      "EconomyService": {
+        "$path": "../../src/server/EconomyService.luau"
+      },
+      "FeedService": {
+        "$path": "../../src/server/FeedService.luau"
+      },
+      "MissionService": {
+        "$path": "../../src/server/MissionService.luau"
+      },
+      "NetRouter": {
+        "$path": "../../src/server/NetRouter.luau"
+      },
+      "ProfileStore": {
+        "$path": "../../src/server/ProfileStore.luau"
+      },
+      "ScoringCatalog": {
+        "$path": "../../src/server/ScoringCatalog.luau"
+      },
+      "SessionService": {
+        "$path": "../../src/server/SessionService.luau"
+      },
+      "WorldService": {
+        "$path": "../../src/server/WorldService.luau"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "WorldPrefabs": {
+        "$className": "Folder",
+        "Bedroom": { "$path": "../../assets/world/Bedroom.rbxmx" },
+        "OldCRT": { "$path": "../../assets/world/OldCRT.rbxmx" },
+        "PhoneCheap": { "$path": "../../assets/world/PhoneCheap.rbxmx" },
+        "PhoneFast": { "$path": "../../assets/world/PhoneFast.rbxmx" },
+        "PCRumah": { "$path": "../../assets/world/PCRumah.rbxmx" },
+        "WorkerDesk1": { "$path": "../../assets/world/WorkerDesk1.rbxmx" },
+        "WorkerDesk2": { "$path": "../../assets/world/WorkerDesk2.rbxmx" },
+        "Trainee1": { "$path": "../../assets/world/Trainee1.rbxmx" },
+        "Trainee2": { "$path": "../../assets/world/Trainee2.rbxmx" }
+      },
+      "CityRukoPrefabs": {
+        "$className": "Folder",
+        "Intersection": { "$path": "../../assets/world/city_ruko/Intersection.rbxmx" },
+        "RukoBlockWest": { "$path": "../../assets/world/city_ruko/RukoBlockWest.rbxmx" },
+        "RukoBlockEast": { "$path": "../../assets/world/city_ruko/RukoBlockEast.rbxmx" },
+        "CityFacilities": { "$path": "../../assets/world/city_ruko/CityFacilities.rbxmx" },
+        "CityBackdrop_Ruko": { "$path": "../../assets/world/city_ruko/CityBackdrop_Ruko.rbxmx" }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$path": "../../src/client"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "ReviewPanel": {
+        "$path": "../../src/review/ReviewPanel.client.luau"
+      }
+    }
+  }
+}

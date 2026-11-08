@@ -37,6 +37,7 @@ class StudioClient:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            encoding="utf-8",
             bufsize=0
         )
         self.req_id = 0
