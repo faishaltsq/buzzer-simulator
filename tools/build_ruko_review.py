@@ -6,7 +6,7 @@ Executes:
 2. Static contract validation (tools/check_city_ruko.py).
 3. Rojo build of tools/review/buzzer-ruko-review.project.json.
 4. Post-processing to ensure fully assembled Edit-mode scene:
-   - Workspace.CityRuko populated with 638 BaseParts across 5 zones at exact world origins:
+   - Workspace.CityRuko populated with 390 BaseParts across 5 zones at exact world origins:
      * Intersection: (0, 0, 0)
      * RukoBlockWest: (-55, 0, -60)
      * RukoBlockEast: (55, 0, -60)
@@ -110,7 +110,7 @@ def run_contract_checks():
         print(res.stdout)
         print(res.stderr)
         raise SystemExit(f"FAILED: check_city_ruko exited with code {res.returncode}")
-    print("  -> All contract checks passed (638 BaseParts, 8 PointLights, 0 errors).")
+    print("  -> All contract checks passed (390 BaseParts, 12 PointLights, 0 errors).")
 
 
 def build_rojo():
@@ -265,10 +265,10 @@ def verify_final_build():
     print(f"  Deliverable:              {OUTPUT_PATH}")
     print(f"  Size:                     {size:,} bytes ({round(size / 1024, 1)} KB / {round(size / (1024*1024), 2)} MB)")
     print(f"  SHA-256:                  {sha}")
-    print(f"  Workspace.CityRuko:       {city_parts} BaseParts (contract: 638)")
+    print(f"  Workspace.CityRuko:       {city_parts} BaseParts (contract: 390)")
     print(f"  Workspace.ReviewBedroom:  {bedroom_parts} BaseParts (contract: 155)")
     print(f"  Workspace.ReviewGround:   1 BasePart (600x1x600 studs, slate)")
-    print(f"  Total Edit-mode parts:    {total_parts} BaseParts (budget: 794)")
+    print(f"  Total Edit-mode parts:    {total_parts} BaseParts (budget: 546)")
     print("=================================================================")
 
 

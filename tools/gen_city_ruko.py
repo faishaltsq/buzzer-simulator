@@ -169,16 +169,23 @@ def build_ruko_block(name, origin, bldg_left, bldg_right, x_left, x_mid_l, x_mid
     z_back, z_front = -72.0, -48.0
     z_balcony_front = -44.0
 
+    stair_w = 7.0
     if stair_side == "east":
-        stair_x0, stair_x1 = x_right, x_right + 8.0
+        stair_x0, stair_x1 = x_right, x_right + stair_w
         balcony_x0, balcony_x1 = x_left, stair_x1
-        ramp_x = (stair_x0 + stair_x1) / 2
+        walk_x0, walk_x1 = stair_x0, stair_x0 + 3.5
+        flight_x0, flight_x1 = stair_x0 + 3.5, stair_x1
+        p_x_min, p_x_max = stair_x1 - 1.2, stair_x1
         lamp_x = stair_x1 - 1.0
+        rail_x = flight_x1 - 0.2
     else:  # west
-        stair_x0, stair_x1 = x_left - 8.0, x_left
+        stair_x0, stair_x1 = x_left - stair_w, x_left
         balcony_x0, balcony_x1 = stair_x0, x_right
-        ramp_x = (stair_x0 + stair_x1) / 2
+        walk_x0, walk_x1 = stair_x1 - 3.5, stair_x1
+        flight_x0, flight_x1 = stair_x0, stair_x1 - 3.5
+        p_x_min, p_x_max = stair_x0, stair_x0 + 1.2
         lamp_x = stair_x0 + 1.0
+        rail_x = flight_x0 + 0.2
 
     # 4 Slabs (ground floor, floor 2, floor 3, roof)
     z.box("FloorSlab1", x_left, x_right, -0.6, 0.0, z_back, z_front, "concrete", "Concrete", collide=True)
@@ -186,49 +193,134 @@ def build_ruko_block(name, origin, bldg_left, bldg_right, x_left, x_mid_l, x_mid
     z.box("FloorSlab3", x_left, x_right, 19.6, 20.0, z_back, z_front, "concrete", "Concrete", collide=True)
     z.box("RoofSlab", x_left, x_right, 29.6, 30.0, z_back, z_front, "concrete", "Concrete", collide=True)
 
-    # 4 Perimeter solid walls
+    # 4 Perimeter solid walls + back stairwell wall
     z.box("WallNorth", x_left, x_right, 0.0, 30.0, z_back - 0.6, z_back, "plaster", "Concrete", collide=True)
     z.box("WallLeft", x_left - 0.6, x_left, 0.0, 30.0, z_back, z_front, "plaster", "Concrete", collide=True)
     z.box("WallRight", x_right, x_right + 0.6, 0.0, 30.0, z_back, z_front, "plaster", "Concrete", collide=True)
     z.box("WallDividing", x_mid_l, x_mid_r, 0.0, 30.0, z_back, z_front, "plaster", "Concrete", collide=True)
+    z.box("WallStairBack", stair_x0, stair_x1, 0.0, 30.0, z_back - 0.6, z_back, "plaster", "Concrete", collide=True)
 
     # Front facade pillars (3)
-    z.box("PillarLeft", x_left, x_left + 5.0, 0.0, 30.0, z_front - 0.6, z_front, "cream", "Concrete", collide=True)
-    z.box("PillarMid", x_mid_l - 2.5, x_mid_r + 2.5, 0.0, 30.0, z_front - 0.6, z_front, "cream", "Concrete", collide=True)
-    z.box("PillarRight", x_right - 5.0, x_right, 0.0, 30.0, z_front - 0.6, z_front, "cream", "Concrete", collide=True)
+    z.box("PillarLeft", x_left, x_left + 3.0, 0.0, 32.5, z_front - 0.6, z_front, "cream", "Concrete", collide=True)
+    z.box("PillarMid", x_mid_l - 1.5, x_mid_r + 1.5, 0.0, 32.5, z_front - 0.6, z_front, "cream", "Concrete", collide=True)
+    z.box("PillarRight", x_right - 3.0, x_right, 0.0, 32.5, z_front - 0.6, z_front, "cream", "Concrete", collide=True)
 
-    # Door positions
-    door_w = 3.4
-    door_left_x0 = (x_left + 5.0 + x_mid_l - 2.5) / 2 - door_w / 2
-    door_left_x1 = door_left_x0 + door_w
-    door_right_x0 = (x_mid_r + 2.5 + x_right - 5.0) / 2 - door_w / 2
-    door_right_x1 = door_right_x0 + door_w
+    # Stairwell structural support columns (3)
+    z.box("PillarStairBack", p_x_min, p_x_max, 0.0, 32.5, z_back - 0.6, z_back + 1.2, "cream", "Concrete", collide=True)
+    z.box("PillarStairMid", p_x_min, p_x_max, 0.0, 30.0, -59.5, -57.5, "cream", "Concrete", collide=True)
+    z.box("PillarStairFront", p_x_min, p_x_max, 0.0, 32.5, z_front - 0.6, z_front + 1.2, "cream", "Concrete", collide=True)
 
-    # Facade lintels and doors per floor
+    # Ground slab under stairwell
+    z.box("StairGroundSlab", stair_x0, stair_x1, -0.6, 0.0, z_back, z_balcony_front, "concrete", "Concrete", collide=True)
+
+    # Unit layout parameters
+    units = [
+        (bldg_left, x_left + 3.0, x_mid_l - 1.5),
+        (bldg_right, x_mid_r + 1.5, x_right - 3.0)
+    ]
+
+    door_w = 3.6
+
+    for bldg, u_x0, u_x1 in units:
+        door_x0 = (u_x0 + u_x1) / 2 - door_w / 2
+        door_x1 = door_x0 + door_w
+        ac_x = (u_x0 + u_x1) / 2
+
+        # --- Ground Floor: Indonesian Rolling Door & Entrance Canopy ---
+        d1 = z.box(f"Door_{bldg}1", door_x0, door_x1, 0.0, 7.2, z_front - 0.4, z_front, "wood_dark", "Metal", collide=True)
+        gui(d1, "Back", f"UNIT {bldg}1", 44)
+
+        z.box(f"RollingDoor_{bldg}1_L", u_x0, door_x0, 0.0, 7.2, z_front - 0.35, z_front - 0.1, "shutter", "Slate", collide=True)
+        z.box(f"RollingDoor_{bldg}1_R", door_x1, u_x1, 0.0, 7.2, z_front - 0.35, z_front - 0.1, "shutter", "Slate", collide=True)
+        z.box(f"RollingBox_{bldg}1", u_x0 - 0.2, u_x1 + 0.2, 7.2, 8.2, z_front - 0.8, z_front, "metal", "Metal", collide=True)
+
+        z.box(f"Canopy_{bldg}", u_x0 - 0.2, u_x1 + 0.2, 8.8, 9.2, z_front, z_balcony_front, "navy", "Metal", collide=True)
+        z.box(f"CanopyBracket_{bldg}_L", u_x0 + 0.8, u_x0 + 1.2, 7.2, 8.8, z_front, z_front + 2.5, "metal", "Metal", collide=False)
+        z.box(f"CanopyBracket_{bldg}_R", u_x1 - 1.2, u_x1 - 0.8, 7.2, 8.8, z_front, z_front + 2.5, "metal", "Metal", collide=False)
+
+        # Ground floor clean room ceiling lamp fixture with PointLight
+        lamp1 = z.box(f"CeilingLamp_{bldg}1", ac_x - 2.0, ac_x + 2.0, 9.6, 9.9, -62.0, -58.0, "linen", "SmoothPlastic", shadow=False)
+        light(lamp1, brightness=1.2, reach=18)
+
+        # --- Upper Floors: Aluminum-framed Modern Office Windows & Clean Rooms ---
+        for fl in (2, 3):
+            y0 = (fl - 1) * 10.0
+            d = z.box(f"Door_{bldg}{fl}", door_x0, door_x1, y0, y0 + 7.2, z_front - 0.4, z_front, "wood", "WoodPlanks", collide=True)
+            gui(d, "Back", f"UNIT {bldg}{fl}", 44)
+
+            # Left window bay
+            w_l0, w_l1 = u_x0 + 0.4, door_x0 - 0.4
+            z.box(f"WindowGlass_{bldg}{fl}_L", w_l0, w_l1, y0 + 1.2, y0 + 6.8, z_front - 0.4, z_front - 0.2, "pane", "Glass", transparency=0.4, collide=True)
+            z.box(f"WindowSill_{bldg}{fl}_L", w_l0, w_l1, y0 + 0.9, y0 + 1.2, z_front - 0.5, z_front - 0.1, "metal", "Metal", collide=True)
+            z.box(f"WindowTop_{bldg}{fl}_L", w_l0, w_l1, y0 + 6.8, y0 + 7.2, z_front - 0.5, z_front - 0.1, "metal", "Metal", collide=True)
+            z.box(f"WindowMullion_{bldg}{fl}_L", (w_l0+w_l1)/2 - 0.15, (w_l0+w_l1)/2 + 0.15, y0 + 1.2, y0 + 6.8, z_front - 0.5, z_front - 0.1, "metal", "Metal", collide=False)
+
+            # Right window bay
+            w_r0, w_r1 = door_x1 + 0.4, u_x1 - 0.4
+            z.box(f"WindowGlass_{bldg}{fl}_R", w_r0, w_r1, y0 + 1.2, y0 + 6.8, z_front - 0.4, z_front - 0.2, "pane", "Glass", transparency=0.4, collide=True)
+            z.box(f"WindowSill_{bldg}{fl}_R", w_r0, w_r1, y0 + 0.9, y0 + 1.2, z_front - 0.5, z_front - 0.1, "metal", "Metal", collide=True)
+            z.box(f"WindowTop_{bldg}{fl}_R", w_r0, w_r1, y0 + 6.8, y0 + 7.2, z_front - 0.5, z_front - 0.1, "metal", "Metal", collide=True)
+            z.box(f"WindowMullion_{bldg}{fl}_R", (w_r0+w_r1)/2 - 0.15, (w_r0+w_r1)/2 + 0.15, y0 + 1.2, y0 + 6.8, z_front - 0.5, z_front - 0.1, "metal", "Metal", collide=False)
+
+            # Exterior AC outdoor condenser unit mounted on facade
+            z.box(f"AC_Unit_{bldg}{fl}", ac_x - 1.2, ac_x + 1.2, y0 + 7.4, y0 + 9.2, z_front - 1.4, z_front - 0.4, "shutter", "Metal", collide=True)
+            z.box(f"AC_Bracket_{bldg}{fl}", ac_x - 1.0, ac_x + 1.0, y0 + 7.1, y0 + 7.4, z_front - 1.3, z_front - 0.4, "metal", "Metal", collide=False)
+
+            # Clean room ceiling lamp fixture
+            z.box(f"CeilingLamp_{bldg}{fl}", ac_x - 2.0, ac_x + 2.0, y0 + 9.6, y0 + 9.9, -62.0, -58.0, "linen", "SmoothPlastic", shadow=False)
+
+    # Facade Lintels per floor
     for fl, y0 in ((1, 0.0), (2, 10.0), (3, 20.0)):
         z.box(f"Lintel_{fl}", x_left, x_right, y0 + 7.2, y0 + 10.0, z_front - 0.6, z_front, "cream", "Concrete", collide=True)
 
-        d_left = z.box(f"Door_{bldg_left}{fl}", door_left_x0, door_left_x1, y0, y0 + 7.2, z_front - 0.4, z_front, "wood", "WoodPlanks", collide=True)
-        gui(d_left, "Back", f"UNIT {bldg_left}{fl}", 44)
-
-        d_right = z.box(f"Door_{bldg_right}{fl}", door_right_x0, door_right_x1, y0, y0 + 7.2, z_front - 0.4, z_front, "wood", "WoodPlanks", collide=True)
-        gui(d_right, "Back", f"UNIT {bldg_right}{fl}", 44)
-
-    # Facade window panels (1 display glass per building)
-    z.box(f"FacadeWindow_{bldg_left}", x_left + 5.0, door_left_x0, 1.0, 27.2, z_front - 0.4, z_front - 0.2, "pane", "Glass", transparency=0.4, collide=True)
-    z.box(f"FacadeWindow_{bldg_right}", door_right_x1, x_right - 5.0, 1.0, 27.2, z_front - 0.4, z_front - 0.2, "pane", "Glass", transparency=0.4, collide=True)
-
-    # Stairwell & Balconies
-    z.add("StairRamp1", (5.0, 0.5, 22.36), (ramp_x, 5.0, -54.0), "concrete", "Concrete", collide=True, rot=(26.56, 0, 0))
+    # Balconies (Floors 2 & 3)
     z.box("Balcony2", balcony_x0, balcony_x1, 9.6, 10.0, z_front, z_balcony_front, "concrete", "Concrete", collide=True)
     z.box("Railing2", balcony_x0, balcony_x1, 10.0, 13.0, z_balcony_front - 0.3, z_balcony_front, "metal", "Metal", collide=True)
+    z.box("BalconySideRailing2", p_x_min, p_x_max, 10.0, 13.0, z_front, z_balcony_front, "metal", "Metal", collide=True)
 
-    z.add("StairRamp2", (5.0, 0.5, 22.36), (ramp_x, 15.0, -54.0), "concrete", "Concrete", collide=True, rot=(-26.56, 0, 0))
     z.box("Balcony3", balcony_x0, balcony_x1, 19.6, 20.0, z_front, z_balcony_front, "concrete", "Concrete", collide=True)
     z.box("Railing3", balcony_x0, balcony_x1, 20.0, 23.0, z_balcony_front - 0.3, z_balcony_front, "metal", "Metal", collide=True)
+    z.box("BalconySideRailing3", p_x_min, p_x_max, 20.0, 23.0, z_front, z_balcony_front, "metal", "Metal", collide=True)
 
-    z.add("StairRamp3", (5.0, 0.5, 22.36), (ramp_x, 25.0, -54.0), "concrete", "Concrete", collide=True, rot=(26.56, 0, 0))
-    z.box("RoofLanding", stair_x0, stair_x1, 29.6, 30.0, -68.0, -62.0, "concrete", "Concrete", collide=True)
+    # Landings and Walkways (Bordes Tangga)
+    # Floor 2 Landings
+    z.box("LandingBack2", stair_x0, stair_x1, 9.6, 10.0, z_back, -68.0, "concrete", "Concrete", collide=True)
+    z.box("Walkway2", walk_x0, walk_x1, 9.6, 10.0, -68.0, z_front, "concrete", "Concrete", collide=True)
+    z.box("LandingRailingBack2", stair_x0, stair_x1, 10.0, 13.0, z_back, z_back + 0.3, "metal", "Metal", collide=True)
+    z.box("LandingSideRailing2", p_x_min, p_x_max, 10.0, 13.0, z_back, -68.0, "metal", "Metal", collide=True)
+
+    # Floor 3 Landings
+    z.box("LandingBack3", stair_x0, stair_x1, 19.6, 20.0, z_back, -68.0, "concrete", "Concrete", collide=True)
+    z.box("Walkway3", walk_x0, walk_x1, 19.6, 20.0, -68.0, z_front, "concrete", "Concrete", collide=True)
+    z.box("LandingRailingBack3", stair_x0, stair_x1, 20.0, 23.0, z_back, z_back + 0.3, "metal", "Metal", collide=True)
+    z.box("LandingSideRailing3", p_x_min, p_x_max, 20.0, 23.0, z_back, -68.0, "metal", "Metal", collide=True)
+
+    # Roof Landing
+    z.box("LandingBackRoof", stair_x0, stair_x1, 29.6, 30.0, z_back, -66.0, "concrete", "Concrete", collide=True)
+    z.box("RoofLandingRailing", stair_x0, stair_x1, 30.0, 33.0, z_back, z_back + 0.3, "metal", "Metal", collide=True)
+    z.box("LandingSideRailingRoof", p_x_min, p_x_max, 30.0, 33.0, z_back, -66.0, "metal", "Metal", collide=True)
+
+    # 3 Flights of Stepped Stairs (10 steps per flight, risers 1.0, treads 2.0 studs)
+    stair_rot = 26.565
+    for fl in (1, 2, 3):
+        y_base = (fl - 1) * 10.0
+        for s in range(10):
+            z_front_s = -48.0 - s * 2.0
+            z_back_s = -48.0 - (s + 1) * 2.0
+            y_bot = y_base + s * 1.0
+            y_top = y_base + (s + 1) * 1.0
+            z.box(f"StairStep_{fl}_{s+1}", flight_x0, flight_x1, y_bot, y_top, z_back_s, z_front_s, "concrete", "Concrete", collide=True)
+
+        # Outer stringer border beam
+        z.add(f"StairStringer_{fl}", (0.4, 1.2, 22.36), (rail_x, y_base + 5.0, -58.0), "concrete", "Concrete", collide=True, rot=(stair_rot, 0, 0))
+
+        # Safety handrail posts (3)
+        z.box(f"StairPost_{fl}_1", rail_x - 0.2, rail_x + 0.2, y_base, y_base + 3.2, -48.4, -48.0, "metal", "Metal", collide=True)
+        z.box(f"StairPost_{fl}_2", rail_x - 0.2, rail_x + 0.2, y_base + 5.0, y_base + 8.2, -58.2, -57.8, "metal", "Metal", collide=True)
+        z.box(f"StairPost_{fl}_3", rail_x - 0.2, rail_x + 0.2, y_base + 10.0, y_base + 13.2, -68.0, -67.6, "metal", "Metal", collide=True)
+
+        # Safety handrail tube
+        z.add(f"StairRail_{fl}", (0.3, 0.3, 22.36), (rail_x, y_base + 5.0 + 3.0, -58.0), "metal", "Metal", collide=True, rot=(stair_rot, 0, 0))
 
     # Rooftop Parapet, AC & Antenna
     z.box("ParapetNorth", x_left, x_right, 30.0, 32.5, z_back - 0.5, z_back, "cream", "Concrete", collide=True)
@@ -238,42 +330,19 @@ def build_ruko_block(name, origin, bldg_left, bldg_right, x_left, x_mid_l, x_mid
     z.box("AC_Condenser", ac_mid_x - 4.0, ac_mid_x + 4.0, 30.0, 33.0, -62.0, -58.0, "metal", "Metal", collide=True)
     z.box("AntennaMast", ac_mid_x - 0.3, ac_mid_x + 0.3, 30.0, 42.0, -68.3, -67.7, "ink", "Metal", collide=False)
 
-    # Commercial signs
-    s_left = z.box(f"SignGedung_{bldg_left}", x_left + 4.0, x_mid_l - 2.0, 27.5, 29.8, z_front - 0.3, z_front, "navy", "SmoothPlastic", collide=False)
+    # Commercial signs on top facade
+    s_left = z.box(f"SignGedung_{bldg_left}", x_left + 4.0, x_mid_l - 2.0, 27.2, 29.6, z_front - 0.4, z_front, "navy", "SmoothPlastic", collide=False)
     gui(s_left, "Back", sign_left, 48)
-    s_right = z.box(f"SignGedung_{bldg_right}", x_mid_r + 2.0, x_right - 4.0, 27.5, 29.8, z_front - 0.3, z_front, "sage_dark", "SmoothPlastic", collide=False)
+    s_right = z.box(f"SignGedung_{bldg_right}", x_mid_r + 2.0, x_right - 4.0, 27.2, 29.6, z_front - 0.4, z_front, "sage_dark", "SmoothPlastic", collide=False)
     gui(s_right, "Back", sign_right, 48)
+
+    # Parapet Signboard ("RUKO BLOK A-B")
+    s_block = z.box("SignBlock", (x_left+x_right)/2 - 7.0, (x_left+x_right)/2 + 7.0, 30.2, 32.2, z_front - 0.7, z_front - 0.2, "amber", "SmoothPlastic", collide=False)
+    gui(s_block, "Back", f"RUKO BLOK {bldg_left}-{bldg_right}", 48, tint="ink")
 
     # Outdoor entrance lamp with PointLight
     lamp_part = z.box("EntranceLamp", lamp_x - 0.5, lamp_x + 0.5, 7.5, 8.5, z_balcony_front - 0.5, z_balcony_front, "amber", "Metal", collide=False)
     light(lamp_part, brightness=1.5, reach=20)
-
-    # 48 PC Desks (6 units * 8 desks * 5 parts = 240 parts)
-    for bldg, x_min_b, x_max_b in ((bldg_left, x_left + 1.0, x_mid_l - 1.0), (bldg_right, x_mid_r + 1.0, x_right - 1.0)):
-        span = x_max_b - x_min_b
-        dx = span / 4.0
-        x_centers = [x_min_b + dx * (i + 0.5) for i in range(4)]
-
-        for fl, y0 in ((1, 0.0), (2, 10.0), (3, 20.0)):
-            # Row 1 (desks 1..4 at Z = -66.0)
-            for i, xc in enumerate(x_centers):
-                slot = i + 1
-                zc = -66.0
-                z.box(f"Table_{bldg}{fl}_{slot}", xc-1.8, xc+1.8, y0+2.3, y0+2.6, zc-1.0, zc+1.0, "wood_light", "Wood", collide=True)
-                z.box(f"Monitor_{bldg}{fl}_{slot}", xc-0.8, xc+0.8, y0+2.6, y0+3.8, zc-0.8, zc-0.65, "screen", "SmoothPlastic", collide=False)
-                z.box(f"Keyboard_{bldg}{fl}_{slot}", xc-0.6, xc+0.6, y0+2.6, y0+2.7, zc+0.1, zc+0.5, "ink", "SmoothPlastic", collide=False)
-                z.box(f"Chair_{bldg}{fl}_{slot}", xc-0.75, xc+0.75, y0+0.4, y0+1.8, zc+1.2, zc+2.4, "navy", "Fabric", collide=True)
-                z.add(f"WorkerAnchor_{bldg}{fl}_{slot}", (1, 1, 1), (xc, y0+1.2, zc+1.8), "cream", transparency=1, collide=False)
-
-            # Row 2 (desks 5..8 at Z = -54.0)
-            for i, xc in enumerate(x_centers):
-                slot = i + 5
-                zc = -54.0
-                z.box(f"Table_{bldg}{fl}_{slot}", xc-1.8, xc+1.8, y0+2.3, y0+2.6, zc-1.0, zc+1.0, "wood_light", "Wood", collide=True)
-                z.box(f"Monitor_{bldg}{fl}_{slot}", xc-0.8, xc+0.8, y0+2.6, y0+3.8, zc-0.8, zc-0.65, "screen", "SmoothPlastic", collide=False)
-                z.box(f"Keyboard_{bldg}{fl}_{slot}", xc-0.6, xc+0.6, y0+2.6, y0+2.7, zc+0.1, zc+0.5, "ink", "SmoothPlastic", collide=False)
-                z.box(f"Chair_{bldg}{fl}_{slot}", xc-0.75, xc+0.75, y0+0.4, y0+1.8, zc+1.2, zc+2.4, "navy", "Fabric", collide=True)
-                z.add(f"WorkerAnchor_{bldg}{fl}_{slot}", (1, 1, 1), (xc, y0+1.2, zc+1.8), "cream", transparency=1, collide=False)
 
     return z
 

@@ -4,10 +4,12 @@ Validates:
     - Deterministic generation (generates twice into temp dirs and asserts identical bytes)
     - Valid XML parsing and schema for all generated .rbxmx files
     - 100% of BaseParts are Anchored (Anchored = true)
-    - Part count within [350, 650] and PointLights <= 12
+    - Part count within [300, 550] and PointLights <= 12
     - Required door anchors (Door_A1..A3, Door_B1..B3, Door_C1..C3, Door_D1..D3)
     - Required prompt markers (Prompt_HardwareShop, Prompt_WarungKopi, Prompt_CityMissions, City_Spawn)
-    - 8 PC desk slots per floor unit (table, monitor, keyboard, chair, worker anchor)
+    - Empty interior: 0 pre-baked desks/chairs/monitors/worker anchors (ready for player placement)
+    - Realistic stepped staircase components (steps, stringers, handrails, landings, structural pillars)
+    - Authentic Indonesian ruko facade (rolling doors, canopies, framed office windows, AC units)
     - Manifest integrity
 
 Usage:
@@ -118,7 +120,7 @@ def main():
     # 3. Budget checks
     total_parts = sum(len(parts) for _, parts in data.values())
     total_lights = sum(sum(nl for _, _, _, _, _, nl, _ in parts) for _, parts in data.values())
-    check(350 <= total_parts <= 650, f"Total BaseParts {total_parts} is within [350, 650]")
+    check(300 <= total_parts <= 550, f"Total BaseParts {total_parts} is within [300, 550]")
     check(total_lights <= 12, f"Total PointLights {total_lights} <= 12")
 
     # 4. Required Door Anchors (Door_A1..A3, Door_B1..B3, Door_C1..C3, Door_D1..D3)
@@ -145,23 +147,52 @@ def main():
         dist = math.dist(sc, (40, 2, 60))
         check(dist < 1.0, f"City_Spawn position {sc} is within 1 stud of (40, 2, 60)")
 
-    # 6. PC Desk Slots: 8 desks per floor unit across all 4 buildings (96 total)
+    # 6. Empty Interior Contract: verify no pre-baked furniture exists
+    furniture_prefixes = ("Table_", "Monitor_", "Keyboard_", "Chair_", "WorkerAnchor_")
+    found_furniture = [pn for pn in all_parts_by_name if any(pn.startswith(p) for p in furniture_prefixes)]
+    check(len(found_furniture) == 0, f"Empty interior: 0 pre-baked desks/chairs (found {len(found_furniture)})")
+
+    # Verify all 12 unit rooms have ceiling lamp fixtures
     for b in ("A", "B", "C", "D"):
         for fl in (1, 2, 3):
-            for slot in range(1, 9):
-                t_name = f"Table_{b}{fl}_{slot}"
-                m_name = f"Monitor_{b}{fl}_{slot}"
-                k_name = f"Keyboard_{b}{fl}_{slot}"
-                c_name = f"Chair_{b}{fl}_{slot}"
-                w_name = f"WorkerAnchor_{b}{fl}_{slot}"
+            lamp_name = f"CeilingLamp_{b}{fl}"
+            check(lamp_name in all_parts_by_name, f"Room ceiling lamp exists: {lamp_name}")
 
-                check(t_name in all_parts_by_name, f"{t_name} exists")
-                check(m_name in all_parts_by_name, f"{m_name} exists")
-                check(k_name in all_parts_by_name, f"{k_name} exists")
-                check(c_name in all_parts_by_name, f"{c_name} exists")
-                check(w_name in all_parts_by_name, f"{w_name} exists")
+    # 7. Realistic Stepped Staircase Contract: verify stepped flights, stringers, handrails, landings, pillars
+    for block_name in ("RukoBlockWest", "RukoBlockEast"):
+        _, block_parts = data[block_name]
+        block_part_names = {pn for pn, _, _, _, _, _, _ in block_parts}
 
-    # 7. Manifest validation
+        for fl in (1, 2, 3):
+            for s in range(1, 11):
+                step_name = f"StairStep_{fl}_{s}"
+                check(step_name in block_part_names, f"{block_name} has {step_name}")
+            check(f"StairStringer_{fl}" in block_part_names, f"{block_name} has StairStringer_{fl}")
+            check(f"StairRail_{fl}" in block_part_names, f"{block_name} has StairRail_{fl}")
+
+        for landing_name in ("LandingBack2", "LandingBack3", "LandingBackRoof", "Walkway2", "Walkway3"):
+            check(landing_name in block_part_names, f"{block_name} has {landing_name}")
+
+        for pillar_name in ("PillarStairBack", "PillarStairMid", "PillarStairFront"):
+            check(pillar_name in block_part_names, f"{block_name} has structural column {pillar_name}")
+
+    # 8. Authentic Indonesian Facade Contract: rolling doors, canopies, AC units, windows
+    for block_name in ("RukoBlockWest", "RukoBlockEast"):
+        _, block_parts = data[block_name]
+        block_part_names = {pn for pn, _, _, _, _, _, _ in block_parts}
+        b_left, b_right = ("A", "B") if block_name == "RukoBlockWest" else ("C", "D")
+
+        for b in (b_left, b_right):
+            check(f"RollingDoor_{b}1_L" in block_part_names, f"{block_name} has rolling door left: RollingDoor_{b}1_L")
+            check(f"RollingDoor_{b}1_R" in block_part_names, f"{block_name} has rolling door right: RollingDoor_{b}1_R")
+            check(f"RollingBox_{b}1" in block_part_names, f"{block_name} has rolling box: RollingBox_{b}1")
+            check(f"Canopy_{b}" in block_part_names, f"{block_name} has canopy: Canopy_{b}")
+            for fl in (2, 3):
+                check(f"WindowGlass_{b}{fl}_L" in block_part_names, f"{block_name} has window glass: WindowGlass_{b}{fl}_L")
+                check(f"WindowGlass_{b}{fl}_R" in block_part_names, f"{block_name} has window glass: WindowGlass_{b}{fl}_R")
+                check(f"AC_Unit_{b}{fl}" in block_part_names, f"{block_name} has AC unit: AC_Unit_{b}{fl}")
+
+    # 9. Manifest validation
     manifest_path = os.path.join(RUKO_DIR, "ruko-manifest.json")
     check(os.path.exists(manifest_path), "ruko-manifest.json exists")
     if os.path.exists(manifest_path):
